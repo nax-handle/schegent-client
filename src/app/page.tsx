@@ -1,12 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import Day from "@/components/Home/Day";
-import Week from "@/components/Home/week";
-import Month from "@/components/Home/month";
-import Header2 from "@/components/common/header2";
-import Leftsidebar from "@/components/common/leftsidebar";
-import Header1 from "@/components/common/header1";
+import Day from "@/components/calendar/day";
+import Week from "@/components/calendar/week";
+import Month from "@/components/calendar/month";
+import Header2 from "@/components/header-nav/header2";
+import Leftsidebar from "@/components/header-nav/left-sidebar";
+import Header1 from "@/components/header-nav/header1";
 type CalendarView = "day" | "week" | "month";
 
 export default function CalendarPage() {
@@ -60,7 +60,7 @@ export default function CalendarPage() {
   // Get events for the current day (May 8)
 
   return (
-    <div className="flex h-screen bg-[url('/images/bg3.jpg')] bg-cover bg-center ">
+    <div className="flex ">
       <div className="flex-1 flex flex-col bg-">
         <Header1 />
         <div className="flex ">
@@ -71,10 +71,10 @@ export default function CalendarPage() {
               setCurrentView={setCurrentView}
             />
             <div className="flex mt-23 ml-5">
-              <div className="flex-1 h-[87vh]">
-                {currentView === "month" && <Month events={events} />}
+              <div className="flex-1  ">
                 {currentView === "day" && <Day events={events} />}
                 {currentView === "week" && <Week events={events} />}
+                {currentView === "month" && <Month events={events} />}
               </div>
             </div>
           </div>
