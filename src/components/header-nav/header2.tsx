@@ -8,10 +8,10 @@ interface HeaderProps {
 export default function header({ currentView, setCurrentView }: HeaderProps) {
   return (
     <div className="flex items-center justify-between border-gray-300 border-b mb-3 absolute top-10  w-[86.9%] pl-6">
-      <h1 className="text-2xl font-bold text-white">May 2025</h1>
+      <h1 className="text-2xl font-bold ">May 2025</h1>
 
       <div className="flex items-center gap-4">
-        <div className="flex items-center text-white">
+        <div className="flex items-center ">
           <button className="p-2 rounded-md hover:bg-gray-100">
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -23,10 +23,10 @@ export default function header({ currentView, setCurrentView }: HeaderProps) {
         <div className="px-8 pb-6 mt-6 flex justify-center">
           <div className="inline-flex rounded-md overflow-hidden">
             <button
-              className={`px-6 py-2 text-ld rounded-lg transition text-white
+              className={`px-6 py-2 text-ld rounded-lg transition 
                           ${
                             currentView === "day"
-                              ? "bg-white/20 backdrop-blur-md shadow-md  "
+                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
                               : "hover:bg-white/10"
                           }`}
               onClick={() => setCurrentView("day")}
@@ -34,10 +34,10 @@ export default function header({ currentView, setCurrentView }: HeaderProps) {
               Day
             </button>
             <button
-              className={`px-6 py-2 text-ld rounded-lg transition text-white
+              className={`px-6 py-2 text-ld rounded-lg transition 
                           ${
                             currentView === "week"
-                              ? "bg-white/20 backdrop-blur-md shadow-md  "
+                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
                               : "hover:bg-white/10"
                           }`}
               onClick={() => setCurrentView("week")}
@@ -46,10 +46,10 @@ export default function header({ currentView, setCurrentView }: HeaderProps) {
             </button>
 
             <button
-              className={`px-6 py-2 text-ld rounded-lg transition text-white
+              className={`px-6 py-2 text-ld rounded-lg transition 
                           ${
                             currentView === "month"
-                              ? "bg-white/20 backdrop-blur-md shadow-md  "
+                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
                               : "hover:bg-white/10"
                           }`}
               onClick={() => setCurrentView("month")}

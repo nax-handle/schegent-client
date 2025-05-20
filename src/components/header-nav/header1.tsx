@@ -1,9 +1,10 @@
 import React from "react";
+import ToggleTheme from "@/components/theme/toggle-theme";
 
 export default function header1() {
   return (
     <div className=" px-6 py-3 flex items-center gap-4 ">
-      <button className="px-3 py-1 font-medium text-white border-b-2 border-white">
+      <button className="px-3 py-1 font-medium  border-b-2 border-white">
         <div className="flex items-center gap-2">
           <svg
             viewBox="0 0 24 24"
@@ -20,7 +21,10 @@ export default function header1() {
           Calendar
         </div>
       </button>
-      <button className="px-3 py-1 font-medium text-gray-100">Tasks</button>
+      <button className="px-3 py-1 font-medium text-gray-600 dark:text-gray-200">
+        Tasks
+      </button>
+      <ToggleTheme />
     </div>
   );
 }
