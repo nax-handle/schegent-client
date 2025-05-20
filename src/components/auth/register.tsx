@@ -6,6 +6,7 @@ import { Eye, EyeOff, Mail, Lock, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
+import ToggleTheme from "@/components/theme/toggle-theme";
 
 export default function CreateAccount() {
   const [showPassword, setShowPassword] = useState(false);
@@ -92,7 +93,7 @@ export default function CreateAccount() {
   return (
     <div className="w-full max-w-md mx-auto p-6">
       <div className="text-center mb-8">
-        <h1 className="text-2xl font-bold text-[#383874]">
+        <h1 className="text-2xl font-bold text-[#383874] dark:text-[#6060c2]">
           {step === 1 ? "Create Your Account" : "Verify Your Email"}
         </h1>
         {step === 2 && (
@@ -138,7 +139,9 @@ export default function CreateAccount() {
 
           <div className="relative flex items-center justify-center">
             <div className="border-t border-gray-200 w-full absolute"></div>
-            <span className="px-4 text-sm text-gray-400 relative">OR</span>
+            <span className="px-4 text-sm text-gray-400 dark:bg-[#0A0A0A] bg-white relative">
+              OR
+            </span>
           </div>
 
           <form onSubmit={handleSendOtp} className="space-y-4">
