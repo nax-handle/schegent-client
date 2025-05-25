@@ -4,9 +4,8 @@ import { useState } from "react";
 import Day from "@/components/calendar/day";
 import Week from "@/components/calendar/week";
 import Month from "@/components/calendar/month";
-import Header2 from "@/components/header-nav/header2";
+import Header2 from "@/components/header-nav/header";
 import Leftsidebar from "@/components/header-nav/left-sidebar";
-import Header1 from "@/components/header-nav/header1";
 type CalendarView = "day" | "week" | "month";
 
 export default function CalendarPage() {
@@ -62,7 +61,6 @@ export default function CalendarPage() {
   return (
     <div className="flex ">
       <div className="flex-1 flex flex-col bg-">
-        <Header1 />
         <div className="flex ">
           <Leftsidebar events={events} />
           <div className="w-full">
