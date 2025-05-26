@@ -5,15 +5,30 @@ import OTPInput from "react-otp-input";
 import { Button } from "@/components/ui/button";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
+import { useMutation } from "@tanstack/react-query";
+import { verify } from "@/lib/services/auth";
+import { useRouter } from "next/navigation";
 
 interface CreateAccountProps {
   setStep: (step: number) => void;
+  email?: (field: string) => string;
 }
 
-export default function CreateAccount({ setStep }: CreateAccountProps) {
+export default function CreateAccount({ setStep, email }: CreateAccountProps) {
+  const router = useRouter();
   const [otp, setOtp] = useState("");
   const [otpError, setOtpError] = useState(false);
   const { t } = useTranslation();
+
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: verify,
+    onSuccess: () => {
+      setOtpError(false);
+      setOtp("");
+      setStep(3);
+      router.push("/auth/login");
+    },
+  });
 
   const handleVerifyOtp = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -21,9 +36,7 @@ export default function CreateAccount({ setStep }: CreateAccountProps) {
       setOtpError(true);
       return;
     }
-    setOtpError(false);
-    setOtp("");
-    setStep(3);
+    mutate({ email: email ? email("email") : "", code: otp });
   };
 
   return (
@@ -56,9 +69,10 @@ export default function CreateAccount({ setStep }: CreateAccountProps) {
 
         <Button
           type="submit"
+          disabled={isPending}
           className="w-full py-6 bg-[#3e41f7] hover:bg-[#5355d1] text-white rounded-xl"
         >
-          {t("Register")}
+          {isPending ? t("Loading...") : t("Verify")}
         </Button>
 
         <div className="flex justify-center items-center">

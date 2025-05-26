@@ -37,5 +37,11 @@
   "Password is set and hidden for security": "Mật khẩu được đặt và ẩn để bảo mật",
   "Change Password": "Đổi mật khẩu",
 
+  "Email is required": "Email là bắt buộc",
+  "Invalid email address": "Địa chỉ email không hợp lệ",
+  "Password must be at least 6 characters": "Mật khẩu phải có ít nhất 6 ký tự",
+  "Confirm Password is required": " Xác nhận mật khẩu là bắt buộc",
+  "Update Password": "Cập nhật mật khẩu",
+
   "welcome": "Chào mừng bạn đến với trang web của chúng tôi!"
 }

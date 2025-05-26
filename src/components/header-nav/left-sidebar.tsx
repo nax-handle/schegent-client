@@ -2,6 +2,7 @@
 import React, { useState, useMemo } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
 import { HomeProps } from "../instance";
+import ToggleTheme from "../theme/toggle-theme";
 
 export default function LeftSidebar({ events }: HomeProps) {
   const today = new Date();
@@ -59,11 +60,14 @@ export default function LeftSidebar({ events }: HomeProps) {
   };
 
   return (
-    <div className="w-[15%] border-r border-gray-200 flex flex-col bg-gray/30 backdrop-blur-2xl h-[98.5vh] rounded-tr-2xl">
+    <div className="w-[15%] border-r border-gray-200 flex flex-col bg-gray/30 backdrop-blur-2xl h-[85vh] rounded-tr-2xl">
       <div className="p-3">
         <button className="w-full py-2 px-4 text-center rounded-4xl font-medium bg-[#3A82F6] text-white">
           + Create
         </button>
+      </div>
+      <div className="px-4 py-2">
+        <ToggleTheme />
       </div>
 
       <nav className="flex-1">

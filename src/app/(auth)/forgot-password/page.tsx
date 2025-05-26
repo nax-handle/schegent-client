@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Mail, Lock } from "lucide-react";
+import { Mail } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Otp from "@/components/auth/otp";
@@ -11,14 +11,9 @@ import "@/../i18n";
 import FogotPassword from "@/components/auth/editPassword";
 
 export default function ForgotPassword() {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordsMatch, setPasswordsMatch] = useState(true);
   const [step, setStep] = useState(1);
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
 
   const handleChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
     let val = e.target.value;
@@ -26,20 +21,6 @@ export default function ForgotPassword() {
       val += "gmail.com";
     }
     setEmail(val);
-  };
-
-  const handleConfirmPasswordChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setConfirmPassword(value);
-    setPasswordsMatch(value === password || value === "");
-  };
-
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPassword(value);
-    setPasswordsMatch(confirmPassword === value || confirmPassword === "");
   };
 
   const handleSendOtp = (e: React.FormEvent<HTMLFormElement>) => {
@@ -83,12 +64,6 @@ export default function ForgotPassword() {
                   required
                 />
               </div>
-
-              {!passwordsMatch && (
-                <p className="text-xs text-red-500 pl-3">
-                  {t("Passwords do not match")}
-                </p>
-              )}
 
               <Button
                 type="submit"

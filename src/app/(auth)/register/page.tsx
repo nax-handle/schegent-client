@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -8,44 +8,56 @@ import { Input } from "@/components/ui/input";
 import Otp from "@/components/auth/otp";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import RegisterSchema from "@/zod/register.schema";
+import { z } from "zod";
+import { useMutation } from "@tanstack/react-query";
+import { register as registerUser } from "@/lib/services/auth";
+
+type RegisterFormData = z.infer<typeof RegisterSchema>;
 
 export default function CreateAccount() {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [passwordsMatch, setPasswordsMatch] = useState(true);
   const [step, setStep] = useState(1);
-  const { t, i18n } = useTranslation();
 
-  const handleChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    if (val.endsWith("@")) {
-      val += "gmail.com";
+  const {
+    register,
+    handleSubmit,
+    watch,
+    getValues,
+    formState: { errors },
+    setValue,
+  } = useForm<RegisterFormData>({
+    resolver: zodResolver(RegisterSchema),
+  });
+
+  const emailValue = watch("email");
+
+  useEffect(() => {
+    if (emailValue && emailValue.includes("@") && !emailValue.includes(".")) {
+      const [local, domain] = emailValue.split("@");
+      if (domain === "") {
+        setValue("email", `${local}@gmail.com`);
+      }
     }
-    setEmail(val);
-  };
+  }, [emailValue]);
 
-  const handleConfirmPasswordChange = (
-    e: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = e.target.value;
-    setConfirmPassword(value);
-    setPasswordsMatch(value === password || value === "");
-  };
+  // const password = watch("password");
+  // const confirmPassword = watch("confirmPassword");
 
-  const handlePasswordChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value;
-    setPassword(value);
-    setPasswordsMatch(confirmPassword === value || confirmPassword === "");
-  };
+  const { mutate, isPending, error } = useMutation({
+    mutationFn: (data: RegisterFormData) => registerUser(data),
+    onSuccess: () => {
+      console.log("Registration successful");
+      setStep(2);
+    },
+  });
 
-  const handleSendOtp = (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    if (!email || !password || !confirmPassword || !passwordsMatch) return;
-    console.log("Sending OTP to", email);
-    setStep(2);
+  const onSubmit = (data: RegisterFormData) => {
+    mutate(data);
   };
 
   return (
@@ -57,13 +69,14 @@ export default function CreateAccount() {
           </h1>
           {step === 2 && (
             <p className="text-sm text-gray-500 mt-2">
-              {t("We've sent a verification code to")} {email}
+              {t("We've sent a verification code to")} {emailValue}
             </p>
           )}
         </div>
 
         {step === 1 ? (
           <div className="space-y-6">
+            {/* Google Signup */}
             <Button
               variant="outline"
               className="w-full py-6 flex items-center justify-center gap-2 hover:bg-gray-50"
@@ -96,6 +109,7 @@ export default function CreateAccount() {
               </span>
             </Button>
 
+            {/* OR line */}
             <div className="relative flex items-center justify-center">
               <div className="border-t border-gray-200 w-full absolute"></div>
               <span className="px-4 text-sm text-gray-400 dark:bg-[#363637] bg-[#FAFAFB] relative">
@@ -103,7 +117,9 @@ export default function CreateAccount() {
               </span>
             </div>
 
-            <form onSubmit={handleSendOtp} className="space-y-4">
+            {/* FORM */}
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+              {/* Email */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
                   <Mail size={18} />
@@ -111,24 +127,34 @@ export default function CreateAccount() {
                 <Input
                   type="email"
                   placeholder={t("Your Email")}
-                  value={email}
-                  onChange={handleChangeEmail}
+                  {...register("email")}
+                  maxLength={30}
+                  onBlur={(e) => {
+                    const value = e.target.value;
+                    if (value && !value.includes("@")) {
+                      setValue("email", `${value}@gmail.com`);
+                    }
+                  }}
                   className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500"
-                  required
                 />
               </div>
+              {errors.email && (
+                <p className="text-xs text-red-500 pl-3">
+                  {t(`${errors.email.message}`)}
+                </p>
+              )}
 
+              {/* Password */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
                   <Lock size={18} />
                 </div>
                 <Input
                   type={showPassword ? "text" : "password"}
+                  maxLength={20}
                   placeholder={t("Password")}
-                  value={password}
-                  onChange={handlePasswordChange}
+                  {...register("password")}
                   className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500"
-                  required
                 />
                 <button
                   type="button"
@@ -138,20 +164,25 @@ export default function CreateAccount() {
                   {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                 </button>
               </div>
+              {errors.password && (
+                <p className="text-xs text-red-500 pl-3">
+                  {t(`${errors.password.message}`)}
+                </p>
+              )}
 
+              {/* Confirm Password */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
                   <Lock size={18} />
                 </div>
                 <Input
                   type={showConfirmPassword ? "text" : "password"}
+                  maxLength={20}
                   placeholder={t("Confirm Password")}
-                  value={confirmPassword}
-                  onChange={handleConfirmPasswordChange}
+                  {...register("confirmPassword")}
                   className={`pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 ${
-                    !passwordsMatch ? "border-red-500" : ""
+                    errors.confirmPassword ? "border-red-500" : ""
                   }`}
-                  required
                 />
                 <button
                   type="button"
@@ -165,21 +196,32 @@ export default function CreateAccount() {
                   )}
                 </button>
               </div>
-              {!passwordsMatch && (
+              {errors.confirmPassword && (
                 <p className="text-xs text-red-500 pl-3">
-                  {t("Passwords do not match")}
+                  {t(`${errors.confirmPassword.message}`)}
+                </p>
+              )}
+
+              {errors?.root && (
+                <p className="text-xs text-red-500 pl-3">
+                  {errors.root.message}
                 </p>
               )}
 
               <Button
                 type="submit"
+                disabled={isPending}
                 className="w-full py-6 bg-[#3e41f7] hover:bg-[#5355d1] text-white rounded-xl"
-                disabled={
-                  !email || !password || !confirmPassword || !passwordsMatch
-                }
               >
-                {t("Continue")}
+                {isPending ? t("Loading...") : t("Continue")}
               </Button>
+              {error && (
+                <p className="text-xs text-red-500 pl-3 text-center">
+                  {error instanceof Error
+                    ? error.message
+                    : "Something went wrong"}
+                </p>
+              )}
             </form>
 
             <p className="text-center text-gray-400 text-sm">
@@ -190,7 +232,7 @@ export default function CreateAccount() {
             </p>
           </div>
         ) : (
-          <Otp setStep={setStep} />
+          <Otp setStep={setStep} email={getValues} />
         )}
       </div>
     </div>

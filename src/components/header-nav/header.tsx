@@ -1,63 +1,116 @@
-import React from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import React, { useState } from "react";
+import { MenuIcon } from "lucide-react";
+import ToggleLanguage from "@/components/language/toggle-language";
+import { Button } from "../ui/button";
+import Image from "next/image";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "../ui/dropdown-menu";
+import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
+import { Bell, Search, User, Settings, LogOut } from "lucide-react";
+import { Badge } from "../ui/badge";
+import { useTranslation } from "react-i18next";
+import "@/../i18n";
+import { useRouter } from "next/navigation";
+import { useMutation } from "@tanstack/react-query";
+import { logout as logoutUser } from "@/lib/services/auth";
 
-interface HeaderProps {
-  currentView: "day" | "week" | "month";
-  setCurrentView: (view: "day" | "week" | "month") => void;
-}
-export default function header({ currentView, setCurrentView }: HeaderProps) {
+export default function Header() {
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const { t } = useTranslation();
+  const router = useRouter();
+
+  const { mutate: logout } = useMutation({
+    mutationFn: logoutUser,
+    onSuccess: () => {
+      setIsLoggedIn(false);
+      router.push("/login");
+    },
+  });
+
+  const handleLogout = () => {
+    logout();
+  };
+
   return (
-    <div className="flex items-center justify-between border-gray-300 border-b mb-3 absolute top-10  w-[86.9%] pl-6">
-      <h1 className="text-2xl font-bold ">May 2025</h1>
+    <div className="p-4 flex items-center justify-between bg-white dark:bg-[#0A0A0A] shadow-md">
+      <div className="flex items-center">
+        <button className="p-2 rounded-md hover:bg-gray-100 hover:dark:bg-white/10">
+          <MenuIcon className="w-6 h-6" />
+        </button>
+        <Image src="/images/logo.png" alt="Logo" width={45} height={45} />
+      </div>
+      <div className="flex items-center gap-2">
+        {/* Search Button */}
+        <Button variant="ghost" size="icon" className="hidden sm:flex">
+          <Search className="h-5 w-5" />
+        </Button>
 
-      <div className="flex items-center gap-4">
-        <div className="flex items-center ">
-          <button className="p-2 rounded-md hover:bg-gray-100">
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button className="px-3 py-1 mx-2 rounded-md">Today</button>
-          <button className="p-2 rounded-md hover:bg-gray-100">
-            <ChevronRight className="w-5 h-5" />
-          </button>
-        </div>
-        <div className="px-8 pb-6 mt-6 flex justify-center">
-          <div className="inline-flex rounded-md overflow-hidden">
-            <button
-              className={`px-6 py-2 text-ld rounded-lg transition 
-                          ${
-                            currentView === "day"
-                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
-                              : "hover:bg-white/10"
-                          }`}
-              onClick={() => setCurrentView("day")}
-            >
-              Day
-            </button>
-            <button
-              className={`px-6 py-2 text-ld rounded-lg transition 
-                          ${
-                            currentView === "week"
-                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
-                              : "hover:bg-white/10"
-                          }`}
-              onClick={() => setCurrentView("week")}
-            >
-              Week
-            </button>
+        {/* Notifications */}
+        <Button variant="ghost" size="icon" className="relative">
+          <Bell className="h-5 w-5" />
+          <Badge
+            variant="destructive"
+            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
+          >
+            3
+          </Badge>
+        </Button>
 
-            <button
-              className={`px-6 py-2 text-ld rounded-lg transition 
-                          ${
-                            currentView === "month"
-                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
-                              : "hover:bg-white/10"
-                          }`}
-              onClick={() => setCurrentView("month")}
-            >
-              Month
-            </button>
+        {/* Profile Menu */}
+        {isLoggedIn ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                className="relative h-10 w-10 rounded-full"
+              >
+                <Avatar className="h-10 w-10">
+                  <AvatarImage
+                    src="/placeholder.svg?height=40&width=40"
+                    alt="User"
+                  />
+                  <AvatarFallback>JD</AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent className="w-56" align="end" forceMount>
+              <div className="flex items-center justify-start gap-2 p-2">
+                <div className="flex flex-col space-y-1 leading-none">
+                  <p className="font-medium">John Doe</p>
+                  <p className="w-[200px] truncate text-sm text-muted-foreground">
+                    john.doe@example.com
+                  </p>
+                </div>
+              </div>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
+              <DropdownMenuItem>
+                <Settings className="mr-2 h-4 w-4" />
+                <span>Settings</span>
+              </DropdownMenuItem>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem onClick={() => handleLogout}>
+                <LogOut className="mr-2 h-4 w-4" />
+                <span>Log out</span>
+              </DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <div className="flex items-center gap-2">
+            <Button variant="ghost" onClick={() => setIsLoggedIn(true)}>
+              Sign In
+            </Button>
           </div>
-        </div>
+        )}
+        <ToggleLanguage />
       </div>
     </div>
   );
