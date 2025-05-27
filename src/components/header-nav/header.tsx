@@ -1,6 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { MenuIcon } from "lucide-react";
-import ToggleLanguage from "@/components/language/toggle-language";
 import { Button } from "../ui/button";
 import Image from "next/image";
 import {
@@ -11,15 +10,21 @@ import {
   DropdownMenuSeparator,
 } from "../ui/dropdown-menu";
 import { Avatar, AvatarImage, AvatarFallback } from "../ui/avatar";
-import { Bell, Search, User, Settings, LogOut } from "lucide-react";
-import { Badge } from "../ui/badge";
+import { Search, User, Settings, LogOut } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import { useRouter } from "next/navigation";
 import { useMutation } from "@tanstack/react-query";
 import { logout as logoutUser } from "@/lib/services/auth";
+import ToggleTheme from "../theme/toggle-theme";
+import Link from "next/link";
 
-export default function Header() {
+interface MenuProps {
+  menuOpen: boolean;
+  setMenuOpen?: (open: boolean) => void;
+}
+
+export default function Header({ menuOpen, setMenuOpen }: MenuProps) {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const { t } = useTranslation();
   const router = useRouter();
@@ -36,10 +41,44 @@ export default function Header() {
     logout();
   };
 
+  const getCookie = (name: string) => {
+    const value = `; ${document.cookie}`;
+    const parts = value.split(`; ${name}=`);
+    if (parts.length === 2) {
+      const part = parts.pop();
+      if (part) {
+        return part.split(";").shift();
+      }
+    }
+  };
+
+  const checkLoginStatus = () => {
+    const accessToken = getCookie("accessToken");
+    const refreshToken = getCookie("refreshToken");
+    if (accessToken && refreshToken) {
+      setIsLoggedIn(true);
+    } else {
+      setIsLoggedIn(false);
+    }
+  };
+
+  useEffect(() => {
+    checkLoginStatus();
+  }, []);
+
+  const toggleMenuOpen = () => {
+    if (setMenuOpen) {
+      setMenuOpen(!menuOpen);
+    }
+  };
+
   return (
     <div className="p-4 flex items-center justify-between bg-white dark:bg-[#0A0A0A] shadow-md">
       <div className="flex items-center">
-        <button className="p-2 rounded-md hover:bg-gray-100 hover:dark:bg-white/10">
+        <button
+          className="p-2 rounded-md hover:bg-gray-100 hover:dark:bg-white/10"
+          onClick={toggleMenuOpen}
+        >
           <MenuIcon className="w-6 h-6" />
         </button>
         <Image src="/images/logo.png" alt="Logo" width={45} height={45} />
@@ -51,15 +90,6 @@ export default function Header() {
         </Button>
 
         {/* Notifications */}
-        <Button variant="ghost" size="icon" className="relative">
-          <Bell className="h-5 w-5" />
-          <Badge
-            variant="destructive"
-            className="absolute -top-1 -right-1 h-5 w-5 flex items-center justify-center p-0 text-xs"
-          >
-            3
-          </Badge>
-        </Button>
 
         {/* Profile Menu */}
         {isLoggedIn ? (
@@ -90,27 +120,24 @@ export default function Header() {
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />
-                <span>Profile</span>
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Settings className="mr-2 h-4 w-4" />
-                <span>Settings</span>
+                <Link href={"/profile"}>{t("Profile")}</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => handleLogout}>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
-                <span>Log out</span>
+                <span>{t("Log out")}</span>
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>
         ) : (
           <div className="flex items-center gap-2">
-            <Button variant="ghost" onClick={() => setIsLoggedIn(true)}>
-              Sign In
+            <Button variant="ghost" onClick={() => router.push("/login")}>
+              {t("LogIn")}
             </Button>
           </div>
         )}
-        <ToggleLanguage />
+        <ToggleTheme />
+        {/* <ToggleLanguage /> */}
       </div>
     </div>
   );

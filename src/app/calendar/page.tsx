@@ -12,6 +12,7 @@ type CalendarView = "day" | "week" | "month";
 
 export default function CalendarPage() {
   const [currentView, setCurrentView] = useState<CalendarView>("week");
+  const [menuOpen, setMenuOpen] = useState(true);
 
   const events = [
     {
@@ -62,18 +63,18 @@ export default function CalendarPage() {
 
   return (
     <div className="block">
-      <Header />
+      <Header setMenuOpen={setMenuOpen} menuOpen={menuOpen} />
       <div className="flex-1 flex flex-col mt-2">
         <div className="flex ">
           <SideBarIcon />
-          <Leftsidebar events={events} />
+          <Leftsidebar events={events} menuOpen={menuOpen} />
           <div className="w-full">
             <NavMenu
               currentView={currentView}
               setCurrentView={setCurrentView}
             />
-            <div className="flex ml-5">
-              <div className="flex-1  ">
+            <div className={`flex`}>
+              <div className={`flex-1  mr-1 `}>
                 {currentView === "day" && <Day events={events} />}
                 {currentView === "week" && <Week events={events} />}
                 {currentView === "month" && <Month events={events} />}

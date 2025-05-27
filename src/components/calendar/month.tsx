@@ -39,7 +39,7 @@ export default function Month({ events }: HomeProps) {
   const totalCells = Math.ceil((daysInMonth + firstDayOfMonth) / 7) * 7;
 
   return (
-    <div className="inset-0 bg-gray/30 backdrop-blur-sm border-gray-300 border-1 rounded-lg">
+    <div className="inset-0 bg-gray/30 backdrop-blur-sm border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
       <div className="grid grid-cols-7 border-b ">
         {days.map((day) => (
           <div
@@ -51,7 +51,7 @@ export default function Month({ events }: HomeProps) {
         ))}
       </div>
 
-      <div className="grid grid-cols-7 grid-rows-5 h-[80vh]">
+      <div className="grid grid-cols-7 grid-rows-5 h-[73vh]">
         {Array.from({ length: totalCells }, (_, i) => {
           const date = i - firstDayOfMonth + 1;
           const isCurrentMonth = date > 0 && date <= daysInMonth;

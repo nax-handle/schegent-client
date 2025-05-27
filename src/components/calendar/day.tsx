@@ -43,7 +43,7 @@ export default function Day({ events }: HomeProps) {
   };
 
   return (
-    <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl black overflow-hidden rounded-lg border-gray-300 border-1">
+    <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl black overflow-hidden  border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl ">
       <p className="p-2 pl-6 text-2xl  text-white w-fit rounded-full">
         {todayDate}, {weekdayVN}
       </p>
@@ -54,13 +54,13 @@ export default function Day({ events }: HomeProps) {
           </span>
           <span className="text-sm text-white border-b p-2 w-full"></span>
         </div>
-        <div className="mx-2 flex h-[70vh] overflow-y-scroll relative overflow-x-hidden scrollbar-hidden">
+        <div className="mx-2 flex h-[62.5vh] overflow-y-scroll relative overflow-x-hidden scrollbar-hidden">
           <div className="flex h-full w-full">
             <div className=" w-full relative">
               {Array.from({ length: 24 }, (_, i) => (
                 <div className="flex h-[65px]" key={i}>
                   <div className="w-[85px] z-20 border-r">
-                    <p className="text-sm text-white w-18 px-4">
+                    <p className="text-sm dark:text-white text-black w-18 px-4">
                       {i === 0 ? "" : `${i}:00`}
                     </p>
                   </div>
@@ -75,13 +75,13 @@ export default function Day({ events }: HomeProps) {
                 ></div>
               ))}
 
-              {events.map((event) => {
+              {events.map((event, index) => {
                 const top = event.startHour * 65;
                 const bgColor = getColorByTitle(event.title);
 
                 return (
                   <div
-                    key={event.id}
+                    key={index}
                     className="flex items-center sm:w-[94.5%] w-[73%] left-26 z-20 justify-right absolute right-0"
                     style={{ top: `${top}px` }}
                   >
