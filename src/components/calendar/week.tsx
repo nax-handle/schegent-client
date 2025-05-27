@@ -29,7 +29,7 @@ export default function Week({ events }: HomeProps) {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
   return (
-    <div className="w-full relative rounded-lg border-gray-300 border-1">
+    <div className="w-full relative rounded-tr-xl rounded-br-xl rou border-gray-300 border-t-1 border-b-1 border-r-1">
       <div className="w-full flex sticky top-0 z-50 rounded-t-lg">
         <div className="grid grid-cols-7 pl-19 border-b border-gray-200 flex-1 w-full ">
           {days.map((day, index) => {
@@ -57,7 +57,7 @@ export default function Week({ events }: HomeProps) {
         </div>
       </div>
 
-      <div className="h-[77vh] relative overflow-y-auto scrollbar-hidden">
+      <div className="h-[69vh] relative overflow-y-auto scrollbar-hidden">
         <div className="absolute left-0 w-20 z-10 h-full">
           {Array.from({ length: 24 }, (_, i) => (
             <div
@@ -88,14 +88,14 @@ export default function Week({ events }: HomeProps) {
                   .filter((event) => {
                     return event.date === dayIndex;
                   })
-                  .map((event) => {
+                  .map((event, index) => {
                     const top = event.startHour * 56;
                     const height = event.duration * 56;
                     const bgColor = getColorByTitle(event.title);
 
                     return (
                       <div
-                        key={event.id}
+                        key={index}
                         className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black border-l-4 ${bgColor}`}
                         style={{
                           top: `${top}px`,
