@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import Otp from "@/components/auth/otp";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
-import FogotPassword from "@/components/auth/editPassword";
+import FogotPassword from "@/components/auth/edit-password";
 
 export default function ForgotPassword() {
   const [email, setEmail] = useState("");
@@ -60,7 +60,7 @@ export default function ForgotPassword() {
                   placeholder={t("Your Email")}
                   value={email}
                   onChange={handleChangeEmail}
-                  className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500"
+                  className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
                   required
                 />
               </div>

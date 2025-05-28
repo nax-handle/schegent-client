@@ -1,10 +1,11 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { HomeProps } from "../instance";
+import events from "@/constant/events";
 import colors from "../color-event";
-import { Lunar } from "lunar-javascript";
+import LunarJS from "lunar-javascript";
 
-export default function Month({ events }: HomeProps) {
+export default function Month() {
+  const { Lunar } = LunarJS;
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
@@ -51,7 +52,10 @@ export default function Month({ events }: HomeProps) {
         ))}
       </div>
 
-      <div className="grid grid-cols-7 grid-rows-5 h-[73vh]">
+      <div
+        className="grid grid-cols-7 grid-rows-5 "
+        style={{ height: "calc(100vh - 217px)" }}
+      >
         {Array.from({ length: totalCells }, (_, i) => {
           const date = i - firstDayOfMonth + 1;
           const isCurrentMonth = date > 0 && date <= daysInMonth;

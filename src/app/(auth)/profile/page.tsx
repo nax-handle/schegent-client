@@ -1,45 +1,37 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit2, Save, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
-import EditProfile from "@/components/auth/editProfile";
-import EditPassword from "@/components/auth/editPassword";
+import EditProfile from "@/components/auth/edit-profile";
+import EditPassword from "@/components/auth/edit-password";
 import Profile from "@/components/auth/profile";
-
-type UserType = {
-  name: string;
-  username: string;
-  email: string;
-  phone: string | null;
-  avatar_url: string | null;
-  gender: 0 | 1 | 2;
-  date_of_birth: string | null;
-  address: string | null;
-};
+import { useProfile } from "@/hooks/auth/use.auth";
+import { UserType } from "@/components/instance";
 
 export default function ProfilePage() {
   const { t } = useTranslation();
-  const [user, setUser] = useState<UserType>({
-    name: "John Doe",
-    username: "johndoe",
-    email: "john.doe@example.com",
-    phone: "+1 (555) 123-4567",
-    avatar_url: "/placeholder.svg?height=128&width=128",
-    gender: 1,
-    date_of_birth: "1990-05-15",
-    address: "123 Main Street, Apt 4B, New York, NY 10001, United States",
-  });
-
+  const { data, isLoading, error } = useProfile();
+  const [user, setUser] = useState<UserType | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedUser, setEditedUser] = useState<UserType>(user);
+  const [editedUser, setEditedUser] = useState<UserType | null>(null);
+
+  useEffect(() => {
+    if (data) {
+      setUser(data);
+      console.log("User data:", data);
+      setEditedUser(data);
+    }
+  }, [data]);
 
   const handleEdit = () => {
-    setEditedUser(user);
-    setIsEditing(true);
+    if (user) {
+      setEditedUser(user);
+      setIsEditing(true);
+    }
   };
 
   const handleCancel = () => {
@@ -47,9 +39,15 @@ export default function ProfilePage() {
   };
 
   const handleSave = () => {
-    setUser(editedUser);
-    setIsEditing(false);
+    if (editedUser) {
+      setUser(editedUser);
+      setIsEditing(false);
+    }
   };
+
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Không thể tải hồ sơ người dùng</div>;
+  if (!user) return <div>Không có thông tin người dùng</div>;
 
   return (
     <div className=" h-screen">
@@ -95,12 +93,14 @@ export default function ProfilePage() {
                 <Avatar className="h-32 w-32 text-black dark:text-white">
                   <AvatarImage
                     src={
-                      user.avatar_url || "/placeholder.svg?height=128&width=128"
+                      user.avatarUrl || "/placeholder.svg?height=128&width=128"
                     }
-                    alt={user.name}
+                    alt={user.username}
                   />
                   <AvatarFallback>
-                    {user.name.substring(0, 2).toUpperCase()}
+                    {user && user.username
+                      ? user.username.substring(0, 1).toUpperCase()
+                      : ""}
                   </AvatarFallback>
                 </Avatar>
                 {isEditing && (
@@ -117,7 +117,7 @@ export default function ProfilePage() {
                 )}
               </div>
               <CardTitle className="text-center text-black dark:text-white">
-                {user.name}
+                {user.username}
               </CardTitle>
               <p className=" text-center text-black dark:text-white">
                 @{user.username}

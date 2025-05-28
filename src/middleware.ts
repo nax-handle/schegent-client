@@ -3,20 +3,25 @@ import type { NextRequest } from "next/server";
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  const accessToken = request.cookies.get("accessToken")?.value;
 
   if (
-    pathname.startsWith("/login") ||
-    pathname.startsWith("/register") ||
-    pathname.startsWith("/_next") ||
-    pathname.startsWith("/api")
+    accessToken &&
+    (pathname.startsWith("/login") ||
+      pathname.startsWith("/register") ||
+      pathname.startsWith("/forgot-password"))
   ) {
-    return NextResponse.next();
+    return NextResponse.redirect(new URL("/calendar", request.url));
   }
 
-  const accessToken = request.cookies.get("accessToken");
-  const refreshToken = request.cookies.get("refreshToken");
-
-  if (!accessToken || !refreshToken) {
+  if (
+    !accessToken &&
+    !pathname.startsWith("/login") &&
+    !pathname.startsWith("/register") &&
+    !pathname.startsWith("/forgot-password") &&
+    !pathname.startsWith("/_next") &&
+    !pathname.startsWith("/api")
+  ) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 

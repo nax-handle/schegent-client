@@ -4,7 +4,7 @@ import { UserType } from "../instance";
 import { format } from "date-fns";
 
 export default function Profile({ user }: { user: UserType }) {
-  const getGenderLabel = (gender: 0 | 1 | 2) => {
+  const getGenderLabel = (gender: 0 | 1 | 2 | null | undefined) => {
     switch (gender) {
       case 0:
         return "Not specified";
@@ -21,8 +21,8 @@ export default function Profile({ user }: { user: UserType }) {
     if (!dateString) return "Not specified";
     try {
       return format(new Date(dateString), "MMMM d, yyyy");
-    } catch (error) {
-      return "Invalid date";
+    } catch (e) {
+      return "Invalid date" + e;
     }
   };
 
@@ -30,7 +30,6 @@ export default function Profile({ user }: { user: UserType }) {
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4">
         <div className="flex items-center gap-2">
-          <User className="h-5 w-5 text-black dark:text-white" />
           <div>
             <p className="text-black dark:text-white">{user.name}</p>
           </div>
@@ -52,14 +51,26 @@ export default function Profile({ user }: { user: UserType }) {
         <div className="flex items-center gap-2 ">
           <User className="h-5 w-5 text-black dark:text-white" />
           <div className="text-black dark:text-white">
-            <p>{getGenderLabel(user.gender)}</p>
+            <p>
+              {getGenderLabel(
+                user.gender === "1"
+                  ? 1
+                  : user.gender === "2"
+                  ? 2
+                  : user.gender === "0" ||
+                    user.gender === null ||
+                    user.gender === undefined
+                  ? 0
+                  : undefined
+              )}
+            </p>
           </div>
         </div>
         <div className="flex items-center gap-2">
           <Calendar className="h-5 w-5 text-black dark:text-white" />
           <div>
             <p className="text-black dark:text-white">
-              {formatDate(user.date_of_birth)}
+              {formatDate(user.dateOfBirth)}
             </p>
           </div>
         </div>

@@ -12,7 +12,10 @@ import { UserType } from "../instance";
 export default function EditProfile({ user }: { user: UserType }) {
   const { t } = useTranslation();
   const [editedUser, setEditedUser] = useState<UserType>(user);
-  const handleChange = (field: keyof UserType, value: any) => {
+  const handleChange = <K extends keyof UserType>(
+    field: K,
+    value: UserType[K]
+  ) => {
     setEditedUser((prev) => ({
       ...prev,
       [field]: value,
@@ -65,8 +68,8 @@ export default function EditProfile({ user }: { user: UserType }) {
             className="text-gray-400 dark:text-white"
             id="date_of_birth"
             type="date"
-            value={editedUser.date_of_birth || ""}
-            onChange={(e) => handleChange("date_of_birth", e.target.value)}
+            value={editedUser.dateOfBirth || ""}
+            onChange={(e) => handleChange("dateOfBirth", e.target.value)}
           />
         </div>
       </div>
@@ -77,7 +80,7 @@ export default function EditProfile({ user }: { user: UserType }) {
             {t("Gender")}
           </Label>
           <RadioGroup
-            value={editedUser.gender.toString()}
+            value={(editedUser.gender ?? 0).toString()}
             onValueChange={(value) =>
               handleChange("gender", Number.parseInt(value) as 0 | 1 | 2)
             }

@@ -48,5 +48,28 @@
   "Settings": " Cài đặt",
   "Log out": "Đăng xuất",
 
+  "Today": "Hôm nay",
+  "Scheduler": " Lịch trình",
+  "Tasks": "Nhiệm vụ",
+  "Day": "Ngày",
+  "Week": "Tuần",
+  "Month": "Tháng",
+
+  "Secure": "Bảo mật",
+  "Manage your sessions and devices": "Quản lý phiên làm việc và thiết bị của bạn",
+  "Sign out quickly": "Đăng xuất nhanh chóng",
+  "Quickly sign out of your current device or all other devices": "Đăng xuất nhanh khỏi thiết bị hiện tại hoặc tất cả các thiết bị khác",
+  "Log out current device": "Đăng xuất thiết bị hiện tại",
+  "Confirm Logout": "Xác nhận đăng xuất",
+  "This will log you out of the current device. You will need to log in again to access your account.": "Điều này sẽ đăng xuất bạn khỏi thiết bị hiện tại. Bạn sẽ cần đăng nhập lại để truy cập tài khoản của mình.",
+  "Log out all devices": "Đăng xuất tất cả thiết bị",
+  "This will log you out of all devices. You will need to log in again to access your account.": "Điều này sẽ đăng xuất bạn khỏi tất cả các thiết bị. Bạn sẽ cần đăng nhập lại để truy cập tài khoản của mình.",
+  "Log out all": "Đăng xuất tất cả",
+  "Device is logged in": "Thiết bị đã đăng nhập",
+  "List of devices currently logged into your account": "Danh sách các thiết bị hiện đang đăng nhập vào tài khoản của bạn",
+  "Current device": "Thiết bị hiện tại",
+  "Device Logouts": "Đăng xuất thiết bị",
+  "Are you sure you want to log out of this device? You will need to log in again to access your account.": " Bạn có chắc chắn muốn đăng xuất khỏi thiết bị này không? Bạn sẽ cần đăng nhập lại để truy cập tài khoản của mình.",
+
   "welcome": "Chào mừng bạn đến với trang web của chúng tôi!"
 }

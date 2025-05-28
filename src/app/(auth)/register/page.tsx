@@ -8,31 +8,22 @@ import { Input } from "@/components/ui/input";
 import Otp from "@/components/auth/otp";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import RegisterSchema from "@/zod/register.schema";
-import { z } from "zod";
-import { useMutation } from "@tanstack/react-query";
-import { register as registerUser } from "@/lib/services/auth";
-
-type RegisterFormData = z.infer<typeof RegisterSchema>;
+import { useRegister } from "@/hooks/auth/use.auth";
+import { useRegisterForm, RegisterFormData } from "@/hooks/auth/zod.auth";
 
 export default function CreateAccount() {
   const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [step, setStep] = useState(1);
-
   const {
-    register,
-    handleSubmit,
-    watch,
-    getValues,
-    formState: { errors },
-    setValue,
-  } = useForm<RegisterFormData>({
-    resolver: zodResolver(RegisterSchema),
-  });
+    register: onRegister,
+    isRegistering,
+    registerError,
+    isSuccess,
+  } = useRegister();
+  const { register, handleSubmit, watch, getValues, errors, setValue } =
+    useRegisterForm();
 
   const emailValue = watch("email");
 
@@ -45,20 +36,15 @@ export default function CreateAccount() {
     }
   }, [emailValue]);
 
-  // const password = watch("password");
-  // const confirmPassword = watch("confirmPassword");
-
-  const { mutate, isPending, error } = useMutation({
-    mutationFn: (data: RegisterFormData) => registerUser(data),
-    onSuccess: () => {
-      console.log("Registration successful");
-      setStep(2);
-    },
-  });
-
-  const onSubmit = (data: RegisterFormData) => {
-    mutate(data);
+  const handleRegister = (data: RegisterFormData) => {
+    onRegister(data);
   };
+
+  useEffect(() => {
+    if (isSuccess) {
+      setStep(2);
+    }
+  }, [isSuccess]);
 
   return (
     <div className="w-full h-screen flex justify-center items-center">
@@ -79,7 +65,7 @@ export default function CreateAccount() {
             {/* Google Signup */}
             <Button
               variant="outline"
-              className="w-full py-6 flex items-center justify-center gap-2 hover:bg-gray-50"
+              className="w-full py-6 flex items-center justify-center gap-2  dark:bg-[#535353]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -104,7 +90,7 @@ export default function CreateAccount() {
                   d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
                 />
               </svg>
-              <span className="text-gray-500 font-medium">
+              <span className="text-gray-500 dark:text-white font-medium">
                 {t("Sign Up with Google")}
               </span>
             </Button>
@@ -112,13 +98,13 @@ export default function CreateAccount() {
             {/* OR line */}
             <div className="relative flex items-center justify-center">
               <div className="border-t border-gray-200 w-full absolute"></div>
-              <span className="px-4 text-sm text-gray-400 dark:bg-[#363637] bg-[#FAFAFB] relative">
+              <span className="px-4 text-sm text-gray-400 dark:bg-[#3F3F40] bg-[#FAFAFB] relative">
                 {t("OR")}
               </span>
             </div>
 
             {/* FORM */}
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+            <form className="space-y-4">
               {/* Email */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
@@ -135,7 +121,7 @@ export default function CreateAccount() {
                       setValue("email", `${value}@gmail.com`);
                     }
                   }}
-                  className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500"
+                  className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
                 />
               </div>
               {errors.email && (
@@ -154,7 +140,7 @@ export default function CreateAccount() {
                   maxLength={20}
                   placeholder={t("Password")}
                   {...register("password")}
-                  className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500"
+                  className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
                 />
                 <button
                   type="button"
@@ -182,7 +168,7 @@ export default function CreateAccount() {
                   {...register("confirmPassword")}
                   className={`pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 ${
                     errors.confirmPassword ? "border-red-500" : ""
-                  }`}
+                  } bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white`}
                 />
                 <button
                   type="button"
@@ -209,16 +195,18 @@ export default function CreateAccount() {
               )}
 
               <Button
-                type="submit"
-                disabled={isPending}
+                type="button"
+                onClick={handleSubmit(handleRegister)}
+                disabled={isRegistering}
                 className="w-full py-6 bg-[#3e41f7] hover:bg-[#5355d1] text-white rounded-xl"
               >
-                {isPending ? t("Loading...") : t("Continue")}
+                {isRegistering ? t("Loading...") : t("Continue")}
               </Button>
-              {error && (
+
+              {registerError && (
                 <p className="text-xs text-red-500 pl-3 text-center">
-                  {error instanceof Error
-                    ? error.message
+                  {registerError instanceof Error
+                    ? registerError.message
                     : "Something went wrong"}
                 </p>
               )}

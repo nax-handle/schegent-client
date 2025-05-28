@@ -1,15 +1,12 @@
 "use client";
 import React, { useState } from "react";
 import { ChevronRight, ChevronLeft } from "lucide-react";
-import { HomeProps } from "../instance";
+import events from "@/constant/events";
 interface menuOpen {
   menuOpen: boolean;
 }
 
-export default function LeftSidebar({
-  events,
-  menuOpen,
-}: HomeProps & menuOpen) {
+export default function LeftSidebar({ menuOpen }: menuOpen) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const currentMonth = currentDate.toLocaleString("default", {
@@ -44,11 +41,12 @@ export default function LeftSidebar({
 
   return (
     <div
-      className={` top-[11vh] left-0 h-[89vh] w-[20%] border-r border-gray-200 bg-gray/30 backdrop-blur-2xl rounded-tr-2xl transition-all duration-300 ease-in-out transform ${
+      className={` top-[11vh] left-0  w-[20%] border-r border-gray-200 bg-gray/30 backdrop-blur-2xl rounded-tr-2xl transition-all duration-300 ease-in-out transform ${
         menuOpen
           ? "translate-x-0 opacity-100 block"
           : "-translate-x-full opacity-0 fixed"
       }`}
+      style={{ height: "calc(100vh - 85px)" }}
     >
       <div className="p-3">
         <button className="w-full py-2 px-4 text-center rounded-4xl font-medium bg-[#3A82F6] text-white">

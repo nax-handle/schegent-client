@@ -3,24 +3,15 @@ import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { z } from "zod";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import ForgotPassword from "@/zod/forgot-password.schema";
-
-type EditPasswordFormData = z.infer<typeof ForgotPassword>;
-
+import {
+  useForgotPasswordForm,
+  ForgotPasswordFormData,
+} from "@/hooks/auth/zod.auth";
 export default function EditPassword() {
-  const { t, i18n } = useTranslation();
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-  } = useForm<EditPasswordFormData>({
-    resolver: zodResolver(ForgotPassword),
-  });
+  const { t } = useTranslation();
+  const { register, handleSubmit, errors } = useForgotPasswordForm();
 
-  const onSubmit = (data: EditPasswordFormData) => {
+  const onSubmit = (data: ForgotPasswordFormData) => {
     console.log("Form data:", data);
   };
 
@@ -36,7 +27,7 @@ export default function EditPassword() {
           </Label>
           <Input
             {...register("currentPassword")}
-            className="text-gray-400 dark:text-white"
+            className="text-gray-400 dark:text-white bg-white dark:bg-[#535353]"
             id="current-password"
             type="password"
             placeholder="••••••••"
@@ -54,7 +45,7 @@ export default function EditPassword() {
           </Label>
           <Input
             {...register("newPassword")}
-            className="text-gray-400 dark:text-white"
+            className="text-gray-400 dark:text-white bg-white dark:bg-[#535353]"
             id="new-password"
             type="password"
             placeholder="••••••••"
@@ -75,7 +66,7 @@ export default function EditPassword() {
           </Label>
           <Input
             {...register("confirmPassword")}
-            className="text-gray-400 dark:text-white"
+            className="text-gray-400 dark:text-white bg-white dark:bg-[#535353]"
             id="confirm-password"
             type="password"
             placeholder="••••••••"

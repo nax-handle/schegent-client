@@ -1,11 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import LoginSchema from "@/zod/login.schema";
-import { z } from "zod";
-
 import Link from "next/link";
 import { Eye, EyeOff, Mail, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -13,40 +8,17 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
-import { useRouter } from "next/navigation";
-import { useMutation } from "@tanstack/react-query";
-import { login as loginUser } from "@/lib/services/auth";
-
-type LoginFormData = z.infer<typeof LoginSchema>;
+import { useLogin } from "@/hooks/auth/use.auth";
+import { useLoginForm, LoginFormData } from "@/hooks/auth/zod.auth";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useTranslation();
-  const router = useRouter();
+  const { login, isLoggingIn, loginError } = useLogin();
+  const { register, handleSubmit, errors, setValue } = useLoginForm();
 
-  const {
-    register,
-    handleSubmit,
-    formState: { errors },
-    setValue,
-  } = useForm<LoginFormData>({
-    resolver: zodResolver(LoginSchema),
-  });
-
-  const { mutate, isPending, error } = useMutation({
-    mutationFn: (data: LoginFormData) => loginUser({ ...data, type: "email" }),
-    onSuccess: () => {
-      console.log("Đăng nhập thành công");
-      router.push("/calendar");
-    },
-    onError: (err) => {
-      console.error("Lỗi đăng nhập:", err);
-    },
-  });
-
-  const onSubmit = (data: LoginFormData) => {
-    console.log("Form data hợp lệ:", data);
-    mutate(data);
+  const handleLogin = (data: LoginFormData) => {
+    login({ ...data, type: "email" });
   };
 
   const handleChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -66,10 +38,10 @@ export default function Login() {
           </h1>
         </div>
 
-        <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+        <form className="space-y-6">
           <Button
             variant="outline"
-            className="w-full py-6 flex items-center justify-center gap-2 dark:bg-[#3F3F40]"
+            className="w-full py-6 flex items-center justify-center gap-2 dark:bg-[#535353]"
             type="button"
           >
             <svg
@@ -102,7 +74,7 @@ export default function Login() {
 
           <div className="relative flex items-center justify-center">
             <div className="border-t border-gray-200 w-full absolute"></div>
-            <span className="dark:bg-[#363637]  px-4 text-sm dark:text-gray-100 bg-[#FAFAFB] text-gray-400 relative">
+            <span className="dark:bg-[#3F3F40]  px-4 text-sm dark:text-gray-100 bg-[#FAFAFB] text-gray-400 relative">
               {t("OR")}
             </span>
           </div>
@@ -117,7 +89,7 @@ export default function Login() {
                 placeholder={t("Your Email")}
                 {...register("email")}
                 onChange={handleChangeEmail}
-                className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500"
+                className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
               />
             </div>
             {errors.email && (
@@ -134,7 +106,7 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 placeholder={t("Password")}
                 {...register("password")}
-                className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500"
+                className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
               />
               <button
                 type="button"
@@ -154,29 +126,34 @@ export default function Login() {
               <div className="flex items-center space-x-2 pl-1">
                 <Checkbox
                   id="remember"
-                  className="rounded-sm border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+                  className="rounded-sm border-gray-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600 bg-white dark:bg-[#6d6d6d]"
                 />
                 <label htmlFor="remember" className="text-sm text-gray-500">
                   {t("Remember me")}
                 </label>
               </div>
-              <Link href="#" className="text-sm text-blue-500 hover:underline">
+              <Link
+                href="/forgot-password"
+                className="text-sm text-blue-500 hover:underline"
+              >
                 {t("Forgot Password")}?
               </Link>
             </div>
           </div>
 
           <Button
-            disabled={isPending}
-            type="submit"
+            disabled={isLoggingIn}
             className="w-full py-6 bg-[#5052fb] hover:bg-[#5370d1] text-white rounded-xl"
+            onClick={handleSubmit(handleLogin)}
           >
-            {isPending ? t("Loading...") : t("Log In")}
+            {isLoggingIn ? t("Loading...") : t("Log In")}
           </Button>
 
-          {error && (
+          {loginError && (
             <p className="text-xs text-red-500 pl-3 text-center">
-              {error instanceof Error ? error.message : "Something went wrong"}
+              {loginError instanceof Error
+                ? loginError.message
+                : "Something went wrong"}
             </p>
           )}
 
