@@ -1,9 +1,9 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import { HomeProps } from "../instance";
 import colors from "../color-event";
+import events from "@/constant/events";
 
-export default function Week({ events }: HomeProps) {
+export default function Week() {
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
@@ -57,7 +57,10 @@ export default function Week({ events }: HomeProps) {
         </div>
       </div>
 
-      <div className="h-[69vh] relative overflow-y-auto scrollbar-hidden">
+      <div
+        className="relative overflow-y-auto scrollbar-hidden"
+        style={{ height: "calc(100vh - 250px)" }}
+      >
         <div className="absolute left-0 w-20 z-10 h-full">
           {Array.from({ length: 24 }, (_, i) => (
             <div

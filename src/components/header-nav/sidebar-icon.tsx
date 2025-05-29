@@ -1,6 +1,7 @@
+"use client";
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { House, UsersRound, Bell, Settings } from "lucide-react";
+import { UsersRound, Bell, Settings } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faListCheck,
@@ -11,12 +12,12 @@ import {
 export default function SideBarIcon() {
   const pathname = usePathname();
   const router = useRouter();
-  const lastSegment = pathname.split("/").filter(Boolean).pop();
 
   const menuItems = [
     {
-      route: "dashboard",
-      icon: <House />,
+      route: "/",
+      icon: <FontAwesomeIcon icon={faCalendarDays} />,
+      style: "text-2xl",
     },
     {
       route: "tasks",
@@ -26,11 +27,6 @@ export default function SideBarIcon() {
     {
       route: "users",
       icon: <UsersRound />,
-    },
-    {
-      route: "calendar",
-      icon: <FontAwesomeIcon icon={faCalendarDays} />,
-      style: "text-2xl",
     },
     {
       route: "reports",
@@ -49,11 +45,14 @@ export default function SideBarIcon() {
   ];
 
   return (
-    <div className="w-14 py-10 flex justify-center border-r items-center h-[#85vh] rounded-tr-xl">
-      <div className="flex flex-col gap-6">
+    <div
+      className="w-14 py-10 flex justify-center dark:border-white border-r items-center rounded-tr-xl"
+      style={{ height: "calc(100vh - 85px)" }}
+    >
+      <div className="flex flex-col gap-20">
         {menuItems.map((item, index) => {
-          const isActive = lastSegment === item.route;
-
+          const isActive =
+            pathname === item.route || pathname.startsWith(`/${item.route}`);
           return (
             <div
               key={index}

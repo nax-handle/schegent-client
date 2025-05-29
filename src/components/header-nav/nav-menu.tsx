@@ -1,14 +1,14 @@
-import React, { useState } from "react";
+import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { Button } from "../ui/button";
-import { Calendar, CheckSquare } from "lucide-react";
+import { useTranslation } from "react-i18next";
+import "@/../i18n";
 
 interface HeaderProps {
   currentView: "day" | "week" | "month";
   setCurrentView: (view: "day" | "week" | "month") => void;
 }
 export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
-  const [activeTab, setActiveTab] = useState("scheduler");
+  const { t } = useTranslation();
 
   const today = new Date();
   const currentMonth = today.toLocaleString("default", {
@@ -19,7 +19,9 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
   return (
     <div className="flex items-center justify-between border-gray-300   w-full pl-6">
       <div className="flex items-center gap-4">
-        <h1 className="text-md border-2 px-4 py-2 rounded-full ">Today</h1>
+        <h1 className="text-md border-2 px-4 py-2 rounded-full ">
+          {t("Today")}
+        </h1>
         <div className="flex items-center ">
           <button className="p-2 rounded-md hover:bg-gray-100">
             <ChevronLeft className="w-5 h-5" />
@@ -31,37 +33,6 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
         <h1 className="text-2xl font-bold ">
           {currentMonth}, {currentYear}
         </h1>
-      </div>
-      <div className="flex items-center">
-        <div className="hidden md:flex items-center border gap-1 p-1 rounded-lg">
-          <Button
-            variant={activeTab === "scheduler" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("scheduler")}
-            className={`gap-2 ${
-              activeTab === "scheduler"
-                ? "bg-blue-500 text-white hover:bg-blue-400"
-                : "dark:hover:bg-white/10 hover:bg-blue-200"
-            }`}
-          >
-            <Calendar className="h-4 w-4" />
-            Scheduler
-          </Button>
-
-          <Button
-            variant={activeTab === "task" ? "default" : "ghost"}
-            size="sm"
-            onClick={() => setActiveTab("task")}
-            className={`gap-2 ${
-              activeTab === "task"
-                ? "bg-blue-500 text-white hover:bg-blue-400"
-                : "dark:hover:bg-white/10 hover:bg-blue-200"
-            }`}
-          >
-            <CheckSquare className="h-4 w-4" />
-            Tasks
-          </Button>
-        </div>
       </div>
 
       <div className="flex items-center gap-4">
@@ -76,7 +47,7 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
                           }`}
               onClick={() => setCurrentView("day")}
             >
-              Day
+              {t("Day")}
             </button>
             <button
               className={`px-6 py-2 text-ld rounded-lg transition 
@@ -87,7 +58,7 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
                           }`}
               onClick={() => setCurrentView("week")}
             >
-              Week
+              {t("Week")}
             </button>
 
             <button
@@ -99,7 +70,7 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
                           }`}
               onClick={() => setCurrentView("month")}
             >
-              Month
+              {t("Month")}
             </button>
           </div>
         </div>

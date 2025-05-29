@@ -1,26 +1,9 @@
 "use client";
-
-import { usePathname, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Globe, Check } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 
-const languages = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "vi", name: "Tiếng Việt", flag: "🇻🇳" },
-];
-
 export default function LanguageSwitcher() {
   const { i18n } = useTranslation();
-  const pathname = usePathname();
-  const router = useRouter();
   const isEnglish = i18n.language === "en";
   const setIsEnglish = (value: boolean) => {
     if (value) {
@@ -30,25 +13,14 @@ export default function LanguageSwitcher() {
     }
   };
 
-  const currentLang = i18n.language;
-  const currentLanguage = languages.find((lang) => lang.code === currentLang);
-
-  const switchLanguage = (newLang: string) => {
-    i18n.changeLanguage(newLang);
-    const segments = pathname.split("/");
-
-    if (languages.some((lang) => lang.code === segments[1])) {
-      segments[1] = newLang;
-    }
-
-    const newPath = segments.join("/");
-    router.push(newPath);
-  };
-
   return (
     <div className="flex items-center gap-4">
       <div
-        className="relative w-21 h-10 bg-gray-300 rounded-full cursor-pointer transition-all duration-300 shadow-inner"
+        className={`relative w-21 h-10 rounded-full cursor-pointer transition-all duration-300 shadow-inner bg-cover bg-center ${
+          isEnglish
+            ? "bg-[url('/images/Flag_of_the_United_Kingdom.png')]"
+            : "bg-[url('/images/Flag_of_Vietnam.png')]"
+        }`}
         onClick={() => setIsEnglish(!isEnglish)}
       >
         <div
@@ -57,7 +29,6 @@ export default function LanguageSwitcher() {
           }`}
         >
           {isEnglish ? (
-            // UK Flag
             <div className="w-8 h-6 rounded-full overflow-hidden">
               <svg viewBox="0 0 60 30" className="w-full h-full">
                 <clipPath id="uk-flag">

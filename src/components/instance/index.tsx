@@ -9,12 +9,17 @@ export interface HomeProps {
 }
 
 export interface UserType {
+  id: string;
   name: string;
   username: string;
   email: string;
   phone: string | null;
-  avatar_url: string | null;
-  gender: 0 | 1 | 2;
-  date_of_birth: string | null;
+  avatarUrl: string | null;
+  gender: string | null;
+  dateOfBirth: string | null;
   address: string | null;
+  isActive: string | true;
+  lastLogin: string | null;
+  createdAt: string;
+  updatedAt: string;
 }

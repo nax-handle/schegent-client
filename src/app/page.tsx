@@ -1,5 +1,6 @@
 import React from "react";
 import type { Metadata } from "next";
+import Calendar from "./calendar/page";
 
 export const metadata: Metadata = {
   title: "Calendar App",
@@ -7,5 +8,9 @@ export const metadata: Metadata = {
 };
 
 export default function Home() {
-  return <div></div>;
+  return (
+    <div>
+      <Calendar />
+    </div>
+  );
 }
