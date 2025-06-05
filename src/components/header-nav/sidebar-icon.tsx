@@ -1,13 +1,9 @@
 "use client";
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { UsersRound, Bell, Settings } from "lucide-react";
+import { UsersRound, Bell, Settings, CalendarClock, House } from "lucide-react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import {
-  faListCheck,
-  faCalendarDays,
-  faChartSimple,
-} from "@fortawesome/free-solid-svg-icons";
+import { faListCheck, faChartSimple } from "@fortawesome/free-solid-svg-icons";
 
 export default function SideBarIcon() {
   const pathname = usePathname();
@@ -16,7 +12,12 @@ export default function SideBarIcon() {
   const menuItems = [
     {
       route: "/",
-      icon: <FontAwesomeIcon icon={faCalendarDays} />,
+      icon: <House />,
+      style: "text-2xl",
+    },
+    {
+      route: "events",
+      icon: <CalendarClock />,
       style: "text-2xl",
     },
     {
@@ -49,7 +50,7 @@ export default function SideBarIcon() {
       className="w-14 py-10 flex justify-center dark:border-white border-r items-center rounded-tr-xl"
       style={{ height: "calc(100vh - 85px)" }}
     >
-      <div className="flex flex-col gap-20">
+      <div className="flex flex-col gap-15">
         {menuItems.map((item, index) => {
           const isActive =
             pathname === item.route || pathname.startsWith(`/${item.route}`);

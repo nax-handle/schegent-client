@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { UserType } from "../instance";
+import { UserType } from "../../types";
 
 export default function EditProfile({ user }: { user: UserType }) {
   const { t } = useTranslation();
@@ -82,7 +82,7 @@ export default function EditProfile({ user }: { user: UserType }) {
           <RadioGroup
             value={(editedUser.gender ?? 0).toString()}
             onValueChange={(value) =>
-              handleChange("gender", Number.parseInt(value) as 0 | 1 | 2)
+              handleChange("gender", value as "0" | "1" | "2")
             }
             className="flex gap-4 text-black dark:text-white"
           >

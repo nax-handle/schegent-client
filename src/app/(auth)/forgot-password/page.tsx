@@ -67,7 +67,8 @@ export default function ForgotPassword() {
 
               <Button
                 type="submit"
-                className="w-full py-6 bg-[#3e41f7] hover:bg-[#5355d1] text-white rounded-xl"
+                variant={"decorate"}
+                className="py-6"
                 disabled={!email}
               >
                 {t("Continue")}

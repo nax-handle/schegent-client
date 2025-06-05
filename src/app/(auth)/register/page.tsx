@@ -198,7 +198,8 @@ export default function CreateAccount() {
                 type="button"
                 onClick={handleSubmit(handleRegister)}
                 disabled={isRegistering}
-                className="w-full py-6 bg-[#3e41f7] hover:bg-[#5355d1] text-white rounded-xl"
+                variant={"decoder"}
+                className="py-6"
               >
                 {isRegistering ? t("Loading...") : t("Continue")}
               </Button>

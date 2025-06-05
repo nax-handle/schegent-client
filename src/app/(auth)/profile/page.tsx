@@ -10,7 +10,7 @@ import EditProfile from "@/components/auth/edit-profile";
 import EditPassword from "@/components/auth/edit-password";
 import Profile from "@/components/auth/profile";
 import { useProfile } from "@/hooks/auth/use.auth";
-import { UserType } from "@/components/instance";
+import { UserType } from "@/types";
 
 export default function ProfilePage() {
   const { t } = useTranslation();
