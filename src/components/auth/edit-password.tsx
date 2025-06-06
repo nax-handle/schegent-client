@@ -7,6 +7,7 @@ import {
   useForgotPasswordForm,
   ForgotPasswordFormData,
 } from "@/hooks/auth/zod.auth";
+import { Button } from "../ui/button";
 export default function EditPassword() {
   const { t } = useTranslation();
   const { register, handleSubmit, errors } = useForgotPasswordForm();
@@ -78,12 +79,13 @@ export default function EditPassword() {
           )}
         </div>
       </div>
-      <button
+      <Button
         type="submit"
-        className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200"
+        variant={"decoder"}
+        className=" py-3 transition-colors duration-200"
       >
         {t("Update Password")}
-      </button>
+      </Button>
     </form>
   );
 }

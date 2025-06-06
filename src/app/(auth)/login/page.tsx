@@ -143,7 +143,8 @@ export default function Login() {
 
           <Button
             disabled={isLoggingIn}
-            className="w-full py-6 bg-[#5052fb] hover:bg-[#5370d1] text-white rounded-xl"
+            variant={"decorate"}
+            className="py-6"
             onClick={handleSubmit(handleLogin)}
           >
             {isLoggingIn ? t("Loading...") : t("Log In")}

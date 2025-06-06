@@ -1,6 +1,6 @@
 import React from "react";
 import { Calendar, Mail, MapPin, Phone, User } from "lucide-react";
-import { UserType } from "../instance";
+import { UserType } from "../../types";
 import { format } from "date-fns";
 
 export default function Profile({ user }: { user: UserType }) {

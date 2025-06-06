@@ -225,4 +225,12 @@ export async function revokeSession(data: RevokeSessionData): Promise<void> {
       "x-session-id": data.sessionId,
     },
   });
+  if (isClient) {
+    const currentSessionId = localStorage.getItem("sessionId");
+    if (currentSessionId === data.sessionId) {
+      Cookies.remove("accessToken");
+      Cookies.remove("refreshToken");
+      localStorage.removeItem("sessionId");
+    }
+  }
 }

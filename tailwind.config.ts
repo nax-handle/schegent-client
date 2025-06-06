@@ -1,14 +1,16 @@
 import type { Config } from "tailwindcss";
+import animatePlugin from "tailwindcss-animate";
 
 const config = {
-  // darkMode: ["class"],
+  darkMode: "class",
   content: [
-    "./pages/**/*.{ts,tsx}",
-    "./components/**/*.{ts,tsx}",
     "./app/**/*.{ts,tsx}",
-    "./*.{ts,tsx}",
-    "*.{js,ts,jsx,tsx,mdx}",
+    "./components/**/*.{ts,tsx}",
+    "./pages/**/*.{ts,tsx}",
+    "./src/**/*.{ts,tsx}",
+    "node_modules/@shadcn/ui/**/*.{js,ts,jsx,tsx}",
   ],
+
   prefix: "",
   theme: {
     container: {
@@ -75,7 +77,7 @@ const config = {
       },
     },
   },
-  // plugins: [require("tailwindcss-animate")],
+  plugins: [animatePlugin],
 } satisfies Config;
 
 export default config;

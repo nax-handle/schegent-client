@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { MenuIcon } from "lucide-react";
 import { Button } from "../ui/button";
 import Image from "next/image";
@@ -18,7 +18,7 @@ import { useMutation } from "@tanstack/react-query";
 import { logout as logoutUser } from "@/lib/services/auth";
 import ToggleTheme from "../theme/toggle-theme";
 import Link from "next/link";
-import ToggleLanguage from "../language/toggle-language";
+import LanguageSwitcher from "../language/toggle-language";
 import { useProfile } from "@/hooks/auth/use.auth";
 
 interface MenuProps {
@@ -30,6 +30,7 @@ export default function Header({ menuOpen, setMenuOpen }: MenuProps) {
   const { t } = useTranslation();
   const router = useRouter();
   const { data } = useProfile();
+  const [profileMenuOpen, setProfileMenuOpen] = useState(false);
 
   const { mutate: logout } = useMutation({
     mutationFn: logoutUser,
@@ -67,10 +68,8 @@ export default function Header({ menuOpen, setMenuOpen }: MenuProps) {
           <Search className="h-5 w-5" />
         </Button>
 
-        {/* Notifications */}
-
         {/* Profile Menu */}
-        <DropdownMenu>
+        <DropdownMenu open={profileMenuOpen} onOpenChange={setProfileMenuOpen}>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="relative h-10 w-10 rounded-full">
               <Avatar className="h-10 w-10">
@@ -102,6 +101,14 @@ export default function Header({ menuOpen, setMenuOpen }: MenuProps) {
               <User className="mr-2 h-4 w-4" />
               <Link href={"/profile"}>{t("Profile")}</Link>
             </DropdownMenuItem>
+            <DropdownMenu
+              open={profileMenuOpen}
+              onOpenChange={setProfileMenuOpen}
+            >
+              <LanguageSwitcher
+                onLanguageSelect={() => setProfileMenuOpen(false)}
+              />
+            </DropdownMenu>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <LogOut className="mr-2 h-4 w-4" />
@@ -111,7 +118,6 @@ export default function Header({ menuOpen, setMenuOpen }: MenuProps) {
         </DropdownMenu>
 
         <ToggleTheme />
-        <ToggleLanguage />
       </div>
     </div>
   );

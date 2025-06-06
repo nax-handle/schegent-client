@@ -1,7 +1,7 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import events from "@/constant/events";
-import colors from "../color-event";
+import { colors } from "@/lib/constants/constants";
 import LunarJS from "lunar-javascript";
 
 export default function Month() {
