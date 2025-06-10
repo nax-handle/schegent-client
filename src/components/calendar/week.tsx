@@ -1,6 +1,6 @@
 import React from "react";
-import { cn } from "@/lib/utils";
-import { colors } from "@/lib/constants/constants";
+import { cn } from "@/lib/config/utils";
+import { colors } from "@/utils";
 import events from "@/constant/events";
 
 export default function Week() {

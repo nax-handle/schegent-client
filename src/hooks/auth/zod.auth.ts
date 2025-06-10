@@ -1,6 +1,6 @@
-import RegisterSchema from "@/zod/register.schema";
-import LoginSchema from "@/zod/login.schema";
-import ForgotPasswordSchema from "@/zod/forgot-password.schema";
+import RegisterSchema from "@/zod/auth/register.schema";
+import LoginSchema from "@/zod/auth/login.schema";
+import ForgotPasswordSchema from "@/zod/auth/forgot-password.schema";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";

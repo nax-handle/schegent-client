@@ -1,6 +1,5 @@
 "use client";
-
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   DragDropContext,
   Droppable,
@@ -18,23 +17,21 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import type { Event, EventType } from "@/types";
+import type { Event, Calendar } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
-
-const initialEventTypes: EventType[] = [
-  { id: "1", name: "Họp team", color: "bg-blue-500" },
-  { id: "2", name: "Đào tạo", color: "bg-green-500" },
-  { id: "3", name: "Dự án", color: "bg-purple-500" },
-  { id: "4", name: "Cá nhân", color: "bg-orange-500" },
-];
+import {
+  useGetAllCalendars,
+  useDeleteCalendar,
+} from "@/hooks/calendar/use.calendar";
+import { getPriorityColor } from "@/utils";
 
 const initialEvents: Event[] = [
   {
     id: "1",
     title: "Họp team hàng tuần",
     description: "Họp review công việc tuần",
-    eventTypeId: "1",
+    eventTypeId: "8aa01e9-6916-4fb3-8600-0c67ec1a2557",
     priority: "medium",
     startDate: "2024-12-25",
     startTime: "09:00",
@@ -47,50 +44,28 @@ const initialEvents: Event[] = [
     reminders: [15, 60],
     status: "accepted",
   },
-  {
-    id: "2",
-    title: "Đào tạo React",
-    description: "Khóa học React cơ bản",
-    eventTypeId: "2",
-    priority: "high",
-    startDate: "2024-12-26",
-    startTime: "14:00",
-    duration: 120,
-    participants: ["Lê Văn C"],
-    attachments: [],
-    notes: "Chuẩn bị tài liệu học tập",
-    isRecurring: false,
-    reminders: [30],
-    status: "pending",
-  },
-  {
-    id: "3",
-    title: "Viết báo cáo",
-    description: "Hoàn thành báo cáo tháng",
-    eventTypeId: null,
-    priority: "low",
-    startDate: "2024-12-27",
-    startTime: "10:00",
-    duration: 180,
-    participants: [],
-    attachments: [],
-    notes: "",
-    isRecurring: false,
-    reminders: [],
-    status: "pending",
-  },
 ];
 
 export default function EventManagement() {
   const { t } = useTranslation();
-  const [eventTypes, setEventTypes] = useState<EventType[]>(initialEventTypes);
+  const [eventTypes, setEventTypes] = useState<Calendar[]>([]);
   const [events, setEvents] = useState<Event[]>(initialEvents);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [isEventTypeDialogOpen, setIsEventTypeDialogOpen] = useState(false);
-  const [editingEventType, setEditingEventType] = useState<EventType | null>(
+  const [editingEventType, setEditingEventType] = useState<Calendar | null>(
     null
   );
+  const { data, isLoading, error } = useGetAllCalendars();
+  const { deleteCalendar } = useDeleteCalendar();
+
+  useEffect(() => {
+    if (data) {
+      setEventTypes(data);
+      console.log("Fetched event types:", data);
+      console.log("Color:", data[0]?.colorId);
+    }
+  }, [data]);
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
@@ -162,16 +137,25 @@ export default function EventManagement() {
     setEvents(events.filter((event) => event.id !== eventId));
   };
 
-  const handleCreateEventType = (eventTypeData: Partial<EventType>) => {
-    const newEventType: EventType = {
+  const handleDeleteEventType = (eventTypeId: string) => {
+    setEvents(events.filter((event) => event.eventTypeId !== eventTypeId));
+    setEventTypes(eventTypes.filter((type) => type.id !== eventTypeId));
+    deleteCalendar(eventTypeId);
+  };
+
+  const handleCreateEventType = (eventTypeData: Partial<Calendar>) => {
+    const newEventType: Calendar = {
       id: Date.now().toString(),
       name: eventTypeData.name || "",
-      color: eventTypeData.color || "bg-gray-500",
+      colorId: eventTypeData.colorId || "bg-gray-500",
+      description: eventTypeData.description || "",
+      isPrimary: eventTypeData.isPrimary || false,
+      isShared: eventTypeData.isShared || false,
     };
     setEventTypes([...eventTypes, newEventType]);
   };
 
-  const handleUpdateEventType = (eventTypeData: Partial<EventType>) => {
+  const handleUpdateEventType = (eventTypeData: Partial<Calendar>) => {
     if (!editingEventType) return;
 
     setEventTypes(
@@ -182,38 +166,17 @@ export default function EventManagement() {
     setEditingEventType(null);
   };
 
-  const handleDeleteEventType = (eventTypeId: string) => {
-    setEventTypes(eventTypes.filter((type) => type.id !== eventTypeId));
-    // Move events of this type to "Việc cần làm"
-    setEvents(
-      events.map((event) =>
-        event.eventTypeId === eventTypeId
-          ? { ...event, eventTypeId: null }
-          : event
-      )
-    );
-  };
-
-  const getPriorityColor = (priority: string) => {
-    switch (priority) {
-      case "high":
-        return "bg-red-500";
-      case "medium":
-        return "bg-yellow-500";
-      case "low":
-        return "bg-green-500";
-      default:
-        return "bg-gray-500";
-    }
-  };
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Không thể tải lịch</div>;
+  if (!eventTypes) return <div>Không có thông tin lịch</div>;
 
   return (
     <div
-      className=" p-6 overflow-y-scroll scrollbar-hidden border-none"
-      style={{ maxHeight: "calc(100vh - 85px)" }}
+      className=" p-6 overflow-y-scroll scrollbar-hidden border-none dark:bg-slate-900 bg-slate-50 "
+      style={{ height: "calc(100vh - 85px)" }}
     >
       <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-center mb-6">
+        <div className="md:flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold dark:text-white text-black">
               {t("Event Management")}
@@ -241,7 +204,7 @@ export default function EventManagement() {
                 className="flex flex-wrap gap-6 items-start"
               >
                 {/* Việc cần làm column */}
-                <div className="dark:bg-slate-800 bg-[#F1F2F4] border border-gray-200 dark:border-slate-900 rounded-lg p-4 w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)]">
+                <div className="dark:bg-slate-800 bg-[#fcfdff] border border-gray-200 dark:border-slate-900 rounded-lg p-4 w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)]">
                   <div className="flex items-center justify-between mb-4">
                     <h2 className="text-lg font-semibold dark:text-white">
                       {t("Work to be done")}
@@ -316,6 +279,7 @@ export default function EventManagement() {
                   </Button>
                 </div>
 
+                {/* List Calendar type*/}
                 {eventTypes.map((eventType, columnIndex) => (
                   <Draggable
                     key={eventType.id}
@@ -326,7 +290,7 @@ export default function EventManagement() {
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className="dark:bg-slate-800 bg-[#F1F2F4] rounded-lg p-4 w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] "
+                        className="dark:bg-slate-800 bg-[#fcfdff] border border-gray-200 rounded-lg p-4 w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] "
                       >
                         <div
                           className="flex items-center justify-between mb-4"
@@ -334,7 +298,8 @@ export default function EventManagement() {
                         >
                           <div className="flex items-center gap-2">
                             <div
-                              className={`w-3 h-3 rounded-full ${eventType.color}`}
+                              className="w-3 h-3 rounded-full"
+                              style={{ backgroundColor: eventType.colorId }}
                             />
                             <h2 className="text-lg font-semibold dark:text-white">
                               {eventType.name}
@@ -374,7 +339,10 @@ export default function EventManagement() {
                           </DropdownMenu>
                         </div>
 
-                        <Droppable droppableId={eventType.id} type="event">
+                        <Droppable
+                          droppableId={eventType.id ?? ""}
+                          type="event"
+                        >
                           {(provided) => (
                             <div
                               ref={provided.innerRef}
@@ -450,10 +418,9 @@ export default function EventManagement() {
             setIsEventTypeDialogOpen(false);
             setEditingEventType(null);
           }}
-          onSave={
-            editingEventType ? handleUpdateEventType : handleCreateEventType
-          }
           eventType={editingEventType}
+          handleCreateEventType={handleCreateEventType}
+          handleUpdateEventType={handleUpdateEventType}
         />
       </div>
     </div>

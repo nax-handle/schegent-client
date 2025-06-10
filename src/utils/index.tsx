@@ -21,6 +21,17 @@ export const colors = [
   "border-l-emerald-500 bg-emerald-100 bg-opacity-20 dark:bg-emerald-300",
 ];
 
+export const colorOptions = [
+  { name: "Xanh dương", value: "bg-blue-500" },
+  { name: "Xanh lá", value: "bg-green-500" },
+  { name: "Tím", value: "bg-purple-500" },
+  { name: "Cam", value: "bg-orange-500" },
+  { name: "Đỏ", value: "bg-red-500" },
+  { name: "Vàng", value: "bg-yellow-500" },
+  { name: "Hồng", value: "bg-pink-500" },
+  { name: "Xám", value: "bg-gray-500" },
+];
+
 export const getPriorityColor = (priority: string) => {
   switch (priority) {
     case "high":
@@ -44,36 +55,5 @@ export const getPriorityText = (priority: string) => {
       return "Thấp";
     default:
       return "Trung bình";
-  }
-};
-
-type Reminder = {
-  datetime: string | Date;
-  [key: string]: unknown;
-};
-
-type Task = {
-  createdAt: string | Date;
-  dueDate?: string | Date;
-  reminders: Reminder[];
-  [key: string]: unknown;
-};
-
-export function loadTasksFromStorage(): Task[] {
-  const tasks = JSON.parse(localStorage.getItem("tasks") || "[]");
-  return tasks.map((task: any) => ({
-    id: task.id,
-    title: task.title,
-    description: task.description,
-    priority: task.priority,
-    completed: task.completed,
-    createdAt: task.createdAt ? new Date(task.createdAt) : new Date(),
-    reminders: task.reminders || [],
-  }));
-}
-
-export const saveTasksToStorage = (tasks: unknown[]) => {
-  if (typeof window !== "undefined") {
-    localStorage.setItem("tasks", JSON.stringify(tasks));
   }
 };

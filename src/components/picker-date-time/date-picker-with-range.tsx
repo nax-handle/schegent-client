@@ -6,7 +6,7 @@ import { CalendarIcon } from "lucide-react";
 import { DateRange } from "react-day-picker";
 import { isBefore, startOfDay } from "date-fns";
 
-import { cn } from "@/lib/utils";
+import { cn } from "@/lib/config/utils";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {

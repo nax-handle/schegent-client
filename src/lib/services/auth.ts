@@ -79,10 +79,9 @@ const API_ENDPOINTS = {
   LOGIN: "/auth/login",
   LOGOUT: "/auth/logout",
   GET_USER: "/auth",
-  REFRESH: "/auth/refresh",
-  REVOKE_ALL_SESSIONS: "/auth/revoke-all-sessions",
-  REVOKE_SESSION: "/auth/revoke-session",
-  SESSIONS: "/auth/sessions",
+  REVOKE_ALL_SESSIONS: "/auth/session/revoke-all-sessions",
+  REVOKE_SESSION: "/auth/session/revoke-session",
+  SESSIONS: "/auth/session/sessions",
 } as const;
 
 const TOKEN_EXPIRY = 7;
@@ -108,22 +107,12 @@ export async function verify(data: VerifyData): Promise<AuthResponse> {
 
 export async function login(data: LoginData): Promise<AuthResponse> {
   try {
-    console.log("Attempting login with data:", {
-      ...data,
-      password: "[REDACTED]",
-    });
     const { data: response } = await axiosInstance.post<AuthResponse>(
       API_ENDPOINTS.LOGIN,
       data
     );
-    console.log("Login successful:", {
-      user: response.data,
-    });
     if (isClient) {
       Cookies.set("accessToken", response.data.accessToken, {
-        expires: TOKEN_EXPIRY,
-      });
-      Cookies.set("refreshToken", response.data.refreshToken, {
         expires: TOKEN_EXPIRY,
       });
       localStorage.setItem("sessionId", response.data.sessionId);
@@ -136,36 +125,32 @@ export async function login(data: LoginData): Promise<AuthResponse> {
 }
 
 export async function logout(): Promise<void> {
-  await axiosInstance.post(API_ENDPOINTS.LOGOUT);
+  const token = getAuthToken();
+  const sessionID = localStorage.getItem("sessionId");
+  console.log("Logging out with token:", token, "and session ID:", sessionID);
+  await axiosInstance.post(
+    API_ENDPOINTS.LOGOUT,
+    {
+      sessionId: "user@example.com",
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-session-id": sessionID,
+      },
+    }
+  );
   if (isClient) {
     Cookies.remove("accessToken");
-    Cookies.remove("refreshToken");
     localStorage.removeItem("sessionId");
   }
-}
-
-export async function refreshToken(): Promise<AuthResponse> {
-  const refreshToken = Cookies.get("refreshToken");
-  const { data: response } = await axiosInstance.post<AuthResponse>(
-    API_ENDPOINTS.REFRESH,
-    { refreshToken }
-  );
-  if (isClient && response.data.accessToken) {
-    Cookies.set("accessToken", response.data.accessToken, {
-      expires: TOKEN_EXPIRY,
-    });
-    Cookies.set("refreshToken", response.data.refreshToken, {
-      expires: TOKEN_EXPIRY,
-    });
-    localStorage.setItem("sessionId", response.data.sessionId);
-  }
-  return response;
 }
 
 export function isAuthenticated(): boolean {
   return isClient ? !!Cookies.get("accessToken") : false;
 }
 
+// Profile
 export async function getCurrentUser(): Promise<UserResponse> {
   const token = getAuthToken();
   const sessionID = localStorage.getItem("sessionId");
@@ -198,7 +183,6 @@ export async function revokeAllSessions(): Promise<void> {
   );
 
   Cookies.remove("accessToken");
-  Cookies.remove("refreshToken");
   localStorage.removeItem("sessionId");
 }
 
@@ -229,7 +213,6 @@ export async function revokeSession(data: RevokeSessionData): Promise<void> {
     const currentSessionId = localStorage.getItem("sessionId");
     if (currentSessionId === data.sessionId) {
       Cookies.remove("accessToken");
-      Cookies.remove("refreshToken");
       localStorage.removeItem("sessionId");
     }
   }

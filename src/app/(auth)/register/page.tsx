@@ -198,7 +198,7 @@ export default function CreateAccount() {
                 type="button"
                 onClick={handleSubmit(handleRegister)}
                 disabled={isRegistering}
-                variant={"decoder"}
+                variant={"default"}
                 className="py-6"
               >
                 {isRegistering ? t("Loading...") : t("Continue")}

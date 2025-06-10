@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { colors } from "@/lib/constants/constants";
+import { colors } from "@/utils";
 import events from "@/constant/events";
 
 export default function Day() {

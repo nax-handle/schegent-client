@@ -22,7 +22,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (data) {
       setUser(data);
-      console.log("User data:", data);
       setEditedUser(data);
     }
   }, [data]);

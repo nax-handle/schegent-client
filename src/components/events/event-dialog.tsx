@@ -14,7 +14,7 @@ import {
 } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { X, Plus, Upload } from "lucide-react";
-import type { Event, EventType } from "@/types";
+import type { Event, Calendar } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import TimePicker from "@/components/picker-date-time/time-picker";
@@ -25,7 +25,7 @@ interface EventDialogProps {
   onClose: () => void;
   onSave: (event: Partial<Event>) => void;
   event?: Event | null;
-  eventTypes: EventType[];
+  eventTypes: Calendar[];
 }
 
 export function EventDialog({
@@ -176,9 +176,11 @@ export function EventDialog({
                 <SelectContent>
                   <SelectItem value="none">{t("Work to be done")}</SelectItem>
                   {eventTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
+                    <SelectItem key={type.colorId} value={type.colorId}>
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${type.color}`} />
+                        <div
+                          className={`w-3 h-3 rounded-full ${type.colorId}`}
+                        />
                         {type.name}
                       </div>
                     </SelectItem>

@@ -43,10 +43,31 @@ export interface Event {
   invitedBy?: string;
 }
 
-export interface EventType {
+export interface SendCalendar {
+  name: string;
+  description: string;
+  colorId: string;
+  isPrimary: boolean;
+  isShared: boolean;
+}
+
+export interface Calendar {
   id: string;
   name: string;
-  color: string;
+  description: string;
+  colorId: string;
+  isPrimary: boolean;
+  isShared: boolean;
+}
+export interface ResponseCalendar {
+  data: {
+    id: string;
+    name: string;
+    description: string;
+    colorId: string;
+    isPrimary: boolean;
+    isShared: boolean;
+  }[];
 }
 
 export interface Reminder {
