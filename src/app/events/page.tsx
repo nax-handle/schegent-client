@@ -1,71 +1,44 @@
 "use client";
 import { useState, useEffect } from "react";
-import {
-  DragDropContext,
-  Droppable,
-  Draggable,
-  DropResult,
-} from "@hello-pangea/dnd";
+import { DropResult } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
-import { Plus, MoreHorizontal } from "lucide-react";
-import { EventCard } from "@/components/events/event-card";
+import { Plus } from "lucide-react";
 import { EventDialog } from "@/components/events/event-dialog";
 import { EventTypeDialog } from "@/components/events/event-type-dialog";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import type { Event, Calendar } from "@/types";
+import type { Event, Calendar, SendEvent } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import {
   useGetAllCalendars,
   useDeleteCalendar,
 } from "@/hooks/calendar/use.calendar";
-import { getPriorityColor } from "@/utils";
-
-const initialEvents: Event[] = [
-  {
-    id: "1",
-    title: "Họp team hàng tuần",
-    description: "Họp review công việc tuần",
-    eventTypeId: "8aa01e9-6916-4fb3-8600-0c67ec1a2557",
-    priority: "medium",
-    startDate: "2024-12-25",
-    startTime: "09:00",
-    duration: 60,
-    participants: ["Nguyễn Văn A", "Trần Thị B"],
-    attachments: ["Thảo luận về tiến độ dự án.pdf"],
-    notes: "Thảo luận về tiến độ dự án",
-    isRecurring: true,
-    recurringType: "weekly",
-    reminders: [15, 60],
-    status: "accepted",
-  },
-];
+import EventManager from "@/components/events/event-manager";
+import { useGetAllEvents } from "@/hooks/calendar/use.events";
 
 export default function EventManagement() {
   const { t } = useTranslation();
   const [eventTypes, setEventTypes] = useState<Calendar[]>([]);
-  const [events, setEvents] = useState<Event[]>(initialEvents);
+  const [events, setEvents] = useState<Event[]>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [calendarID, setCalendarID] = useState<string>("");
   const [isEventTypeDialogOpen, setIsEventTypeDialogOpen] = useState(false);
+  const { data, isLoading } = useGetAllCalendars();
+  const { data: dataEvents, isLoading: loadingEvents } = useGetAllEvents();
+
+  const { deleteCalendar } = useDeleteCalendar();
   const [editingEventType, setEditingEventType] = useState<Calendar | null>(
     null
   );
-  const { data, isLoading, error } = useGetAllCalendars();
-  const { deleteCalendar } = useDeleteCalendar();
 
   useEffect(() => {
     if (data) {
       setEventTypes(data);
-      console.log("Fetched event types:", data);
-      console.log("Color:", data[0]?.colorId);
     }
-  }, [data]);
+    if (dataEvents) {
+      setEvents(dataEvents);
+    }
+  }, [data, dataEvents]);
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
@@ -98,26 +71,27 @@ export default function EventManagement() {
   };
 
   const getEventsByType = (eventTypeId: string | null) => {
-    return events.filter((event) => event.eventTypeId === eventTypeId);
+    return events.filter((event) => event.calendarId === eventTypeId);
   };
 
-  const handleCreateEvent = (eventData: Partial<Event>) => {
+  const handleCreateEvent = (eventData: Partial<SendEvent>) => {
     const newEvent: Event = {
       id: Date.now().toString(),
       title: eventData.title || "",
       description: eventData.description || "",
-      eventTypeId: eventData.eventTypeId || null,
+      location: eventData.location || null,
+      startTime: eventData.startTime || new Date().toISOString(),
+      endTime: eventData.endTime || new Date().toISOString(),
+      hangoutLink: eventData.hangoutLink || null,
+      recurrence: eventData.recurrence || "",
+      icon: eventData.icon || null,
+      visibility: eventData.visibility || "default",
+      status: eventData.status || "confirmed",
       priority: eventData.priority || "medium",
-      startDate: eventData.startDate || new Date().toISOString().split("T")[0],
-      startTime: eventData.startTime || "09:00",
-      duration: eventData.duration || 60,
-      participants: eventData.participants || [],
-      attachments: eventData.attachments || [],
-      notes: eventData.notes || "",
-      isRecurring: eventData.isRecurring || false,
-      recurringType: eventData.recurringType,
-      reminders: eventData.reminders || [],
-      status: "pending",
+      eventCategory: eventData.eventCategory || "general",
+      colorId: eventData.colorId || "bg-gray-500",
+      isAllDay: eventData.isAllDay || false,
+      calendarId: calendarID || "",
     };
     setEvents([...events, newEvent]);
   };
@@ -138,7 +112,7 @@ export default function EventManagement() {
   };
 
   const handleDeleteEventType = (eventTypeId: string) => {
-    setEvents(events.filter((event) => event.eventTypeId !== eventTypeId));
+    setEvents(events.filter((event) => event.id !== eventTypeId));
     setEventTypes(eventTypes.filter((type) => type.id !== eventTypeId));
     deleteCalendar(eventTypeId);
   };
@@ -166,8 +140,9 @@ export default function EventManagement() {
     setEditingEventType(null);
   };
 
-  if (isLoading) return <div>Loading...</div>;
-  if (error) return <div>Không thể tải lịch</div>;
+  if (isLoading || loadingEvents) {
+    return <div>Đang tải dữ liệu...</div>;
+  }
   if (!eventTypes) return <div>Không có thông tin lịch</div>;
 
   return (
@@ -195,213 +170,21 @@ export default function EventManagement() {
           </Button>
         </div>
 
-        <DragDropContext onDragEnd={handleDragEnd}>
-          <Droppable droppableId="columns" direction="horizontal" type="column">
-            {(provided) => (
-              <div
-                ref={provided.innerRef}
-                {...provided.droppableProps}
-                className="flex flex-wrap gap-6 items-start"
-              >
-                {/* Việc cần làm column */}
-                <div className="dark:bg-slate-800 bg-[#fcfdff] border border-gray-200 dark:border-slate-900 rounded-lg p-4 w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)]">
-                  <div className="flex items-center justify-between mb-4">
-                    <h2 className="text-lg font-semibold dark:text-white">
-                      {t("Work to be done")}
-                    </h2>
-                    {/* menu setting*/}
-
-                    {/*<DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="text-black hover:bg-gray-200 dark:text-slate-400 dark:hover:text-white dark:hover:bg-slate-700"
-                        >
-                          <MoreHorizontal className="w-4 h-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent>
-                        <DropdownMenuItem
-                          onClick={() => setIsEventDialogOpen(true)}
-                        >
-                          <span></span>
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu> */}
-                  </div>
-
-                  <Droppable droppableId="no-type" type="event">
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.droppableProps}
-                        className="space-y-3 min-h-[20px] h-auto"
-                      >
-                        {getEventsByType(null).map((event, index) => (
-                          <Draggable
-                            key={event.id}
-                            draggableId={event.id}
-                            index={index}
-                          >
-                            {(provided) => (
-                              <div
-                                className="h-fit"
-                                ref={provided.innerRef}
-                                {...provided.draggableProps}
-                                {...provided.dragHandleProps}
-                              >
-                                <EventCard
-                                  event={event}
-                                  onEdit={() => {
-                                    setSelectedEvent(event);
-                                    setIsEventDialogOpen(true);
-                                  }}
-                                  onDelete={() => handleDeleteEvent(event.id)}
-                                  getPriorityColor={getPriorityColor}
-                                />
-                              </div>
-                            )}
-                          </Draggable>
-                        ))}
-                        {provided.placeholder}
-                      </div>
-                    )}
-                  </Droppable>
-
-                  <Button
-                    variant="ghost"
-                    className="w-full mt-3  dark:hover:text-white text-black dark:text-white dark:hover:bg-slate-700 hover:bg-slate-200"
-                    onClick={() => setIsEventDialogOpen(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t("Add Event")}
-                  </Button>
-                </div>
-
-                {/* List Calendar type*/}
-                {eventTypes.map((eventType, columnIndex) => (
-                  <Draggable
-                    key={eventType.id}
-                    draggableId={`column-${eventType.id}`}
-                    index={columnIndex}
-                  >
-                    {(provided) => (
-                      <div
-                        ref={provided.innerRef}
-                        {...provided.draggableProps}
-                        className="dark:bg-slate-800 bg-[#fcfdff] border border-gray-200 rounded-lg p-4 w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] "
-                      >
-                        <div
-                          className="flex items-center justify-between mb-4"
-                          {...provided.dragHandleProps}
-                        >
-                          <div className="flex items-center gap-2">
-                            <div
-                              className="w-3 h-3 rounded-full"
-                              style={{ backgroundColor: eventType.colorId }}
-                            />
-                            <h2 className="text-lg font-semibold dark:text-white">
-                              {eventType.name}
-                            </h2>
-                          </div>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-slate-400 dark:hover:text-white hover:text-black"
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setTimeout(() => {
-                                    setIsEventTypeDialogOpen(true);
-                                    setEditingEventType(eventType);
-                                  }, 0);
-                                }}
-                              >
-                                {t("Edit Event Table")}
-                              </DropdownMenuItem>
-
-                              <DropdownMenuItem
-                                onClick={() =>
-                                  handleDeleteEventType(eventType.id)
-                                }
-                                className="text-red-400"
-                              >
-                                {t("Delete Event Table")}
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        <Droppable
-                          droppableId={eventType.id ?? ""}
-                          type="event"
-                        >
-                          {(provided) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.droppableProps}
-                              className="space-y-3 min-h-[20px]"
-                            >
-                              {getEventsByType(eventType.id).map(
-                                (event, index) => (
-                                  <Draggable
-                                    key={event.id}
-                                    draggableId={event.id}
-                                    index={index}
-                                  >
-                                    {(provided) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                      >
-                                        <EventCard
-                                          event={event}
-                                          onEdit={() => {
-                                            setSelectedEvent(event);
-                                            setIsEventDialogOpen(true);
-                                          }}
-                                          onDelete={() =>
-                                            handleDeleteEvent(event.id)
-                                          }
-                                          getPriorityColor={getPriorityColor}
-                                        />
-                                      </div>
-                                    )}
-                                  </Draggable>
-                                )
-                              )}
-                              {provided.placeholder}
-                            </div>
-                          )}
-                        </Droppable>
-
-                        <Button
-                          variant="ghost"
-                          className="w-full mt-3  dark:hover:text-white text-black dark:text-white dark:hover:bg-slate-700 hover:bg-slate-200"
-                          onClick={() => setIsEventDialogOpen(true)}
-                        >
-                          <Plus className="w-4 h-4 mr-2" />
-                          {t("Add Event")}
-                        </Button>
-                      </div>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </div>
-            )}
-          </Droppable>
-        </DragDropContext>
+        <EventManager
+          setCalendarID={setCalendarID}
+          handleDragEnd={handleDragEnd}
+          getEventsByType={getEventsByType}
+          eventTypes={eventTypes}
+          setIsEventDialogOpen={setIsEventDialogOpen}
+          setSelectedEvent={setSelectedEvent}
+          setIsEventTypeDialogOpen={setIsEventTypeDialogOpen}
+          setEditingEventType={setEditingEventType}
+          handleDeleteEventType={handleDeleteEventType}
+          handleDeleteEvent={handleDeleteEvent}
+        />
 
         <EventDialog
+          calendarID={calendarID}
           isOpen={isEventDialogOpen}
           onClose={() => {
             setIsEventDialogOpen(false);

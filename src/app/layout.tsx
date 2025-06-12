@@ -10,28 +10,46 @@ import SideBarIcon from "@/components/header-nav/sidebar-icon";
 import Leftsidebar from "@/components/header-nav/left-sidebar";
 import { usePathname } from "next/navigation";
 import { NotFoundProvider, useNotFound } from "@/context/not-found-context";
+import CalendarPage from "./(calendar)/page";
 
 const inter = Inter({ subsets: ["latin"] });
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [checked, setChecked] = useState<string[]>([]);
   const pathname = usePathname();
   const { isNotFound } = useNotFound();
+
   const hideLayoutPaths = ["/login", "/register", "/forgot-password"];
+  const calendarPaths = ["/", "/calendar"];
 
-  const shouldShowLayout = !hideLayoutPaths.includes(pathname) && !isNotFound;
+  if (hideLayoutPaths.includes(pathname) || isNotFound) {
+    return <>{children}</>;
+  }
 
-  return shouldShowLayout ? (
+  // ✅ Render layout riêng cho Calendar
+  if (calendarPaths.includes(pathname)) {
+    return (
+      <div className="flex flex-col min-h-screen">
+        <Header setMenuOpen={setMenuOpen} menuOpen={menuOpen} />
+        <div className="flex flex-1 mt-2">
+          <SideBarIcon menuOpen={menuOpen} />
+          <Leftsidebar menuOpen={menuOpen} setChecked={setChecked} />
+          <CalendarPage checked={checked} />
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Render layout mặc định cho các page còn lại
+  return (
     <div className="flex flex-col min-h-screen">
       <Header setMenuOpen={setMenuOpen} menuOpen={menuOpen} />
       <div className="flex flex-1 mt-2">
-        <SideBarIcon />
-        <Leftsidebar menuOpen={menuOpen} />
+        <SideBarIcon menuOpen={menuOpen} />
         <main className="flex-1">{children}</main>
       </div>
     </div>
-  ) : (
-    <>{children}</>
   );
 }
 

@@ -1,5 +1,5 @@
 "use client";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Select,
   SelectTrigger,
@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { useTranslation } from "react-i18next";
 import i18next from "i18next";
 import "@/../i18n";
+import type { SendEvent } from "@/types";
 
 interface TimeRange {
   start: {
@@ -25,7 +26,11 @@ interface TimeRange {
   };
 }
 
-export default function TimePicker() {
+export default function TimePicker({
+  setFormData,
+}: {
+  setFormData: React.Dispatch<React.SetStateAction<Partial<SendEvent>>>;
+}) {
   const { t } = useTranslation();
   const currentLanguage = i18next.language;
 
@@ -65,6 +70,42 @@ export default function TimePicker() {
       },
     }));
   };
+
+  useEffect(() => {
+    const convertTo24Hour = (hour: string, period?: string) => {
+      let h = parseInt(hour, 10);
+      if (period === "PM" && h < 12) h += 12;
+      if (period === "AM" && h === 12) h = 0;
+      return h.toString().padStart(2, "0");
+    };
+
+    const buildTimeISO = (time: {
+      hour: string;
+      minute: string;
+      period?: string;
+    }) => {
+      const now = new Date();
+      const year = now.getFullYear();
+      const month = (now.getMonth() + 1).toString().padStart(2, "0");
+      const day = now.getDate().toString().padStart(2, "0");
+
+      const hour24 = isEnglish
+        ? convertTo24Hour(time.hour, time.period)
+        : time.hour;
+      const minute = time.minute.padStart(2, "0");
+
+      const isoString = new Date(
+        `${year}-${month}-${day}T${hour24}:${minute}:00`
+      ).toISOString();
+      return isoString;
+    };
+
+    setFormData((prev) => ({
+      ...prev,
+      startTime: buildTimeISO(timeRange.start),
+      endTime: buildTimeISO(timeRange.end),
+    }));
+  }, [timeRange, setFormData]);
 
   return (
     <div>

@@ -4,12 +4,12 @@ import { Card, CardContent } from "@/components/ui/card";
 import Check_button from "@/components/check-button";
 import { Button } from "@/components/ui/button";
 import {
-  Calendar,
+  // Calendar,
+  // Users,
+  // Paperclip,
+  // Bell,
+  // Repeat,
   Clock,
-  Users,
-  Paperclip,
-  Bell,
-  Repeat,
   Edit,
   Trash2,
 } from "lucide-react";
@@ -47,14 +47,14 @@ export function EventCard({
     return time;
   };
 
-  const formatDuration = (minutes: number) => {
-    const hours = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    if (hours > 0) {
-      return `${hours}h${mins > 0 ? ` ${mins}m` : ""}`;
-    }
-    return `${mins}m`;
-  };
+  // const formatDuration = (minutes: number) => {
+  //   const hours = Math.floor(minutes / 60);
+  //   const mins = minutes % 60;
+  //   if (hours > 0) {
+  //     return `${hours}h${mins > 0 ? ` ${mins}m` : ""}`;
+  //   }
+  //   return `${mins}m`;
+  // };
 
   return (
     <Card className="dark:bg-gray-700 h-fit bg-white dark:border-slate-600 border-gray-100 hover:bg-slate-650 transition-colors cursor-pointer group">
@@ -112,13 +112,13 @@ export function EventCard({
 
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
-            <Calendar className="w-3 h-3" />
-            <span>{formatDate(event.startDate)}</span>
             <Clock className="w-3 h-3 ml-2" />
-            <span>{formatTime(event.startTime)}</span>
+            <span>{formatDate(event.startTime)}</span>
+            {" - "}
+            <span>{formatTime(event.endTime)}</span>
           </div>
 
-          {event.duration > 0 && (
+          {/* {event. > 0 && (
             <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
               <Clock className="w-3 h-3" />
               <span>{formatDuration(event.duration)}</span>
@@ -147,9 +147,9 @@ export function EventCard({
             {event.reminders.length > 0 && (
               <Bell className="w-3 h-3 dark:text-slate-400 text-black" />
             )}
-          </div>
+          </div> */}
 
-          {event.notes && (
+          {event.description && (
             <div className="mt-2 p-2 dark:bg-slate-600 bg-gray-100 rounded text-xs text-slate-300">
               <div className="flex items-center gap-1 mb-1">
                 <div className="w-3 h-3 dark:bg-slate-500 bg-gray-50 rounded flex items-center justify-center">
@@ -162,7 +162,7 @@ export function EventCard({
                 </span>
               </div>
               <p className="line-clamp-2 dark:text-white text-black">
-                {event.notes}
+                {event.description}
               </p>
             </div>
           )}

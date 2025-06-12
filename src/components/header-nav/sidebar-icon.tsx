@@ -1,11 +1,21 @@
 "use client";
 import React from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { UsersRound, Bell, Settings, CalendarClock, House } from "lucide-react";
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faListCheck, faChartSimple } from "@fortawesome/free-solid-svg-icons";
+import {
+  UsersRound,
+  Bell,
+  Settings,
+  CalendarClock,
+  House,
+  ChartColumnDecreasing,
+  ListChecks,
+} from "lucide-react";
 
-export default function SideBarIcon() {
+interface menuOpen {
+  menuOpen: boolean;
+}
+
+export default function SideBarIcon({ menuOpen }: menuOpen) {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -13,41 +23,45 @@ export default function SideBarIcon() {
     {
       route: "/",
       icon: <House />,
-      style: "text-2xl",
+      text: "Home",
     },
     {
       route: "events",
       icon: <CalendarClock />,
-      style: "text-2xl",
+      text: "Events",
     },
     {
       route: "tasks",
-      icon: <FontAwesomeIcon icon={faListCheck} />,
-      style: "text-xl",
+      icon: <ListChecks />,
+      text: "Tasks",
     },
     {
       route: "users",
       icon: <UsersRound />,
+      text: "Users",
     },
     {
       route: "reports",
-      icon: <FontAwesomeIcon icon={faChartSimple} />,
-      style: "text-2xl",
+      icon: <ChartColumnDecreasing />,
+      text: "Reports",
     },
     {
       route: "notifications",
       icon: <Bell />,
+      text: "Notifications",
     },
     {
       route: "settings",
       icon: <Settings />,
-      style: "text-2xl",
+      text: "Settings",
     },
   ];
 
   return (
     <div
-      className="w-14 py-10 flex justify-center dark:border-white border-r items-center rounded-tr-xl"
+      className={`flex justify-center dark:border-white border-r pt-5 rounded-tr-xl ${
+        menuOpen ? "w-40 px-4 translate-x-0" : "hidden w-0 translate-x-[-100%] "
+      }`}
       style={{ height: "calc(100vh - 85px)" }}
     >
       <div className="flex flex-col gap-15">
@@ -58,15 +72,20 @@ export default function SideBarIcon() {
             <div
               key={index}
               onClick={() => router.push(`/${item.route}`)}
-              className={`cursor-pointer transition-colors duration-200 ${
-                item.style ? `${item.style}` : ""
-              } ${
+              className={`cursor-pointer transition-colors duration-200 flex items-center ${
                 isActive ? "text-blue-500" : "text-black dark:text-white"
               } hover:text-blue-500`}
             >
               {React.cloneElement(item.icon, {
                 className: "w-6 h-6",
               })}
+              <span
+                className={`text-sm ml-2 ${
+                  menuOpen ? "inline-block opacity-100" : "hidden"
+                }`}
+              >
+                {item.text}
+              </span>
             </div>
           );
         })}

@@ -12,13 +12,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { X, Plus, Upload } from "lucide-react";
-import type { Event, Calendar } from "@/types";
+import type { Event, Calendar, SendEvent } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import TimePicker from "@/components/picker-date-time/time-picker";
-import DatePickerWithRange from "../picker-date-time/date-picker-with-range";
+import { Switch } from "../ui/switch";
+import ColorPicker from "../ui/color-picker";
+import { useCreateEvent, useUpdateEvent } from "@/hooks/calendar/use.events";
 
 interface EventDialogProps {
   isOpen: boolean;
@@ -26,9 +26,11 @@ interface EventDialogProps {
   onSave: (event: Partial<Event>) => void;
   event?: Event | null;
   eventTypes: Calendar[];
+  calendarID?: string | null;
 }
 
 export function EventDialog({
+  calendarID,
   isOpen,
   onClose,
   onSave,
@@ -37,101 +39,72 @@ export function EventDialog({
 }: EventDialogProps) {
   const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
+  const { createEvent, createEventError } = useCreateEvent();
+  const { updateEvent, updateEventError } = useUpdateEvent();
 
-  const [formData, setFormData] = useState<Partial<Event>>({
+  const [formData, setFormData] = useState<Partial<SendEvent>>({
     title: "",
     description: "",
-    eventTypeId: null,
+    location: "",
+    startTime: "",
+    endTime: "",
+    hangoutLink: "",
+    recurrence: "",
+    icon: "",
+    visibility: "default",
+    status: "confirmed",
     priority: "medium",
-    startDate: new Date().toISOString().split("T")[0],
-    startTime: "09:00",
-    duration: 0,
-    participants: [],
-    attachments: [],
-    notes: "",
-    isRecurring: false,
-    recurringType: undefined,
-    reminders: [],
-    status: "pending",
+    eventCategory: "general",
+    colorId: "",
+    isAllDay: false,
   });
 
-  const [newParticipant, setNewParticipant] = useState("");
-  const [newReminder, setNewReminder] = useState("");
+  useEffect(() => {
+    if (calendarID) {
+      setFormData((prev) => ({
+        ...prev,
+        calendarId: calendarID,
+      }));
+    }
+  }, [calendarID]);
 
   useEffect(() => {
     if (event) {
-      setFormData(event);
+      setFormData((prev) => ({
+        ...prev,
+        ...event,
+        calendarId: event.calendarId ?? prev.calendarId,
+      }));
     }
   }, [event]);
 
   const handleSave = () => {
-    if (newReminder) {
-      formData.reminders = [
-        ...(formData.reminders || []),
-        typeof newReminder === "string" ? parseInt(newReminder) : newReminder,
-      ];
+    if (!formData.calendarId && calendarID) {
+      formData.calendarId = calendarID;
     }
+
     onSave(formData);
     onClose();
-  };
 
-  const addParticipant = () => {
-    if (newParticipant.trim()) {
-      setFormData({
-        ...formData,
-        participants: [...(formData.participants || []), newParticipant.trim()],
+    if (event) {
+      updateEvent(
+        { data: formData as SendEvent, id: event.id },
+        {
+          onSuccess: () => onClose(),
+          onError: (error) => {
+            console.error("Error updating event:", error);
+          },
+        }
+      );
+    } else {
+      createEvent(formData as SendEvent, {
+        onSuccess: () => onClose(),
+        onError: (error) => {
+          console.error("Error creating event:", error);
+        },
       });
-      setNewParticipant("");
     }
   };
-
-  const removeParticipant = (index: number) => {
-    setFormData({
-      ...formData,
-      participants: formData.participants?.filter((_, i) => i !== index) || [],
-    });
-  };
-
-  const handleChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    if (val.endsWith("@")) {
-      val += "gmail.com";
-    }
-    setNewParticipant(val);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const fileNames = files.map((file) => file.name);
-    setFormData({
-      ...formData,
-      attachments: [...(formData.attachments || []), ...fileNames],
-    });
-  };
-
-  const removeAttachment = (index: number) => {
-    setFormData({
-      ...formData,
-      attachments: formData.attachments?.filter((_, i) => i !== index) || [],
-    });
-  };
-
-  // useEffect(() => {
-  //   function handleClickOutside(event: MouseEvent) {
-  //     if (
-  //       modalRef.current &&
-  //       !modalRef.current.contains(event.target as Node)
-  //     ) {
-  //       onClose();
-  //     }
-  //   }
-  //   if (isOpen) {
-  //     document.addEventListener("mousedown", handleClickOutside);
-  //   }
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   };
-  // }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -156,33 +129,24 @@ export function EventDialog({
                   setFormData({ ...formData, title: e.target.value })
                 }
                 placeholder={t("Enter event title")}
-                className="focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
               />
             </div>
+
             <div>
               <Label htmlFor="eventType">{t("Event Type")}</Label>
               <Select
-                value={formData.eventTypeId || "none"}
+                value={formData.calendarId || ""}
                 onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    eventTypeId: value === "none" ? null : value,
-                  })
+                  setFormData({ ...formData, calendarId: value })
                 }
               >
-                <SelectTrigger className="w-full  focus:ring-blue-500 hover:border-blue-600">
-                  <SelectValue placeholder={t("Select event type")} />
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("Select Event Type")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("Work to be done")}</SelectItem>
                   {eventTypes.map((type) => (
-                    <SelectItem key={type.colorId} value={type.colorId}>
-                      <div className="flex items-center gap-2">
-                        <div
-                          className={`w-3 h-3 rounded-full ${type.colorId}`}
-                        />
-                        {type.name}
-                      </div>
+                    <SelectItem key={type.id} value={type.id}>
+                      {type.name}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -200,206 +164,184 @@ export function EventDialog({
               }
               placeholder={t("Enter event description")}
               rows={3}
-              className="focus:ring-blue-500 hover:border-blue-600"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label>{t("Priority Level")}</Label>
-              <Select
-                value={formData.priority}
-                onValueChange={(value: "low" | "medium" | "high") =>
-                  setFormData({ ...formData, priority: value })
+            <div className="flex items-center">
+              <Label htmlFor="isAllDay">{t("All Day Event:")}</Label>
+              <Switch
+                id="isAllDay"
+                checked={formData.isAllDay || false}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isAllDay: checked })
                 }
-              >
-                <SelectTrigger className="w-full focus:ring-blue-500 hover:border-blue-600">
-                  <SelectValue className="" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    value="low"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    {t("Low")}
-                  </SelectItem>
-
-                  <SelectItem
-                    value="medium"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    {t("Medium")}
-                  </SelectItem>
-                  <SelectItem
-                    value="high"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    {t("High")}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
+                className="ml-2"
+              />
             </div>
-            <div>
-              <Label>{t("Date")}</Label>
-              <DatePickerWithRange />
+            <div className="flex items-center">
+              <Label className="mr-3" htmlFor="colorId">
+                {t("Color")}:
+              </Label>
+              <ColorPicker
+                id="colorId"
+                value={formData.colorId || "#ffffff"}
+                onChange={(colorId: string) =>
+                  setFormData({ ...formData, colorId })
+                }
+              />
             </div>
           </div>
 
-          <TimePicker />
-
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>{t("Repeat Event")}</Label>
+              <Label htmlFor="prioritylevel">{t("Priority Level")}</Label>
               <Select
-                value={formData.recurringType}
-                onValueChange={(value: string | undefined) =>
+                value={formData.priority}
+                onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    recurringType: value as
-                      | "daily"
-                      | "weekly"
-                      | "monthly"
-                      | undefined,
+                    priority: value as "low" | "medium" | "high",
                   })
                 }
               >
-                <SelectTrigger className="w-full focus:ring-blue-500 hover:border-blue-600">
-                  <SelectValue placeholder={t("Select")} />
+                <SelectTrigger className="w-full">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    value="Not"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    {t("Not")}
-                  </SelectItem>
-                  <SelectItem
-                    value="daily"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    {t("Daily")}
-                  </SelectItem>
-                  <SelectItem
-                    value="weekly"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    {t("Weekly")}
-                  </SelectItem>
-                  <SelectItem
-                    value="monthly"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    {t("Monthly")}
-                  </SelectItem>
+                  <SelectItem value="low">{t("Low")}</SelectItem>
+                  <SelectItem value="medium">{t("Medium")}</SelectItem>
+                  <SelectItem value="high">{t("High")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             <div>
-              <Label>{t("Early reminder")}</Label>
+              <Label htmlFor="hangoutLink">{t("Hangout Link")}</Label>
+              <Input
+                id="hangoutLink"
+                value={formData.hangoutLink || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, hangoutLink: e.target.value })
+                }
+                placeholder={t("Enter event hangout link")}
+              />
+            </div>
+          </div>
+
+          <TimePicker setFormData={setFormData} />
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="repeatEvent">{t("Repeat Event")}</Label>
               <Select
-                value={newReminder}
-                onValueChange={(value) => setNewReminder(value)}
+                value={formData.recurrence || "none"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, recurrence: value })
+                }
               >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder={t("Select")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem
-                    value="5m"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    5 {t("minutes")}
-                  </SelectItem>
-                  <SelectItem
-                    value="15m"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    15 {t("minutes")}
-                  </SelectItem>
-                  <SelectItem
-                    value="30m"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    30 {t("minutes")}
-                  </SelectItem>
-                  <SelectItem
-                    value="1h"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    1 {t("hours")}
-                  </SelectItem>
+                  <SelectItem value="none">{t("None")}</SelectItem>
+                  <SelectItem value="daily">{t("Daily")}</SelectItem>
+                  <SelectItem value="weekly">{t("Weekly")}</SelectItem>
+                  <SelectItem value="monthly">{t("Monthly")}</SelectItem>
+                  <SelectItem value="yearly">{t("Yearly")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label>{t("Visibility")}</Label>
+              <Select
+                value={formData.visibility || "default"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, visibility: value })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("Select")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="default">{t("Default")}</SelectItem>
+                  <SelectItem value="public">{t("Public")}</SelectItem>
+                  <SelectItem value="private">{t("Private")}</SelectItem>
                 </SelectContent>
               </Select>
             </div>
           </div>
 
           <div>
-            <Label>{t("Participant")}</Label>
-            <div className="flex items-center gap-2 mb-2">
-              <Input
-                value={newParticipant}
-                onChange={handleChangeEmail}
-                placeholder={t("Enter participant email")}
-                onKeyPress={(e) => e.key === "Enter" && addParticipant()}
-                className="focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addParticipant}
-                size="sm"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.participants?.map((p, index) => (
-                <Badge
-                  key={index}
-                  className="flex items-center gap-1 cursor-pointer bg-blue-500"
-                  onClick={() => removeParticipant(index)}
-                >
-                  {p}
-                  <X className="w-3 h-3" />
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <Label>{t("File Attachments")}</Label>
+            <Label htmlFor="location">{t("Location")}</Label>
             <Input
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+              id="location"
+              value={formData.location || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, location: e.target.value })
+              }
+              placeholder={t("Enter event location")}
             />
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.attachments?.map((file, index) => (
-                <Badge
-                  key={index}
-                  className="flex items-center gap-1 cursor-pointer bg-blue-500"
-                  onClick={() => removeAttachment(index)}
-                >
-                  <Upload className="w-3 h-3" />
-                  {file}
-                  <X className="w-3 h-3" />
-                </Badge>
-              ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="status">{t("Status")}</Label>
+              <Select
+                value={formData.status || "confirmed"}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    status: value as "confirmed" | "tentative" | "cancelled",
+                  })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("Select")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="confirmed">{t("Confirmed")}</SelectItem>
+                  <SelectItem value="tentative">{t("Tentative")}</SelectItem>
+                  <SelectItem value="cancelled">{t("Cancelled")}</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="eventCategory">{t("Event Category")}</Label>
+              <Select
+                value={formData.eventCategory || "general"}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    eventCategory: value as "general" | "habit" | "task",
+                  })
+                }
+              >
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder={t("Select")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">{t("General")}</SelectItem>
+                  <SelectItem value="habit">{t("Habit")}</SelectItem>
+                  <SelectItem value="task">{t("Task")}</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="ghost" onClick={onClose}>
               {t("Cancel")}
             </Button>
-            <Button
-              variant="decorate"
-              className="w-fit rounded-sm px-10"
-              onClick={handleSave}
-            >
-              {t("Save")}
-            </Button>
+            <Button onClick={handleSave}>{t("Save")}</Button>
+            {(createEventError || updateEventError) && (
+              <span className="ml-2 text-sm text-red-500">
+                {createEventError?.message ||
+                  updateEventError?.message ||
+                  t("An error occurred")}
+              </span>
+            )}
           </div>
         </div>
       </div>

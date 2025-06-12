@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { colors } from "@/utils";
-import events from "@/constant/events";
+import type { Event } from "@/types";
 
-export default function Day() {
+export default function Day({ eventsdata }: { eventsdata: Event[] }) {
   const [topOffset, setTopOffset] = useState(0);
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
@@ -34,12 +33,11 @@ export default function Day() {
     return () => clearInterval(interval);
   }, []);
 
-  const getColorByTitle = (title: string) => {
-    let sum = 0;
-    for (let i = 0; i < title.length; i++) {
-      sum += title.charCodeAt(i);
-    }
-    return colors[sum % colors.length];
+  const addOpacityToHex = (color: string) => {
+    const alpha = Math.round(255 * 0.19)
+      .toString(16)
+      .padStart(2, "0");
+    return color + alpha;
   };
 
   return (
@@ -81,27 +79,49 @@ export default function Day() {
                 ></div>
               ))}
 
-              {events.map((event, index) => {
-                const top = event.startHour * 65;
-                const bgColor = getColorByTitle(event.title);
+              {eventsdata
+                .filter((event) => {
+                  return (
+                    new Date(event.startTime).getDate() === new Date().getDate()
+                  );
+                })
+                .map((event) => {
+                  const stateTime = new Date(event.startTime);
+                  const hourStartTime = stateTime.getHours();
+                  const minuteStartTime = stateTime.getMinutes();
+                  const top = hourStartTime * 65 + (minuteStartTime / 60) * 65;
 
-                return (
-                  <div
-                    key={index}
-                    className="flex items-center sm:w-[94.5%] w-[73%] left-26 z-20 justify-right absolute right-0 "
-                    style={{ top: `${top}px` }}
-                  >
-                    <span
-                      className={`px-3 py-2 border-l-4 ${bgColor} w-[98%] rounded-md text-black flex flex-col h-[65px]`}
+                  const endTime = new Date(event.endTime);
+                  const hourEndTime = endTime.getHours();
+                  const minuteEndTime = endTime.getMinutes();
+                  const height =
+                    (hourEndTime - hourStartTime) * 65 +
+                    (minuteEndTime - minuteStartTime) * (65 / 60);
+
+                  return (
+                    <div
+                      key={event.id}
+                      className="flex items-center sm:w-[94.5%] w-[73%] left-26 z-20 justify-right absolute right-0 "
+                      style={{ top: `${top}px` }}
                     >
-                      <span className="text-xs font-semibold">
-                        {event.title}
+                      <span
+                        className={`px-3 py-2 border-l-4 w-[98%] bg-opacity-20  rounded-md text-black flex flex-col`}
+                        style={{
+                          height: `${height}px`,
+                          borderLeftColor: event.colorId,
+                          backgroundColor: addOpacityToHex(event.colorId),
+                        }}
+                      >
+                        <span className="text-xs font-semibold dark:text-white">
+                          {event.title}
+                        </span>
+                        <span className="text-xs dark:text-white">
+                          {event.description}
+                        </span>
                       </span>
-                      <span className="text-xs">{event.time}</span>
-                    </span>
-                  </div>
-                );
-              })}
+                    </div>
+                  );
+                })}
 
               <div
                 className="flex items-center w-full z-20 justify-right absolute right-0 left-19.5"
