@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Button } from "@/components/ui/button";
 import { MoreHorizontal } from "lucide-react";
-import { useEventDragResize } from "@/hooks/useEventDragResize/useEventDragResize";
+import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
 
 export default function Day({ eventsdata }: { eventsdata: Event[] }) {
   const [topOffset, setTopOffset] = useState(0);

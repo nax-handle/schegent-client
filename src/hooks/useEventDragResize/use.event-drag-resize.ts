@@ -214,8 +214,107 @@ export function useEventDragResize({
     [updateEvent]
   );
 
+  const handleMouseDownDragToOtherDay = useCallback(
+    (e: React.MouseEvent<HTMLDivElement>, event: Event) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const startY = e.clientY;
+      const initialStart = new Date(event.startTime);
+      const initialEnd = new Date(event.endTime);
+      const duration = initialEnd.getTime() - initialStart.getTime();
+      const eventBlock = e.currentTarget;
+
+      const parent = eventBlock.closest(".grid-cols-7") as HTMLDivElement;
+      if (!parent) return;
+
+      const columns = Array.from(parent.children);
+      const currentDayIndex = columns.findIndex((col) =>
+        col.contains(eventBlock.parentElement)
+      );
+      const columnWidth = columns[0]?.getBoundingClientRect().width || 100;
+
+      let lastColumn = currentDayIndex;
+      let lastTop = initialStart.getHours() * 65 + (initialStart.getMinutes() / 60) * 65;
+
+      // Set initial position
+      if (eventBlock.parentElement) {
+        const el = eventBlock.parentElement as HTMLDivElement;
+        el.style.transform = `translate(${currentDayIndex * columnWidth}px, ${lastTop}px)`;
+        el.style.transition = 'none';
+      }
+
+      const onMouseMove = (moveEvent: MouseEvent) => {
+        const diffX = moveEvent.clientX - startX;
+        const diffY = moveEvent.clientY - startY;
+        
+        // Calculate the target column based on mouse position
+        const targetColumn = Math.floor(diffX / columnWidth);
+        const minutesMoved = Math.round((diffY / 65) * 60);
+
+        // Calculate new position
+        const newStart = new Date(initialStart);
+        newStart.setDate(initialStart.getDate() + targetColumn);
+        newStart.setMinutes(initialStart.getMinutes() + minutesMoved);
+        const newEnd = new Date(newStart.getTime() + duration);
+
+        const top = newStart.getHours() * 65 + (newStart.getMinutes() / 60) * 65;
+        const left = targetColumn * columnWidth;
+
+        if (eventBlock.parentElement) {
+          const el = eventBlock.parentElement as HTMLDivElement;
+          el.style.transform = `translate(${left}px, ${top}px)`;
+        }
+
+        lastColumn = targetColumn;
+        lastTop = top;
+      };
+
+      const onMouseUp = (upEvent: MouseEvent) => {
+        const diffX = upEvent.clientX - startX;
+        const diffY = upEvent.clientY - startY;
+        
+        // Calculate final position
+        const targetColumn = Math.floor(diffX / columnWidth);
+        const minutesMoved = Math.round((diffY / 65) * 60);
+
+        const newStart = new Date(initialStart);
+        newStart.setDate(initialStart.getDate() + targetColumn);
+        newStart.setMinutes(initialStart.getMinutes() + minutesMoved);
+        const newEnd = new Date(newStart.getTime() + duration);
+
+        updateEvent({
+          id: event.id,
+          data: {
+            ...event,
+            startTime: newStart.toISOString(),
+            endTime: newEnd.toISOString(),
+          },
+        });
+
+        if (eventBlock.parentElement) {
+          const el = eventBlock.parentElement as HTMLDivElement;
+          el.style.transform = '';
+          el.style.transition = '';
+        }
+
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+
+        // Reload the page after dropping
+        window.location.reload();
+      };
+
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    },
+    [updateEvent]
+  );
+
   return {
     handleMouseDownResize,
     handleMouseDownMoveBlock,
+    handleMouseDownDragToOtherDay,
   };
 }

@@ -4,7 +4,7 @@ import { forwardRef, useMemo, useState } from "react";
 import { HexColorPicker } from "react-colorful";
 import { cn } from "@/lib/utils";
 import { useForwardedRef } from "@/lib/config/use-forwarded-ref";
-import type { ButtonProps } from "@/components/ui/button";
+type ButtonProps = React.ComponentPropsWithoutRef<"button">;
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 

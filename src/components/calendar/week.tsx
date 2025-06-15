@@ -1,10 +1,12 @@
 import React from "react";
 import { cn } from "@/lib/utils";
 import type { Event } from "@/types";
-// import { useUpdateEvent } from "@/hooks/calendar/use.events";
+import { useUpdateEvent } from "@/hooks/calendar/use.events";
+import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
 
 export default function Week({ eventsdata }: { eventsdata: Event[] }) {
-  // const { updateEvent } = useUpdateEvent();
+  const { updateEvent } = useUpdateEvent();
+  const { handleMouseDownResize, handleMouseDownMoveBlock, handleMouseDownDragToOtherDay } = useEventDragResize({ updateEvent });
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
@@ -118,28 +120,61 @@ export default function Week({ eventsdata }: { eventsdata: Event[] }) {
                       return (
                         <div
                           key={index}
-                          className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20`}
+                          className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none`}
                           style={{
                             top: `${top}px`,
                             height: `${height}px`,
                             borderLeftColor: event.colorId,
                             backgroundColor: addOpacityToHex(event.colorId),
+                            zIndex: 10,
                           }}
                         >
-                          <div className="text-xs font-semibold truncate">
-                            {event.title}
+                          <div 
+                            className="h-full w-full cursor-move"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleMouseDownDragToOtherDay(e, event);
+                              if (e.target instanceof HTMLElement) {
+                                const eventBlock = e.target;
+                                const currentDayIndex = dayIndex;
+                                const lastTop = top;
+                                const columnWidth = 56;
+                                if (eventBlock.parentElement) {
+                                  const el = eventBlock.parentElement as HTMLDivElement;
+                                  el.style.transform = `translate(${currentDayIndex * columnWidth}px, ${lastTop}px)`;
+                                }
+                              }
+                            }}
+                          >
+                            <div className="text-xs font-semibold truncate pointer-events-none">
+                              {event.title}
+                            </div>
+                            <div className="text-xs truncate pointer-events-none">
+                              {new Date(event.startTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}{" "}
+                              -{" "}
+                              {new Date(event.endTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
                           </div>
-                          <div className="text-xs truncate">
-                            {new Date(event.startTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}{" "}
-                            -{" "}
-                            {new Date(event.endTime).toLocaleTimeString([], {
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                          </div>
+                          <div 
+                            className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleMouseDownResize(e, event);
+                            }}
+                          />
+                          <div 
+                            className="absolute top-0 left-0 right-0 h-2 cursor-move"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleMouseDownMoveBlock(e, event);
+                            }}
+                          />
                         </div>
                       );
                     })}

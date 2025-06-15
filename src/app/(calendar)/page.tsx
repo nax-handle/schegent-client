@@ -10,7 +10,7 @@ import { useMultiCalendarEvents } from "@/hooks/calendar/use.events";
 import { Event } from "@/types";
 
 export default function CalendarPage({ checked }: { checked: string[] }) {
-  const [currentView, setCurrentView] = useState<CalendarView>("day");
+  const [currentView, setCurrentView] = useState<CalendarView>("week");
   const currentDate = new Date().toISOString().split("T")[0];
   const [events, setEvents] = useState<Event[] | null>([]);
   const queryResults = useMultiCalendarEvents(
