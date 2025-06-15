@@ -235,20 +235,22 @@ export function useEventDragResize({
       );
       const columnWidth = columns[0]?.getBoundingClientRect().width || 100;
 
-      let lastColumn = currentDayIndex;
-      let lastTop = initialStart.getHours() * 65 + (initialStart.getMinutes() / 60) * 65;
+      let lastTop =
+        initialStart.getHours() * 65 + (initialStart.getMinutes() / 60) * 65;
 
       // Set initial position
       if (eventBlock.parentElement) {
         const el = eventBlock.parentElement as HTMLDivElement;
-        el.style.transform = `translate(${currentDayIndex * columnWidth}px, ${lastTop}px)`;
-        el.style.transition = 'none';
+        el.style.transform = `translate(${
+          currentDayIndex * columnWidth
+        }px, ${lastTop}px)`;
+        el.style.transition = "none";
       }
 
       const onMouseMove = (moveEvent: MouseEvent) => {
         const diffX = moveEvent.clientX - startX;
         const diffY = moveEvent.clientY - startY;
-        
+
         // Calculate the target column based on mouse position
         const targetColumn = Math.floor(diffX / columnWidth);
         const minutesMoved = Math.round((diffY / 65) * 60);
@@ -257,9 +259,9 @@ export function useEventDragResize({
         const newStart = new Date(initialStart);
         newStart.setDate(initialStart.getDate() + targetColumn);
         newStart.setMinutes(initialStart.getMinutes() + minutesMoved);
-        const newEnd = new Date(newStart.getTime() + duration);
 
-        const top = newStart.getHours() * 65 + (newStart.getMinutes() / 60) * 65;
+        const top =
+          newStart.getHours() * 65 + (newStart.getMinutes() / 60) * 65;
         const left = targetColumn * columnWidth;
 
         if (eventBlock.parentElement) {
@@ -267,14 +269,13 @@ export function useEventDragResize({
           el.style.transform = `translate(${left}px, ${top}px)`;
         }
 
-        lastColumn = targetColumn;
         lastTop = top;
       };
 
       const onMouseUp = (upEvent: MouseEvent) => {
         const diffX = upEvent.clientX - startX;
         const diffY = upEvent.clientY - startY;
-        
+
         // Calculate final position
         const targetColumn = Math.floor(diffX / columnWidth);
         const minutesMoved = Math.round((diffY / 65) * 60);
@@ -295,8 +296,8 @@ export function useEventDragResize({
 
         if (eventBlock.parentElement) {
           const el = eventBlock.parentElement as HTMLDivElement;
-          el.style.transform = '';
-          el.style.transition = '';
+          el.style.transform = "";
+          el.style.transition = "";
         }
 
         document.removeEventListener("mousemove", onMouseMove);
