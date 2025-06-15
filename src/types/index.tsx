@@ -89,6 +89,11 @@ export interface Event {
   calendarId: string;
 }
 
+export interface UpdateEvent {
+  id: string;
+  data: Partial<SendEvent>;
+}
+
 export interface ResponseEvent {
   data: {
     id: string;

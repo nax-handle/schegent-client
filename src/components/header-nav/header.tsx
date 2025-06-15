@@ -105,9 +105,7 @@ export default function Header({ menuOpen, setMenuOpen }: MenuProps) {
               open={profileMenuOpen}
               onOpenChange={setProfileMenuOpen}
             >
-              <LanguageSwitcher
-                onLanguageSelect={() => setProfileMenuOpen(false)}
-              />
+              <LanguageSwitcher />
             </DropdownMenu>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>

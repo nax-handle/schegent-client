@@ -1,13 +1,24 @@
-import Cookies from "js-cookie";
-
 export function getAuthToken(): string | undefined {
-  return Cookies.get("accessToken");
+  const token = localStorage.getItem("accessToken");
+  return token === null ? undefined : token;
 }
 
 export function setAuthTokens(accessToken: string) {
-  Cookies.set("accessToken", accessToken, { expires: 7 });
+  localStorage.setItem("accessToken", accessToken);
 }
 
 export function clearAuthTokens() {
-  Cookies.remove("accessToken");
+  localStorage.removeItem("accessToken");
+}
+
+export function getSessionId(): string | null {
+  return localStorage.getItem("sessionId");
+}
+
+export function setSessionId(sessionId: string) {
+  localStorage.setItem("sessionId", sessionId);
+}
+
+export function clearSessionId() {
+  localStorage.removeItem("sessionId");
 }

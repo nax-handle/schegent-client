@@ -5,17 +5,21 @@ import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Providers } from "@/components/providers";
-import Header from "@/components/header-nav/header";
-import SideBarIcon from "@/components/header-nav/sidebar-icon";
-import Leftsidebar from "@/components/header-nav/left-sidebar";
 import { usePathname } from "next/navigation";
 import { NotFoundProvider, useNotFound } from "@/context/not-found-context";
 import CalendarPage from "./(calendar)/page";
+import Chat from "@/components/chat/index";
+import { AppSidebar } from "@/components/nav-sidebar/app-sidebar";
+import {
+  SidebarInset,
+  SidebarProvider,
+  SidebarTrigger,
+} from "@/components/ui/sidebar";
+import { ScrollAnimation, ScrollToTop } from "@/components/ui/scroll-animation";
 
 const inter = Inter({ subsets: ["latin"] });
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
-  const [menuOpen, setMenuOpen] = useState(false);
   const [checked, setChecked] = useState<string[]>([]);
   const pathname = usePathname();
   const { isNotFound } = useNotFound();
@@ -30,26 +34,48 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   // ✅ Render layout riêng cho Calendar
   if (calendarPaths.includes(pathname)) {
     return (
-      <div className="flex flex-col min-h-screen">
-        <Header setMenuOpen={setMenuOpen} menuOpen={menuOpen} />
-        <div className="flex flex-1 mt-2">
-          <SideBarIcon menuOpen={menuOpen} />
-          <Leftsidebar menuOpen={menuOpen} setChecked={setChecked} />
-          <CalendarPage checked={checked} />
-        </div>
-      </div>
+      <SidebarProvider>
+        <AppSidebar setChecked={setChecked} />
+        <SidebarInset>
+          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+            <div className="flex items-center gap-2 px-4">
+              <SidebarTrigger className="-ml-1" />
+            </div>
+          </header>
+          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+            <div className="flex flex-col min-h-screen relative">
+              <ScrollAnimation />
+              <div className="flex flex-1 mt-2">
+                <CalendarPage checked={checked} />
+                <div className="flex flex-col absolute bottom-10 right-20">
+                  <Chat />
+                </div>
+              </div>
+              <ScrollToTop />
+            </div>
+          </div>
+        </SidebarInset>
+      </SidebarProvider>
     );
   }
 
   // ✅ Render layout mặc định cho các page còn lại
   return (
-    <div className="flex flex-col min-h-screen">
-      <Header setMenuOpen={setMenuOpen} menuOpen={menuOpen} />
-      <div className="flex flex-1 mt-2">
-        <SideBarIcon menuOpen={menuOpen} />
-        <main className="flex-1">{children}</main>
-      </div>
-    </div>
+    <SidebarProvider>
+      <AppSidebar />
+      <SidebarInset>
+        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          <div className="flex items-center gap-2 px-4">
+            <SidebarTrigger className="-ml-1" />
+          </div>
+        </header>
+        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          <ScrollAnimation />
+          <main className="flex-1">{children}</main>
+          <ScrollToTop />
+        </div>
+      </SidebarInset>
+    </SidebarProvider>
   );
 }
 

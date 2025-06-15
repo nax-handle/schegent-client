@@ -1,6 +1,13 @@
 import { axiosInstance } from "../axios";
 import Cookies from "js-cookie";
-import { getAuthToken } from "../auth";
+import {
+  getAuthToken,
+  clearAuthTokens,
+  setAuthTokens,
+  getSessionId,
+  setSessionId,
+  clearSessionId,
+} from "../auth";
 
 const isClient = typeof window !== "undefined";
 
@@ -84,8 +91,6 @@ const API_ENDPOINTS = {
   SESSIONS: "/auth/session/sessions",
 } as const;
 
-const TOKEN_EXPIRY = 7;
-
 export async function register(data: RegisterData): Promise<AuthResponse> {
   const { data: response } = await axiosInstance.post<AuthResponse>(
     API_ENDPOINTS.REGISTER,
@@ -95,9 +100,6 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
 }
 
 export async function verify(data: VerifyData): Promise<AuthResponse> {
-  console.log("Verifying with data:", {
-    ...data,
-  });
   const { data: response } = await axiosInstance.post<AuthResponse>(
     API_ENDPOINTS.VERIFY,
     data
@@ -112,10 +114,8 @@ export async function login(data: LoginData): Promise<AuthResponse> {
       data
     );
     if (isClient) {
-      Cookies.set("accessToken", response.data.accessToken, {
-        expires: TOKEN_EXPIRY,
-      });
-      localStorage.setItem("sessionId", response.data.sessionId);
+      setAuthTokens(response.data.accessToken);
+      setSessionId(response.data.sessionId);
     }
     return response;
   } catch (error) {
@@ -126,12 +126,12 @@ export async function login(data: LoginData): Promise<AuthResponse> {
 
 export async function logout(): Promise<void> {
   const token = getAuthToken();
-  const sessionID = localStorage.getItem("sessionId");
-  console.log("Logging out with token:", token, "and session ID:", sessionID);
+  const sessionID = getSessionId();
+  console.log("Logging out with token:", token, "and sessionId:", sessionID);
   await axiosInstance.post(
     API_ENDPOINTS.LOGOUT,
     {
-      sessionId: "user@example.com",
+      sessionId: sessionID,
     },
     {
       headers: {
@@ -140,9 +140,10 @@ export async function logout(): Promise<void> {
       },
     }
   );
+
   if (isClient) {
-    Cookies.remove("accessToken");
-    localStorage.removeItem("sessionId");
+    clearAuthTokens();
+    clearSessionId();
   }
 }
 
@@ -153,7 +154,7 @@ export function isAuthenticated(): boolean {
 // Profile
 export async function getCurrentUser(): Promise<UserResponse> {
   const token = getAuthToken();
-  const sessionID = localStorage.getItem("sessionId");
+  const sessionID = getSessionId();
   const response = await axiosInstance.get<UserResponse>(
     API_ENDPOINTS.GET_USER,
     {
@@ -169,7 +170,7 @@ export async function getCurrentUser(): Promise<UserResponse> {
 
 export async function revokeAllSessions(): Promise<void> {
   const token = getAuthToken();
-  const sessionID = localStorage.getItem("sessionId");
+  const sessionID = getSessionId();
 
   await axiosInstance.post(
     API_ENDPOINTS.REVOKE_ALL_SESSIONS,
@@ -182,13 +183,13 @@ export async function revokeAllSessions(): Promise<void> {
     }
   );
 
-  Cookies.remove("accessToken");
-  localStorage.removeItem("sessionId");
+  clearAuthTokens();
+  clearSessionId();
 }
 
 export async function getSessions(): Promise<SessionRespone> {
   const token = getAuthToken();
-  const sessionID = localStorage.getItem("sessionId");
+  const sessionID = getSessionId();
   const response = await axiosInstance.get<SessionRespone>(
     API_ENDPOINTS.SESSIONS,
     {
@@ -212,8 +213,8 @@ export async function revokeSession(data: RevokeSessionData): Promise<void> {
   if (isClient) {
     const currentSessionId = localStorage.getItem("sessionId");
     if (currentSessionId === data.sessionId) {
-      Cookies.remove("accessToken");
-      localStorage.removeItem("sessionId");
+      clearAuthTokens();
+      clearSessionId();
     }
   }
 }

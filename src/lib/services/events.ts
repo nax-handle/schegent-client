@@ -37,6 +37,14 @@ export async function getAllEventsByCalendarId(
   calendarBy: string,
   currentDate?: string
 ): Promise<ResponseEvent> {
+  console.log(
+    "Fetching events for calendarId:",
+    calendarId,
+    "calendarBy:",
+    calendarBy,
+    "currentDate:",
+    currentDate
+  );
   const params = new URLSearchParams();
   params.append("calendarBy", calendarBy);
   if (currentDate) params.append("currentDate", currentDate);

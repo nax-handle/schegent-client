@@ -1,5 +1,5 @@
 import React from "react";
-import { cn } from "@/lib/config/utils";
+import { cn } from "@/lib/utils";
 import LunarJS from "lunar-javascript";
 import type { Event } from "@/types";
 
@@ -110,7 +110,7 @@ export default function Month({ eventsdata }: { eventsdata: Event[] }) {
                       return (
                         <div
                           key={idx}
-                          className={`text-xs text-black px-3 py-1 border-l-4 rounded-md truncate bg-opacity-20`}
+                          className={`text-xs text-black dark:text-white px-3 py-1 border-l-4 rounded-md truncate bg-opacity-20`}
                           style={{
                             borderLeftColor: event.colorId,
                             backgroundColor: addOpacityToHex(event.colorId),

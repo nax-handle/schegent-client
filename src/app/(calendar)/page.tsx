@@ -10,7 +10,7 @@ import { useMultiCalendarEvents } from "@/hooks/calendar/use.events";
 import { Event } from "@/types";
 
 export default function CalendarPage({ checked }: { checked: string[] }) {
-  const [currentView, setCurrentView] = useState<CalendarView>("month");
+  const [currentView, setCurrentView] = useState<CalendarView>("day");
   const currentDate = new Date().toISOString().split("T")[0];
   const [events, setEvents] = useState<Event[] | null>([]);
   const queryResults = useMultiCalendarEvents(
@@ -18,6 +18,7 @@ export default function CalendarPage({ checked }: { checked: string[] }) {
     currentView,
     currentDate
   );
+
   const data = queryResults.map((result) => result.data).filter(Boolean);
 
   useEffect(() => {
@@ -37,6 +38,10 @@ export default function CalendarPage({ checked }: { checked: string[] }) {
     if (mergedIds !== currentIds) {
       setEvents(mergedEvents);
     }
+  }, [data]);
+
+  useEffect(() => {
+    console.log("data", data);
   }, [data]);
 
   return (

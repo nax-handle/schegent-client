@@ -1,8 +1,10 @@
 import React from "react";
-import { cn } from "@/lib/config/utils";
+import { cn } from "@/lib/utils";
 import type { Event } from "@/types";
+// import { useUpdateEvent } from "@/hooks/calendar/use.events";
 
 export default function Week({ eventsdata }: { eventsdata: Event[] }) {
+  // const { updateEvent } = useUpdateEvent();
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
@@ -116,7 +118,7 @@ export default function Week({ eventsdata }: { eventsdata: Event[] }) {
                       return (
                         <div
                           key={index}
-                          className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black border-l-4 bg-opacity-20`}
+                          className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20`}
                           style={{
                             top: `${top}px`,
                             height: `${height}px`,
