@@ -17,9 +17,11 @@ const HOUR_HEIGHT = {
 export function useEventDragResize({
   updateEvent,
   view = "week",
+  onUpdate,
 }: {
   updateEvent: UpdateEvent;
   view?: "day" | "week";
+  onUpdate?: () => void;
 }) {
   const [dragIndicator, setDragIndicator] = useState<{
     top: number;
@@ -100,7 +102,7 @@ export function useEventDragResize({
           },
         });
 
-        window.location.reload();
+        onUpdate?.();
 
         if (scrollInterval) clearInterval(scrollInterval);
         document.removeEventListener("mousemove", onMouseMove);
@@ -110,7 +112,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view]
+    [updateEvent, hourHeight, view, onUpdate]
   );
 
   const handleMouseDownMoveBlock = useCallback(
@@ -222,7 +224,7 @@ export function useEventDragResize({
           },
         });
 
-        window.location.reload();
+        onUpdate?.();
 
         if (scrollInterval) clearInterval(scrollInterval);
         document.removeEventListener("mousemove", onMouseMove);
@@ -232,7 +234,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view]
+    [updateEvent, hourHeight, view, onUpdate]
   );
 
   const handleMouseDownDragToOtherDay = useCallback(
@@ -324,7 +326,7 @@ export function useEventDragResize({
           },
         });
 
-        window.location.reload();
+        onUpdate?.();
 
         if (eventBlock.parentElement) {
           const el = eventBlock.parentElement as HTMLDivElement;
@@ -341,7 +343,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view]
+    [updateEvent, hourHeight, view, onUpdate]
   );
 
   return {

@@ -1,8 +1,9 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { Event } from "@/types";
 import { useUpdateEvent } from "@/hooks/calendar/use.events";
 import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface PropEvent {
   eventsdata: Event[];
@@ -13,14 +14,32 @@ interface PropEvent {
   handleDeleteEvent: (eventId: string) => void;
 }
 
-export default function Week({ eventsdata }: PropEvent) {
+export default function Week({
+  eventsdata,
+  setSelectedEvent,
+  setIsEventDialogOpen,
+  handleDeleteEvent,
+}: PropEvent) {
   const { updateEvent } = useUpdateEvent();
+  const [events, setEvents] = useState<Event[]>(eventsdata);
+  const [isDragging, setIsDragging] = useState(false);
   const {
     handleMouseDownResize,
     handleMouseDownMoveBlock,
     handleMouseDownDragToOtherDay,
     dragIndicator,
-  } = useEventDragResize({ updateEvent, view: "week" });
+  } = useEventDragResize({
+    updateEvent,
+    view: "week",
+    onUpdate: () => {
+      window.location.reload();
+    },
+  });
+
+  useEffect(() => {
+    setEvents(eventsdata);
+  }, [eventsdata]);
+
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
@@ -43,6 +62,32 @@ export default function Week({ eventsdata }: PropEvent) {
   };
 
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const handleMouseDown = (
+    e: React.MouseEvent<HTMLDivElement>,
+    event: Event
+  ) => {
+    if ((e.target as HTMLElement).closest("button")) {
+      return;
+    }
+    setIsDragging(true);
+    handleMouseDownDragToOtherDay(e, event);
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      window.location.reload();
+    }
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
   return (
     <div className="w-full relative rounded-tr-xl rounded-br-xl rou border-gray-300 border-t-1 border-b-1 border-r-1">
       <div className=" w-full flex sticky top-0 z-50 rounded-t-lg">
@@ -108,7 +153,7 @@ export default function Week({ eventsdata }: PropEvent) {
                     ></div>
                   ))}
 
-                  {eventsdata
+                  {events
                     .filter((event) => {
                       const eventDate = new Date(event.startTime);
                       return (
@@ -134,7 +179,7 @@ export default function Week({ eventsdata }: PropEvent) {
                       return (
                         <div
                           key={index}
-                          className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none`}
+                          className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none group`}
                           style={{
                             top: `${top}px`,
                             height: `${height}px`,
@@ -143,26 +188,7 @@ export default function Week({ eventsdata }: PropEvent) {
                             zIndex: 10,
                           }}
                         >
-                          <div
-                            className="h-full w-full cursor-move"
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              handleMouseDownDragToOtherDay(e, event);
-                              if (e.target instanceof HTMLElement) {
-                                const eventBlock = e.target;
-                                const currentDayIndex = dayIndex;
-                                const lastTop = top;
-                                const columnWidth = 56;
-                                if (eventBlock.parentElement) {
-                                  const el =
-                                    eventBlock.parentElement as HTMLDivElement;
-                                  el.style.transform = `translate(${
-                                    currentDayIndex * columnWidth
-                                  }px, ${lastTop}px)`;
-                                }
-                              }
-                            }}
-                          >
+                          <div className="flex justify-between items-start">
                             <div className="text-xs truncate pointer-events-none">
                               {new Date(event.startTime).toLocaleTimeString(
                                 [],
@@ -177,7 +203,40 @@ export default function Week({ eventsdata }: PropEvent) {
                                 minute: "2-digit",
                               })}
                             </div>
+                            <div
+                              className={`flex gap-2 ${
+                                isDragging
+                                  ? "hidden"
+                                  : "opacity-0 group-hover:opacity-100"
+                              } transition-opacity`}
+                            >
+                              <button
+                                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setSelectedEvent(event);
+                                  setIsEventDialogOpen(true);
+                                }}
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </button>
+                              <button
+                                className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleDeleteEvent(event.id);
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </button>
+                            </div>
                           </div>
+                          <div
+                            className={`h-full w-full ${
+                              isDragging ? "cursor-grabbing" : "cursor-move"
+                            }`}
+                            onMouseDown={(e) => handleMouseDown(e, event)}
+                          ></div>
                           <div
                             className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize"
                             onMouseDown={(e) => {

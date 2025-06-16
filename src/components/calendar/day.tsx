@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import type { Event } from "@/types";
 import { useUpdateEvent } from "@/hooks/calendar/use.events";
 import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
+import { Pencil, Trash2 } from "lucide-react";
 
 interface PropEvent {
   eventsdata: Event[];
@@ -14,11 +15,24 @@ interface PropEvent {
   setSelectedEvent: (event: Event | null) => void;
 }
 
-export default function Day({ eventsdata }: PropEvent) {
+export default function Day({
+  eventsdata,
+  setSelectedEvent,
+  setIsEventDialogOpen,
+  handleDeleteEvent,
+}: PropEvent) {
   const [topOffset, setTopOffset] = useState(0);
   const { updateEvent } = useUpdateEvent();
+  const [isDragging, setIsDragging] = useState(false);
   const { handleMouseDownResize, handleMouseDownMoveBlock } =
-    useEventDragResize({ updateEvent, view: "day" });
+    useEventDragResize({
+      updateEvent,
+      view: "day",
+      onUpdate: () => {
+        window.location.reload();
+      },
+    });
+  const [events, setEvents] = useState<Event[]>(eventsdata);
 
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
@@ -50,12 +64,41 @@ export default function Day({ eventsdata }: PropEvent) {
     return () => clearInterval(interval);
   }, []);
 
+  useEffect(() => {
+    setEvents(eventsdata);
+  }, [eventsdata]);
+
   const addOpacityToHex = (color: string) => {
     const alpha = Math.round(255 * 0.19)
       .toString(16)
       .padStart(2, "0");
     return color + alpha;
   };
+
+  const handleMouseDown = (
+    e: React.MouseEvent<HTMLSpanElement>,
+    event: Event
+  ) => {
+    if ((e.target as HTMLElement).closest("button")) {
+      return;
+    }
+    setIsDragging(true);
+    handleMouseDownMoveBlock(e, event);
+  };
+
+  const handleMouseUp = () => {
+    if (isDragging) {
+      window.location.reload();
+    }
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
 
   return (
     <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl black overflow-hidden border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
@@ -95,7 +138,7 @@ export default function Day({ eventsdata }: PropEvent) {
                 ></div>
               ))}
 
-              {eventsdata
+              {events
                 .filter(
                   (event) =>
                     new Date(event.startTime).getDate() === new Date().getDate()
@@ -128,8 +171,10 @@ export default function Day({ eventsdata }: PropEvent) {
                       style={{ top: `${top}px` }}
                     >
                       <span
-                        onMouseDown={(e) => handleMouseDownMoveBlock(e, event)}
-                        className="p-3 w-full mr-30 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative cursor-move"
+                        onMouseDown={(e) => handleMouseDown(e, event)}
+                        className={`p-3 w-full mr-30 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative ${
+                          isDragging ? "cursor-grabbing" : "cursor-move"
+                        } group`}
                         style={{
                           height: `${height}px`,
                           borderLeftColor: event.colorId,
@@ -137,9 +182,38 @@ export default function Day({ eventsdata }: PropEvent) {
                           overflow: "hidden",
                         }}
                       >
-                        <span className="text-xl font-semibold dark:text-white">
-                          {event.title}
-                        </span>
+                        <div className="flex justify-between items-start">
+                          <span className="text-xl font-semibold dark:text-white">
+                            {event.title}
+                          </span>
+                          <div
+                            className={`flex gap-2 ${
+                              isDragging
+                                ? "hidden"
+                                : "opacity-0 group-hover:opacity-100"
+                            } transition-opacity`}
+                          >
+                            <button
+                              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedEvent(event);
+                                setIsEventDialogOpen(true);
+                              }}
+                            >
+                              <Pencil className="w-4 h-4" />
+                            </button>
+                            <button
+                              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteEvent(event.id);
+                              }}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
                         <span className="spanText-event">
                           {formatTime(stateTime)} - {formatTime(endTime)}
                         </span>
