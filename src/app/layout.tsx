@@ -22,6 +22,10 @@ const inter = Inter({ subsets: ["latin"] });
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
   const [checked, setChecked] = useState<string[]>([]);
+  const [calendarID, setCalendarID] = useState<string>("");
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [selectedCalendarColor, setSelectedCalendarColor] =
+    useState<string>("");
   const pathname = usePathname();
   const { isNotFound } = useNotFound();
 
@@ -35,7 +39,12 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   if (calendarPaths.includes(pathname)) {
     return (
       <SidebarProvider>
-        <AppSidebar setChecked={setChecked} />
+        <AppSidebar
+          setChecked={setChecked}
+          setCalendarID={setCalendarID}
+          setIsEventDialogOpen={setIsEventDialogOpen}
+          setSelectedCalendarColor={setSelectedCalendarColor}
+        />
         <SidebarInset>
           {/* <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 absolute top-6 z-100">
             <div className="flex items-center gap-2 px-4">
@@ -46,7 +55,13 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
             <div className="flex flex-col min-h-[80vh] relative">
               <ScrollAnimation />
               <div className="flex flex-1">
-                <CalendarPage checked={checked} />
+                <CalendarPage
+                  checked={checked}
+                  calendarID={calendarID}
+                  isEventDialogOpen={isEventDialogOpen}
+                  setIsEventDialogOpen={setIsEventDialogOpen}
+                  selectedCalendarColor={selectedCalendarColor}
+                />
                 <div className="flex flex-col absolute bottom-10 right-20">
                   <Chat />
                 </div>
@@ -62,7 +77,11 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   // ✅ Render layout mặc định cho các page còn lại
   return (
     <SidebarProvider>
-      <AppSidebar />
+      <AppSidebar
+        setCalendarID={setCalendarID}
+        setIsEventDialogOpen={setIsEventDialogOpen}
+        setSelectedCalendarColor={setSelectedCalendarColor}
+      />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
           <div className="flex items-center gap-2 px-4">

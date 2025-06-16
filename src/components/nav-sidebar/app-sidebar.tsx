@@ -25,9 +25,15 @@ import { useGetAllCalendars } from "@/hooks/calendar/use.calendar";
 
 export function AppSidebar({
   setChecked,
+  setCalendarID,
+  setIsEventDialogOpen,
+  setSelectedCalendarColor,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   setChecked?: React.Dispatch<React.SetStateAction<string[]>>;
+  setCalendarID: (id: string) => void;
+  setIsEventDialogOpen: (isOpen: boolean) => void;
+  setSelectedCalendarColor: (colorId: string) => void;
 }) {
   const { data: dataCalendar } = useGetAllCalendars();
   const [calendar, setCalendar] = useState(dataCalendar || []);
@@ -46,6 +52,9 @@ export function AppSidebar({
       <SidebarContent>
         <NavMain
           setChecked={setChecked}
+          setCalendarID={setCalendarID}
+          setIsEventDialogOpen={setIsEventDialogOpen}
+          setSelectedCalendarColor={setSelectedCalendarColor}
           calendar={calendar}
           items={[
             {

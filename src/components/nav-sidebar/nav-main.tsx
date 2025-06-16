@@ -52,10 +52,16 @@ export function NavMain({
   items,
   calendar,
   setChecked,
+  setCalendarID,
+  setIsEventDialogOpen,
+  setSelectedCalendarColor,
 }: {
   items: NavItem[];
   calendar: Calendar[];
   setChecked?: React.Dispatch<React.SetStateAction<string[]>>;
+  setCalendarID: (id: string) => void;
+  setIsEventDialogOpen: (isOpen: boolean) => void;
+  setSelectedCalendarColor: (colorId: string) => void;
 }) {
   const { deleteCalendar } = useDeleteCalendar();
   const { setIsEventTypeDialogOpen, setEditingEventType } = useCalendarDialog();
@@ -153,6 +159,15 @@ export function NavMain({
                                   </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setCalendarID(subItem.id);
+                                      setIsEventDialogOpen(true);
+                                      setSelectedCalendarColor(subItem.colorId);
+                                    }}
+                                  >
+                                    Create Event
+                                  </DropdownMenuItem>
                                   <DropdownMenuItem
                                     onClick={() =>
                                       handleUpdateCalendar(subItem)

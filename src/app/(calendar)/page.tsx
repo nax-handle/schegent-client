@@ -19,7 +19,19 @@ import {
 import { EventTypeDialog } from "@/components/events/event-type-dialog";
 import { useCalendarDialog } from "@/context/calendar-dialog-context";
 
-export default function CalendarPage({ checked }: { checked: string[] }) {
+export default function CalendarPage({
+  checked,
+  calendarID,
+  isEventDialogOpen,
+  setIsEventDialogOpen,
+  selectedCalendarColor,
+}: {
+  checked: string[];
+  calendarID: string;
+  isEventDialogOpen: boolean;
+  setIsEventDialogOpen: (isOpen: boolean) => void;
+  selectedCalendarColor: string;
+}) {
   const [currentView, setCurrentView] = useState<CalendarView>("day");
   const [mounted, setMounted] = useState(false);
   const { deleteEvent } = useDeleteEvent();
@@ -36,6 +48,7 @@ export default function CalendarPage({ checked }: { checked: string[] }) {
   const currentDate = new Date().toISOString().split("T")[0];
   const [events, setEvents] = useState<Event[] | null>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [, setSelectedCalendarID] = useState<string>("");
 
   const queryResults = useMultiCalendarEvents(
     checked,
@@ -43,11 +56,8 @@ export default function CalendarPage({ checked }: { checked: string[] }) {
     currentDate
   );
 
-  const [calendarID, setCalendarID] = useState<string>("");
-  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const data = queryResults.map((result) => result.data).filter(Boolean);
 
-  // function to handle creating a new event type
   useEffect(() => {
     const savedView = localStorage.getItem("view") as CalendarView;
     if (savedView) {
@@ -166,7 +176,7 @@ export default function CalendarPage({ checked }: { checked: string[] }) {
           {currentView === "day" && (
             <Day
               eventsdata={events ?? []}
-              setCalendarID={setCalendarID}
+              setCalendarID={setSelectedCalendarID}
               setIsEventDialogOpen={setIsEventDialogOpen}
               handleUpdateEvent={handleUpdateEvent}
               setSelectedEvent={setSelectedEvent}
@@ -176,7 +186,7 @@ export default function CalendarPage({ checked }: { checked: string[] }) {
           {currentView === "week" && (
             <Week
               eventsdata={events ?? []}
-              setCalendarID={setCalendarID}
+              setCalendarID={setSelectedCalendarID}
               setIsEventDialogOpen={setIsEventDialogOpen}
               handleUpdateEvent={handleUpdateEvent}
               setSelectedEvent={setSelectedEvent}
@@ -194,6 +204,7 @@ export default function CalendarPage({ checked }: { checked: string[] }) {
           }}
           onSave={selectedEvent ? handleUpdateEvent : handleCreateEvent}
           event={selectedEvent}
+          colorId={selectedCalendarColor}
         />
         <EventTypeDialog
           isOpen={isEventTypeDialogOpen}

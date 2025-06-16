@@ -17,7 +17,6 @@ import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import TimePicker from "@/components/picker-date-time/time-picker";
 import { Switch } from "../ui/switch";
-import ColorPicker from "../ui/color-picker";
 import { useCreateEvent, useUpdateEvent } from "@/hooks/calendar/use.events";
 
 interface EventDialogProps {
@@ -26,6 +25,7 @@ interface EventDialogProps {
   onSave: (event: Partial<Event>) => void;
   event?: Event | null;
   calendarID?: string | null;
+  colorId?: string;
 }
 
 export function EventDialog({
@@ -34,6 +34,7 @@ export function EventDialog({
   onClose,
   onSave,
   event,
+  colorId,
 }: EventDialogProps) {
   const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -53,8 +54,9 @@ export function EventDialog({
     status: "confirmed",
     priority: "medium",
     eventCategory: "general",
-    colorId: "",
+    colorId: colorId || "",
     isAllDay: false,
+    calendarId: calendarID || "",
   });
 
   useEffect(() => {
@@ -67,6 +69,15 @@ export function EventDialog({
   }, [calendarID]);
 
   useEffect(() => {
+    if (colorId) {
+      setFormData((prev) => ({
+        ...prev,
+        colorId: colorId,
+      }));
+    }
+  }, [colorId]);
+
+  useEffect(() => {
     if (event) {
       setFormData((prev) => ({
         ...prev,
@@ -77,8 +88,9 @@ export function EventDialog({
   }, [event]);
 
   const handleSave = () => {
-    if (!formData.calendarId && calendarID) {
-      formData.calendarId = calendarID;
+    if (!formData.calendarId) {
+      console.error("Calendar ID is required");
+      return;
     }
 
     onSave(formData);
@@ -128,6 +140,17 @@ export function EventDialog({
                 }
                 placeholder={t("Enter event title")}
               />
+            </div>{" "}
+            <div className="flex items-center">
+              <Label htmlFor="isAllDay">{t("All Day Event:")}</Label>
+              <Switch
+                id="isAllDay"
+                checked={formData.isAllDay || false}
+                onCheckedChange={(checked) =>
+                  setFormData({ ...formData, isAllDay: checked })
+                }
+                className="ml-2"
+              />
             </div>
           </div>
 
@@ -142,32 +165,6 @@ export function EventDialog({
               placeholder={t("Enter event description")}
               rows={3}
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div className="flex items-center">
-              <Label htmlFor="isAllDay">{t("All Day Event:")}</Label>
-              <Switch
-                id="isAllDay"
-                checked={formData.isAllDay || false}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isAllDay: checked })
-                }
-                className="ml-2"
-              />
-            </div>
-            <div className="flex items-center">
-              <Label className="mr-3" htmlFor="colorId">
-                {t("Color")}:
-              </Label>
-              <ColorPicker
-                id="colorId"
-                value={formData.colorId || "#ffffff"}
-                onChange={(colorId: string) =>
-                  setFormData({ ...formData, colorId })
-                }
-              />
-            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -315,7 +312,9 @@ export function EventDialog({
             <Button variant="ghost" onClick={onClose}>
               {t("Cancel")}
             </Button>
-            <Button onClick={handleSave}>{t("Save")}</Button>
+            <Button type="submit" onClick={handleSave}>
+              {t("Save")}
+            </Button>
             {(createEventError || updateEventError) && (
               <span className="ml-2 text-sm text-red-500">
                 {createEventError?.message ||
