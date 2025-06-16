@@ -1,14 +1,11 @@
+import Cookies from "js-cookie";
 export function getAuthToken(): string | undefined {
-  const token = localStorage.getItem("accessToken");
-  return token === null ? undefined : token;
+  Cookies.get("accessToken");
+  return Cookies.get("accessToken");
 }
 
 export function setAuthTokens(accessToken: string) {
-  localStorage.setItem("accessToken", accessToken);
-}
-
-export function clearAuthTokens() {
-  localStorage.removeItem("accessToken");
+  Cookies.set("accessToken", accessToken);
 }
 
 export function getSessionId(): string | null {
@@ -21,4 +18,8 @@ export function setSessionId(sessionId: string) {
 
 export function clearSessionId() {
   localStorage.removeItem("sessionId");
+}
+
+export function getCookie() {
+  return Cookies.get("accessToken");
 }

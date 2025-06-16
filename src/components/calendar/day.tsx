@@ -3,21 +3,22 @@
 import React, { useEffect, useState } from "react";
 import type { Event } from "@/types";
 import { useUpdateEvent } from "@/hooks/calendar/use.events";
-import {
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
-  DropdownMenuItem,
-} from "@/components/ui/dropdown-menu";
-import { Button } from "@/components/ui/button";
-import { MoreHorizontal } from "lucide-react";
 import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
 
-export default function Day({ eventsdata }: { eventsdata: Event[] }) {
+interface PropEvent {
+  eventsdata: Event[];
+  setCalendarID: (id: string) => void;
+  setIsEventDialogOpen: (isOpen: boolean) => void;
+  handleUpdateEvent: (event: Event) => void;
+  handleDeleteEvent: (eventId: string) => void;
+  setSelectedEvent: (event: Event | null) => void;
+}
+
+export default function Day({ eventsdata }: PropEvent) {
   const [topOffset, setTopOffset] = useState(0);
   const { updateEvent } = useUpdateEvent();
   const { handleMouseDownResize, handleMouseDownMoveBlock } =
-    useEventDragResize({ updateEvent });
+    useEventDragResize({ updateEvent, view: "day" });
 
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
@@ -56,10 +57,6 @@ export default function Day({ eventsdata }: { eventsdata: Event[] }) {
     return color + alpha;
   };
 
-  const handleDeleteEventType = (id: string) => {
-    console.log("Delete event with id:", id);
-  };
-
   return (
     <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl black overflow-hidden border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
       <p className="p-2 pl-6 text-2xl dark:text-white w-fit rounded-full">
@@ -74,7 +71,7 @@ export default function Day({ eventsdata }: { eventsdata: Event[] }) {
         </div>
         <div
           className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden"
-          style={{ height: "calc(100vh - 245px)" }}
+          style={{ height: "calc(100vh - 225px)" }}
         >
           <div className="flex h-full w-full">
             <div className="w-full relative">
@@ -116,72 +113,49 @@ export default function Day({ eventsdata }: { eventsdata: Event[] }) {
                     (hourEndTime - hourStartTime) * 65 +
                     (minuteEndTime - minuteStartTime) * (65 / 60);
 
+                  const formatTime = (date: Date) => {
+                    return date.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: false,
+                    });
+                  };
+
                   return (
                     <div
                       key={event.id}
-                      className="flex items-center sm:w-[94.5%] w-[73%] left-26 z-20 justify-right absolute right-0"
+                      className="flex items-center w-full left-26 z-20 justify-right absolute right-0"
                       style={{ top: `${top}px` }}
                     >
                       <span
                         onMouseDown={(e) => handleMouseDownMoveBlock(e, event)}
-                        className={`px-3 pt-2 pb-4 border-l-4 w-[98%] bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative cursor-move`}
+                        className="p-3 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative cursor-move"
                         style={{
+                          width: "50%",
                           height: `${height}px`,
                           borderLeftColor: event.colorId,
                           backgroundColor: addOpacityToHex(event.colorId),
+                          overflow: "hidden",
                         }}
                       >
-                        {/* Menu */}
-                        <div className="absolute top-1 right-1 z-50">
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                className="text-slate-400 dark:hover:text-white hover:text-black p-0"
-                              >
-                                <MoreHorizontal className="w-4 h-4" />
-                              </Button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem>Edit Event</DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteEventType(event.id)}
-                                className="text-red-400"
-                              >
-                                Delete Event
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  const newEndTime = new Date(event.endTime);
-                                  newEndTime.setMinutes(
-                                    newEndTime.getMinutes() + 5
-                                  );
-                                  updateEvent({
-                                    id: event.id,
-                                    data: {
-                                      ...event,
-                                      endTime: newEndTime.toISOString(),
-                                    },
-                                  });
-                                }}
-                              >
-                                +5 minutes
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-
-                        <span className="text-xs font-semibold dark:text-white">
+                        <span className="text-xl font-semibold dark:text-white">
                           {event.title}
                         </span>
-                        <span className="text-xs dark:text-white">
+                        <span className="spanText-event">
+                          {formatTime(stateTime)} - {formatTime(endTime)}
+                        </span>
+                        <span className="spanText-event">
+                          <span className="font-bold">Description:</span>{" "}
                           {event.description}
+                        </span>
+                        <span className="spanText-event">
+                          <span className="font-bold">Location:</span>{" "}
+                          {event.location}
                         </span>
 
                         {/* Resize Bottom */}
                         <div
-                          className="resize-handle absolute bottom-0 left-0 w-full h-2 cursor-ns-resize z-50 hover:bg-gray-300 dark:hover:bg-gray-600"
+                          className="resize-handle absolute bottom-0 left-0 w-full h-0.5 cursor-ns-resize z-50 hover:bg-gray-300 dark:hover:bg-gray-600"
                           onMouseDown={(e) => handleMouseDownResize(e, event)}
                         ></div>
                       </span>

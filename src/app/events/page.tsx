@@ -192,7 +192,6 @@ export default function EventManagement() {
           }}
           onSave={selectedEvent ? handleUpdateEvent : handleCreateEvent}
           event={selectedEvent}
-          eventTypes={eventTypes}
         />
 
         <EventTypeDialog

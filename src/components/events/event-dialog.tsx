@@ -12,7 +12,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Event, Calendar, SendEvent } from "@/types";
+import type { Event, SendEvent } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import TimePicker from "@/components/picker-date-time/time-picker";
@@ -25,7 +25,6 @@ interface EventDialogProps {
   onClose: () => void;
   onSave: (event: Partial<Event>) => void;
   event?: Event | null;
-  eventTypes: Calendar[];
   calendarID?: string | null;
 }
 
@@ -35,7 +34,6 @@ export function EventDialog({
   onClose,
   onSave,
   event,
-  eventTypes,
 }: EventDialogProps) {
   const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -131,27 +129,6 @@ export function EventDialog({
                 placeholder={t("Enter event title")}
               />
             </div>
-
-            <div>
-              <Label htmlFor="eventType">{t("Event Type")}</Label>
-              <Select
-                value={formData.calendarId || ""}
-                onValueChange={(value) =>
-                  setFormData({ ...formData, calendarId: value })
-                }
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue placeholder={t("Select Event Type")} />
-                </SelectTrigger>
-                <SelectContent>
-                  {eventTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
-                      {type.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div>
@@ -228,7 +205,11 @@ export function EventDialog({
             </div>
           </div>
 
-          <TimePicker setFormData={setFormData} />
+          <TimePicker
+            setFormData={setFormData}
+            startDate={event?.startTime || ""}
+            endDate={event?.endTime || ""}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>

@@ -64,14 +64,6 @@ export function EventTypeDialog({
   }, [eventType, isOpen]);
 
   const handleCreateSubmit = () => {
-    createCalendar(formData, {
-      onSuccess: () => {
-        onClose();
-      },
-      onError: (error) => {
-        console.error("Create calendar failed", error);
-      },
-    });
     if (handleCreateEventType) {
       handleCreateEventType(formData);
     }

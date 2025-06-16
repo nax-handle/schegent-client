@@ -16,6 +16,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { ScrollAnimation, ScrollToTop } from "@/components/ui/scroll-animation";
+import { CalendarDialogProvider } from "@/context/calendar-dialog-context";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -31,21 +32,20 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     return <>{children}</>;
   }
 
-  // ✅ Render layout riêng cho Calendar
   if (calendarPaths.includes(pathname)) {
     return (
       <SidebarProvider>
         <AppSidebar setChecked={setChecked} />
         <SidebarInset>
-          <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
+          {/* <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 absolute top-6 z-100">
             <div className="flex items-center gap-2 px-4">
               <SidebarTrigger className="-ml-1" />
             </div>
-          </header>
+          </header> */}
           <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-            <div className="flex flex-col min-h-screen relative">
+            <div className="flex flex-col min-h-[80vh] relative">
               <ScrollAnimation />
-              <div className="flex flex-1 mt-2">
+              <div className="flex flex-1">
                 <CalendarPage checked={checked} />
                 <div className="flex flex-col absolute bottom-10 right-20">
                   <Chat />
@@ -100,7 +100,9 @@ export default function Layout({ children }: { children: React.ReactNode }) {
   return (
     <NotFoundProvider>
       <Providers>
-        <RootLayout>{children}</RootLayout>
+        <CalendarDialogProvider>
+          <RootLayout>{children}</RootLayout>
+        </CalendarDialogProvider>
       </Providers>
     </NotFoundProvider>
   );

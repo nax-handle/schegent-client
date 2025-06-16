@@ -1,7 +1,12 @@
 "use client";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import Link from "next/link";
-import { ChevronRight, type LucideIcon } from "lucide-react";
+import {
+  ChevronRight,
+  Plus,
+  MoreVertical,
+  type LucideIcon,
+} from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   SidebarGroup,
@@ -17,7 +22,15 @@ import {
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import type { Calendar } from "@/types";
+import { useDeleteCalendar } from "@/hooks/calendar/use.calendar";
+import { useCalendarDialog } from "@/context/calendar-dialog-context";
 
 type NavItem =
   | {
@@ -44,6 +57,29 @@ export function NavMain({
   calendar: Calendar[];
   setChecked?: React.Dispatch<React.SetStateAction<string[]>>;
 }) {
+  const { deleteCalendar } = useDeleteCalendar();
+  const { setIsEventTypeDialogOpen, setEditingEventType } = useCalendarDialog();
+  const isCreatingRef = useRef(false);
+
+  const handleDeleteCalendar = (id: string) => {
+    deleteCalendar(id);
+  };
+
+  const handleUpdateCalendar = (calendar: Calendar) => {
+    setEditingEventType(calendar);
+    setIsEventTypeDialogOpen(true);
+  };
+
+  const handleCreateCalendar = () => {
+    if (isCreatingRef.current) return;
+    isCreatingRef.current = true;
+    setEditingEventType(null);
+    setIsEventTypeDialogOpen(true);
+    setTimeout(() => {
+      isCreatingRef.current = false;
+    }, 100);
+  };
+
   useEffect(() => {
     if (calendar) {
       setChecked?.(calendar.map((cal) => cal.id));
@@ -68,7 +104,20 @@ export function NavMain({
                       <SidebarMenuButton tooltip={item.title}>
                         {item.icon && <item.icon className="w-5 h-5" />}
                         <span>{item.title}</span>
-                        <ChevronRight className="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        <div className="ml-auto flex items-center">
+                          <div
+                            role="button"
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              handleCreateCalendar();
+                            }}
+                            className="p-1 hover:bg-accent rounded-sm cursor-pointer"
+                          >
+                            <Plus />
+                          </div>
+                          <ChevronRight className="ml-2 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                        </div>
                       </SidebarMenuButton>
                     </Link>
                   </CollapsibleTrigger>
@@ -78,7 +127,7 @@ export function NavMain({
                       {item.items?.map((subItem) => (
                         <SidebarMenuSubItem key={subItem.id}>
                           <SidebarMenuSubButton asChild>
-                            <div className="flex items-center gap-3">
+                            <div className="flex items-center gap-3 w-full h-fit">
                               <Checkbox
                                 id={subItem.id}
                                 defaultChecked
@@ -94,7 +143,33 @@ export function NavMain({
                                   }
                                 }}
                               />
-                              <span className="text-sm">{subItem.name}</span>
+                              <span className="text-sm flex-1">
+                                {subItem.name}
+                              </span>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button className="p-1 hover:bg-accent rounded-sm">
+                                    <MoreVertical className="w-4 h-4" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleUpdateCalendar(subItem)
+                                    }
+                                  >
+                                    Update
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() =>
+                                      handleDeleteCalendar(subItem.id)
+                                    }
+                                    className="text-destructive"
+                                  >
+                                    Delete
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
                           </SidebarMenuSubButton>
                         </SidebarMenuSubItem>

@@ -6,20 +6,61 @@ import Week from "@/components/calendar/week";
 import Month from "@/components/calendar/month";
 import NavMenu from "@/components/header-nav/nav-menu";
 type CalendarView = "day" | "week" | "month";
-import { useMultiCalendarEvents } from "@/hooks/calendar/use.events";
-import { Event } from "@/types";
+import {
+  useMultiCalendarEvents,
+  useDeleteEvent,
+} from "@/hooks/calendar/use.events";
+import { Event, SendEvent, Calendar } from "@/types";
+import { EventDialog } from "@/components/events/event-dialog";
+import {
+  useUpdateCalendar,
+  useCreateCalendar,
+} from "@/hooks/calendar/use.calendar";
+import { EventTypeDialog } from "@/components/events/event-type-dialog";
+import { useCalendarDialog } from "@/context/calendar-dialog-context";
 
 export default function CalendarPage({ checked }: { checked: string[] }) {
-  const [currentView, setCurrentView] = useState<CalendarView>("week");
+  const [currentView, setCurrentView] = useState<CalendarView>("day");
+  const [mounted, setMounted] = useState(false);
+  const { deleteEvent } = useDeleteEvent();
+
+  const { updateCalendar } = useUpdateCalendar();
+  const { createCalendar } = useCreateCalendar();
+  const {
+    isEventTypeDialogOpen,
+    setIsEventTypeDialogOpen,
+    editingEventType,
+    setEditingEventType,
+  } = useCalendarDialog();
+
   const currentDate = new Date().toISOString().split("T")[0];
   const [events, setEvents] = useState<Event[] | null>([]);
+  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+
   const queryResults = useMultiCalendarEvents(
     checked,
     currentView,
     currentDate
   );
 
+  const [calendarID, setCalendarID] = useState<string>("");
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const data = queryResults.map((result) => result.data).filter(Boolean);
+
+  // function to handle creating a new event type
+  useEffect(() => {
+    const savedView = localStorage.getItem("view") as CalendarView;
+    if (savedView) {
+      setCurrentView(savedView);
+    }
+    setMounted(true);
+  }, []);
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("view", currentView);
+    }
+  }, [currentView, mounted]);
 
   useEffect(() => {
     const mergedEvents = data
@@ -40,19 +81,130 @@ export default function CalendarPage({ checked }: { checked: string[] }) {
     }
   }, [data]);
 
-  useEffect(() => {
-    console.log("data", data);
-  }, [data]);
+  const handleCreateEvent = (eventData: Partial<SendEvent>) => {
+    if (typeof eventData.title === "string") {
+      const newEvent: Event = {
+        id: Date.now().toString(),
+        title: eventData.title,
+        description: eventData.description ?? "",
+        location: eventData.location ?? null,
+        startTime: eventData.startTime ?? new Date().toISOString(),
+        endTime: eventData.endTime ?? new Date().toISOString(),
+        hangoutLink: eventData.hangoutLink ?? null,
+        recurrence: eventData.recurrence ?? "",
+        icon: eventData.icon ?? null,
+        visibility: eventData.visibility ?? "default",
+        status: eventData.status ?? "confirmed",
+        priority: eventData.priority ?? "medium",
+        eventCategory: eventData.eventCategory ?? "general",
+        colorId: eventData.colorId ?? "",
+        isAllDay: eventData.isAllDay ?? false,
+        calendarId: calendarID,
+      };
+
+      setEvents((prevEvents) => [...(prevEvents || []), newEvent]);
+      setIsEventDialogOpen(false);
+    } else {
+      console.error("Event title is required");
+    }
+  };
+
+  const handleUpdateEvent = (eventData: Partial<Event>) => {
+    if (!selectedEvent) return;
+
+    setEvents((prevEvents) => {
+      if (!prevEvents) return prevEvents;
+      return prevEvents.map((event) =>
+        event.id === selectedEvent.id ? { ...event, ...eventData } : event
+      );
+    });
+    setSelectedEvent(null);
+  };
+
+  const handleDeleteEvent = (eventId: string) => {
+    deleteEvent(eventId);
+    setEvents((prevEvents) => {
+      if (!prevEvents) return prevEvents;
+      return prevEvents.filter((event) => event.id !== eventId);
+    });
+  };
+
+  const handleCreateEventType = (eventTypeData: Partial<Calendar>) => {
+    if (typeof eventTypeData.name === "string") {
+      createCalendar({
+        ...eventTypeData,
+        name: eventTypeData.name,
+        description: eventTypeData.description ?? "",
+        colorId: eventTypeData.colorId ?? "",
+        isPrimary: eventTypeData.isPrimary ?? false,
+        isShared: eventTypeData.isShared ?? false,
+      } as { name: string; description: string; colorId: string; isPrimary: boolean; isShared: boolean } & Partial<Calendar>);
+      setIsEventTypeDialogOpen(false);
+    } else {
+      console.error("Event type name is required");
+    }
+  };
+
+  const handleUpdateEventType = (eventTypeData: Partial<Calendar>) => {
+    if (!editingEventType) return;
+    updateCalendar({
+      id: editingEventType.id,
+      data: {
+        ...editingEventType,
+        ...eventTypeData,
+      },
+    });
+    setEditingEventType(null);
+    setIsEventTypeDialogOpen(false);
+  };
 
   return (
     <div className="w-full">
       <NavMenu currentView={currentView} setCurrentView={setCurrentView} />
       <div className={`flex`}>
         <div className={`flex-1  mr-1 `}>
-          {currentView === "day" && <Day eventsdata={events ?? []} />}
-          {currentView === "week" && <Week eventsdata={events ?? []} />}
+          {currentView === "day" && (
+            <Day
+              eventsdata={events ?? []}
+              setCalendarID={setCalendarID}
+              setIsEventDialogOpen={setIsEventDialogOpen}
+              handleUpdateEvent={handleUpdateEvent}
+              setSelectedEvent={setSelectedEvent}
+              handleDeleteEvent={handleDeleteEvent}
+            />
+          )}
+          {currentView === "week" && (
+            <Week
+              eventsdata={events ?? []}
+              setCalendarID={setCalendarID}
+              setIsEventDialogOpen={setIsEventDialogOpen}
+              handleUpdateEvent={handleUpdateEvent}
+              setSelectedEvent={setSelectedEvent}
+              handleDeleteEvent={handleDeleteEvent}
+            />
+          )}
           {currentView === "month" && <Month eventsdata={events ?? []} />}
         </div>
+        <EventDialog
+          calendarID={calendarID}
+          isOpen={isEventDialogOpen}
+          onClose={() => {
+            setIsEventDialogOpen(false);
+            setSelectedEvent(null);
+          }}
+          onSave={selectedEvent ? handleUpdateEvent : handleCreateEvent}
+          event={selectedEvent}
+        />
+        <EventTypeDialog
+          isOpen={isEventTypeDialogOpen}
+          onClose={() => {
+            setIsEventTypeDialogOpen(false);
+            setEditingEventType(null);
+          }}
+          eventType={editingEventType}
+          handleCreateEventType={handleCreateEventType}
+          handleUpdateEventType={handleUpdateEventType}
+        />
       </div>
     </div>
   );

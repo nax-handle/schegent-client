@@ -134,3 +134,7 @@ html {
     @apply bg-background text-foreground;
   }
 }
+
+.spanText-event {
+  @apply text-xs dark:text-white my-1;
+}

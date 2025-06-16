@@ -1,13 +1,6 @@
 import { axiosInstance } from "../axios";
 import Cookies from "js-cookie";
-import {
-  getAuthToken,
-  clearAuthTokens,
-  setAuthTokens,
-  getSessionId,
-  setSessionId,
-  clearSessionId,
-} from "../auth";
+import { getAuthToken, getSessionId, clearSessionId } from "../auth";
 
 const isClient = typeof window !== "undefined";
 
@@ -114,8 +107,16 @@ export async function login(data: LoginData): Promise<AuthResponse> {
       data
     );
     if (isClient) {
-      setAuthTokens(response.data.accessToken);
-      setSessionId(response.data.sessionId);
+      Cookies.set("accessToken", response.data.accessToken, {
+        expires: 7,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
+      Cookies.set("sessionId", response.data.sessionId, {
+        expires: 7,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
+      });
     }
     return response;
   } catch (error) {
@@ -127,7 +128,6 @@ export async function login(data: LoginData): Promise<AuthResponse> {
 export async function logout(): Promise<void> {
   const token = getAuthToken();
   const sessionID = getSessionId();
-  console.log("Logging out with token:", token, "and sessionId:", sessionID);
   await axiosInstance.post(
     API_ENDPOINTS.LOGOUT,
     {
@@ -142,7 +142,6 @@ export async function logout(): Promise<void> {
   );
 
   if (isClient) {
-    clearAuthTokens();
     clearSessionId();
   }
 }
@@ -183,7 +182,6 @@ export async function revokeAllSessions(): Promise<void> {
     }
   );
 
-  clearAuthTokens();
   clearSessionId();
 }
 
@@ -213,7 +211,6 @@ export async function revokeSession(data: RevokeSessionData): Promise<void> {
   if (isClient) {
     const currentSessionId = localStorage.getItem("sessionId");
     if (currentSessionId === data.sessionId) {
-      clearAuthTokens();
       clearSessionId();
     }
   }

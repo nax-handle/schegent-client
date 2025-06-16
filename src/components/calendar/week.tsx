@@ -4,9 +4,23 @@ import type { Event } from "@/types";
 import { useUpdateEvent } from "@/hooks/calendar/use.events";
 import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
 
-export default function Week({ eventsdata }: { eventsdata: Event[] }) {
+interface PropEvent {
+  eventsdata: Event[];
+  setCalendarID: (id: string) => void;
+  setIsEventDialogOpen: (isOpen: boolean) => void;
+  handleUpdateEvent: (event: Event) => void;
+  setSelectedEvent: (event: Event | null) => void;
+  handleDeleteEvent: (eventId: string) => void;
+}
+
+export default function Week({ eventsdata }: PropEvent) {
   const { updateEvent } = useUpdateEvent();
-  const { handleMouseDownResize, handleMouseDownMoveBlock, handleMouseDownDragToOtherDay } = useEventDragResize({ updateEvent });
+  const {
+    handleMouseDownResize,
+    handleMouseDownMoveBlock,
+    handleMouseDownDragToOtherDay,
+    dragIndicator,
+  } = useEventDragResize({ updateEvent, view: "week" });
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
@@ -31,7 +45,7 @@ export default function Week({ eventsdata }: { eventsdata: Event[] }) {
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   return (
     <div className="w-full relative rounded-tr-xl rounded-br-xl rou border-gray-300 border-t-1 border-b-1 border-r-1">
-      <div className="w-full flex sticky top-0 z-50 rounded-t-lg">
+      <div className=" w-full flex sticky top-0 z-50 rounded-t-lg">
         <div className="grid grid-cols-7 pl-19 border-b border-gray-200 flex-1 w-full ">
           {days.map((day, index) => {
             const date = new Date(today);
@@ -60,7 +74,7 @@ export default function Week({ eventsdata }: { eventsdata: Event[] }) {
 
       <div
         className="relative overflow-y-auto scrollbar-hidden"
-        style={{ height: "calc(100vh - 250px)" }}
+        style={{ height: "calc(100vh - 210px)" }}
       >
         <div className="absolute left-0 w-20 z-10 h-full">
           {Array.from({ length: 24 }, (_, i) => (
@@ -129,7 +143,7 @@ export default function Week({ eventsdata }: { eventsdata: Event[] }) {
                             zIndex: 10,
                           }}
                         >
-                          <div 
+                          <div
                             className="h-full w-full cursor-move"
                             onMouseDown={(e) => {
                               e.stopPropagation();
@@ -140,20 +154,23 @@ export default function Week({ eventsdata }: { eventsdata: Event[] }) {
                                 const lastTop = top;
                                 const columnWidth = 56;
                                 if (eventBlock.parentElement) {
-                                  const el = eventBlock.parentElement as HTMLDivElement;
-                                  el.style.transform = `translate(${currentDayIndex * columnWidth}px, ${lastTop}px)`;
+                                  const el =
+                                    eventBlock.parentElement as HTMLDivElement;
+                                  el.style.transform = `translate(${
+                                    currentDayIndex * columnWidth
+                                  }px, ${lastTop}px)`;
                                 }
                               }
                             }}
                           >
-                            <div className="text-xs font-semibold truncate pointer-events-none">
-                              {event.title}
-                            </div>
                             <div className="text-xs truncate pointer-events-none">
-                              {new Date(event.startTime).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}{" "}
+                              {new Date(event.startTime).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}{" "}
                               -{" "}
                               {new Date(event.endTime).toLocaleTimeString([], {
                                 hour: "2-digit",
@@ -161,14 +178,14 @@ export default function Week({ eventsdata }: { eventsdata: Event[] }) {
                               })}
                             </div>
                           </div>
-                          <div 
+                          <div
                             className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize"
                             onMouseDown={(e) => {
                               e.stopPropagation();
                               handleMouseDownResize(e, event);
                             }}
                           />
-                          <div 
+                          <div
                             className="absolute top-0 left-0 right-0 h-2 cursor-move"
                             onMouseDown={(e) => {
                               e.stopPropagation();
@@ -188,6 +205,17 @@ export default function Week({ eventsdata }: { eventsdata: Event[] }) {
                         <span className="absolute -left-1 top-0 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500"></span>
                       </div>
                     </div>
+                  )}
+
+                  {dragIndicator && dragIndicator.column === dayIndex && (
+                    <div
+                      className="absolute h-0.5 bg-blue-500 z-30 pointer-events-none"
+                      style={{
+                        top: `${dragIndicator.top}px`,
+                        left: "4px",
+                        right: "4px",
+                      }}
+                    />
                   )}
                 </div>
               );

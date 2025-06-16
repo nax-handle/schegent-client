@@ -28,21 +28,50 @@ interface TimeRange {
 
 export default function TimePicker({
   setFormData,
+  startDate,
+  endDate,
 }: {
   setFormData: React.Dispatch<React.SetStateAction<Partial<SendEvent>>>;
+  startDate: string;
+  endDate: string;
 }) {
   const { t } = useTranslation();
   const currentLanguage = i18next.language;
 
   const isEnglish = currentLanguage === "en";
 
+  const parseTimeFromISO = (isoString: string) => {
+    if (!isoString) return null;
+    const date = new Date(isoString);
+    const hours = date.getHours();
+    const minutes = date.getMinutes();
+
+    if (isEnglish) {
+      const period = hours >= 12 ? "PM" : "AM";
+      const hour12 = hours % 12 || 12;
+      return {
+        hour: hour12.toString().padStart(2, "0"),
+        minute: minutes.toString().padStart(2, "0"),
+        period,
+      };
+    }
+
+    return {
+      hour: hours.toString().padStart(2, "0"),
+      minute: minutes.toString().padStart(2, "0"),
+    };
+  };
+
+  const initialStartTime = parseTimeFromISO(startDate);
+  const initialEndTime = parseTimeFromISO(endDate);
+
   const [timeRange, setTimeRange] = useState<TimeRange>({
-    start: {
+    start: initialStartTime || {
       hour: "00",
       minute: "00",
       period: isEnglish ? "AM" : undefined,
     },
-    end: {
+    end: initialEndTime || {
       hour: "00",
       minute: "00",
       period: isEnglish ? "AM" : undefined,
@@ -199,13 +228,11 @@ export default function TimePicker({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="h-60 overflow-y-scroll scroll-hidden">
-                {minutes
-                  .filter((_, i) => i % 5 === 0)
-                  .map((minute) => (
-                    <SelectItem key={minute} value={minute}>
-                      {minute}
-                    </SelectItem>
-                  ))}
+                {minutes.map((minute) => (
+                  <SelectItem key={minute} value={minute}>
+                    {minute}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 

@@ -1,14 +1,32 @@
 // src/hooks/useEventDragResize.ts
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import type { Event } from "@/types";
+
+function clamp(num: number, min: number, max: number) {
+  return Math.max(min, Math.min(num, max));
+}
 
 type UpdateEvent = (params: { id: string; data: Event }) => void;
 
+// Constants for different views
+const HOUR_HEIGHT = {
+  day: 65,
+  week: 56,
+};
+
 export function useEventDragResize({
   updateEvent,
+  view = "week",
 }: {
   updateEvent: UpdateEvent;
+  view?: "day" | "week";
 }) {
+  const [dragIndicator, setDragIndicator] = useState<{
+    top: number;
+    column: number;
+  } | null>(null);
+  const hourHeight = HOUR_HEIGHT[view];
+
   const handleMouseDownResize = useCallback(
     (e: React.MouseEvent<HTMLDivElement>, event: Event) => {
       e.preventDefault();
@@ -17,12 +35,12 @@ export function useEventDragResize({
       const startY = e.clientY;
       const initialEndTime = new Date(event.endTime);
       const eventBlock = e.currentTarget.parentElement;
-      const container = eventBlock?.closest(".overflow-y-scroll");
+      const container = eventBlock?.closest(".overflow-y-auto");
       let scrollInterval: NodeJS.Timeout | null = null;
 
       const onMouseMove = (moveEvent: MouseEvent) => {
         const diffY = moveEvent.clientY - startY;
-        const minutesDiff = Math.round((diffY / 65) * 60);
+        const minutesDiff = Math.round((diffY / hourHeight) * 60);
         const newEndTime = new Date(initialEndTime);
         newEndTime.setMinutes(initialEndTime.getMinutes() + minutesDiff);
 
@@ -36,7 +54,7 @@ export function useEventDragResize({
 
         if (eventBlock) {
           const duration = newEndTime.getTime() - startTime.getTime();
-          const height = (duration / (1000 * 60)) * (65 / 60);
+          const height = (duration / (1000 * 60)) * (hourHeight / 60);
           eventBlock.style.height = `${height}px`;
         }
 
@@ -62,7 +80,7 @@ export function useEventDragResize({
 
       const onMouseUp = (upEvent: MouseEvent) => {
         const diffY = upEvent.clientY - startY;
-        const minutesDiff = Math.round((diffY / 65) * 60);
+        const minutesDiff = Math.round((diffY / hourHeight) * 60);
         const newEndTime = new Date(initialEndTime);
         newEndTime.setMinutes(initialEndTime.getMinutes() + minutesDiff);
 
@@ -83,6 +101,7 @@ export function useEventDragResize({
         });
 
         window.location.reload();
+
         if (scrollInterval) clearInterval(scrollInterval);
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
@@ -91,7 +110,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent]
+    [updateEvent, hourHeight, view]
   );
 
   const handleMouseDownMoveBlock = useCallback(
@@ -104,12 +123,12 @@ export function useEventDragResize({
       const initialEnd = new Date(event.endTime);
       const duration = initialEnd.getTime() - initialStart.getTime();
       const eventBlock = e.currentTarget;
-      const container = eventBlock.closest(".overflow-y-scroll");
+      const container = eventBlock.closest(".overflow-y-auto");
       let scrollInterval: NodeJS.Timeout | null = null;
 
       const onMouseMove = (moveEvent: MouseEvent) => {
         const diffY = moveEvent.clientY - startY;
-        const minutesDiff = Math.round((diffY / 65) * 60);
+        const minutesDiff = Math.round((diffY / hourHeight) * 60);
 
         const newStart = new Date(initialStart);
         newStart.setMinutes(initialStart.getMinutes() + minutesDiff);
@@ -133,8 +152,9 @@ export function useEventDragResize({
         }
 
         const top =
-          newStart.getHours() * 65 + (newStart.getMinutes() / 60) * 65;
-        const height = (duration / (1000 * 60)) * (65 / 60);
+          newStart.getHours() * hourHeight +
+          (newStart.getMinutes() / 60) * hourHeight;
+        const height = (duration / (1000 * 60)) * (hourHeight / 60);
 
         if (eventBlock && eventBlock.parentElement) {
           const parent = eventBlock.parentElement as HTMLDivElement;
@@ -170,7 +190,7 @@ export function useEventDragResize({
 
       const onMouseUp = (upEvent: MouseEvent) => {
         const diffY = upEvent.clientY - startY;
-        const minutesDiff = Math.round((diffY / 65) * 60);
+        const minutesDiff = Math.round((diffY / hourHeight) * 60);
 
         const newStart = new Date(initialStart);
         newStart.setMinutes(initialStart.getMinutes() + minutesDiff);
@@ -203,6 +223,7 @@ export function useEventDragResize({
         });
 
         window.location.reload();
+
         if (scrollInterval) clearInterval(scrollInterval);
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
@@ -211,7 +232,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent]
+    [updateEvent, hourHeight, view]
   );
 
   const handleMouseDownDragToOtherDay = useCallback(
@@ -235,53 +256,64 @@ export function useEventDragResize({
       );
       const columnWidth = columns[0]?.getBoundingClientRect().width || 100;
 
-      let lastTop =
-        initialStart.getHours() * 65 + (initialStart.getMinutes() / 60) * 65;
+      const initialTop =
+        initialStart.getHours() * hourHeight +
+        (initialStart.getMinutes() / 60) * hourHeight;
+      const initialLeft = currentDayIndex * columnWidth;
 
-      // Set initial position
       if (eventBlock.parentElement) {
         const el = eventBlock.parentElement as HTMLDivElement;
-        el.style.transform = `translate(${
-          currentDayIndex * columnWidth
-        }px, ${lastTop}px)`;
+        el.style.transform = `translate(${initialLeft}px, ${initialTop}px)`;
         el.style.transition = "none";
+        el.style.opacity = "0";
       }
 
       const onMouseMove = (moveEvent: MouseEvent) => {
         const diffX = moveEvent.clientX - startX;
         const diffY = moveEvent.clientY - startY;
 
-        // Calculate the target column based on mouse position
-        const targetColumn = Math.floor(diffX / columnWidth);
-        const minutesMoved = Math.round((diffY / 65) * 60);
+        const gridRect = parent.getBoundingClientRect();
+        const relativeX = moveEvent.clientX - gridRect.left;
+        let targetColumn = Math.floor(relativeX / columnWidth);
+        targetColumn = clamp(targetColumn, 0, 6);
+        const minutesMoved = Math.round((diffY / hourHeight) * 60);
 
-        // Calculate new position
         const newStart = new Date(initialStart);
-        newStart.setDate(initialStart.getDate() + targetColumn);
+        newStart.setDate(
+          initialStart.getDate() + (targetColumn - currentDayIndex)
+        );
         newStart.setMinutes(initialStart.getMinutes() + minutesMoved);
+        const newEnd = new Date(newStart.getTime() + duration);
 
         const top =
-          newStart.getHours() * 65 + (newStart.getMinutes() / 60) * 65;
-        const left = targetColumn * columnWidth;
+          newStart.getHours() * hourHeight +
+          (newStart.getMinutes() / 60) * hourHeight;
 
-        if (eventBlock.parentElement) {
-          const el = eventBlock.parentElement as HTMLDivElement;
-          el.style.transform = `translate(${left}px, ${top}px)`;
-        }
+        updateEvent({
+          id: event.id,
+          data: {
+            ...event,
+            startTime: newStart.toISOString(),
+            endTime: newEnd.toISOString(),
+          },
+        });
 
-        lastTop = top;
+        setDragIndicator({ top, column: targetColumn });
       };
 
       const onMouseUp = (upEvent: MouseEvent) => {
-        const diffX = upEvent.clientX - startX;
         const diffY = upEvent.clientY - startY;
 
-        // Calculate final position
-        const targetColumn = Math.floor(diffX / columnWidth);
-        const minutesMoved = Math.round((diffY / 65) * 60);
+        const gridRect = parent.getBoundingClientRect();
+        const relativeX = upEvent.clientX - gridRect.left;
+        let targetColumn = Math.floor(relativeX / columnWidth);
+        targetColumn = clamp(targetColumn, 0, 6);
+        const minutesMoved = Math.round((diffY / hourHeight) * 60);
 
         const newStart = new Date(initialStart);
-        newStart.setDate(initialStart.getDate() + targetColumn);
+        newStart.setDate(
+          initialStart.getDate() + (targetColumn - currentDayIndex)
+        );
         newStart.setMinutes(initialStart.getMinutes() + minutesMoved);
         const newEnd = new Date(newStart.getTime() + duration);
 
@@ -294,28 +326,30 @@ export function useEventDragResize({
           },
         });
 
+        window.location.reload();
+
         if (eventBlock.parentElement) {
           const el = eventBlock.parentElement as HTMLDivElement;
+          el.style.opacity = "1";
           el.style.transform = "";
           el.style.transition = "";
         }
 
+        setDragIndicator(null);
         document.removeEventListener("mousemove", onMouseMove);
         document.removeEventListener("mouseup", onMouseUp);
-
-        // Reload the page after dropping
-        window.location.reload();
       };
 
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent]
+    [updateEvent, hourHeight, view]
   );
 
   return {
     handleMouseDownResize,
     handleMouseDownMoveBlock,
     handleMouseDownDragToOtherDay,
+    dragIndicator,
   };
 }
