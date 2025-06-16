@@ -129,9 +129,8 @@ export default function Day({ eventsdata }: PropEvent) {
                     >
                       <span
                         onMouseDown={(e) => handleMouseDownMoveBlock(e, event)}
-                        className="p-3 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative cursor-move"
+                        className="p-3 w-full mr-30 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative cursor-move"
                         style={{
-                          width: "50%",
                           height: `${height}px`,
                           borderLeftColor: event.colorId,
                           backgroundColor: addOpacityToHex(event.colorId),

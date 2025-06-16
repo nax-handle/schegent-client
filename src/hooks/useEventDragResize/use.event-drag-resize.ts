@@ -240,7 +240,6 @@ export function useEventDragResize({
       e.preventDefault();
       e.stopPropagation();
 
-      const startX = e.clientX;
       const startY = e.clientY;
       const initialStart = new Date(event.startTime);
       const initialEnd = new Date(event.endTime);
@@ -269,7 +268,6 @@ export function useEventDragResize({
       }
 
       const onMouseMove = (moveEvent: MouseEvent) => {
-        const diffX = moveEvent.clientX - startX;
         const diffY = moveEvent.clientY - startY;
 
         const gridRect = parent.getBoundingClientRect();
