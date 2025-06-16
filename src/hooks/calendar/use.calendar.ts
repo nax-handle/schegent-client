@@ -11,35 +11,29 @@ export const useCreateCalendar = () => {
       return calendar.createCalendar(data);
     },
     onMutate: async (newCalendar) => {
-      // Cancel any outgoing refetches
       await queryClient.cancelQueries({ queryKey: ["calendars"] });
-
-      // Snapshot the previous value
       const previousCalendars = queryClient.getQueryData(["calendars"]);
-
-      // Optimistically update to the new value
-      queryClient.setQueryData(["calendars"], (old: any) => {
-        const newData = {
-          ...old,
-          data: [
-            ...(old?.data || []),
-            { ...newCalendar, id: Date.now().toString() },
-          ],
-        };
-        return newData;
-      });
-
-      // Return a context object with the snapshotted value
+      queryClient.setQueryData(
+        ["calendars"],
+        (old: { data: SendCalendar[] } | undefined) => {
+          const newData = {
+            ...old,
+            data: [
+              ...(old?.data || []),
+              { ...newCalendar, id: Date.now().toString() },
+            ],
+          };
+          return newData;
+        }
+      );
       return { previousCalendars };
     },
     onError: (err, newCalendar, context) => {
-      // If the mutation fails, use the context returned from onMutate to roll back
       if (context?.previousCalendars) {
         queryClient.setQueryData(["calendars"], context.previousCalendars);
       }
     },
     onSettled: () => {
-      // Always refetch after error or success to ensure data is in sync
       queryClient.invalidateQueries({ queryKey: ["calendars"] });
     },
   });
@@ -70,15 +64,18 @@ export const useUpdateCalendar = () => {
       await queryClient.cancelQueries({ queryKey: ["calendars"] });
       const previousCalendars = queryClient.getQueryData(["calendars"]);
 
-      queryClient.setQueryData(["calendars"], (old: any) => {
-        const newData = {
-          ...old,
-          data: old?.data.map((calendar: any) =>
-            calendar.id === id ? { ...calendar, ...data } : calendar
-          ),
-        };
-        return newData;
-      });
+      queryClient.setQueryData(
+        ["calendars"],
+        (old: { data: (SendCalendar & { id: string })[] } | undefined) => {
+          const newData = {
+            ...old,
+            data: old?.data.map((calendar) =>
+              calendar.id === id ? { ...calendar, ...data } : calendar
+            ),
+          };
+          return newData;
+        }
+      );
 
       return { previousCalendars };
     },
