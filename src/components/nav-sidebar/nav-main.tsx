@@ -55,6 +55,7 @@ export function NavMain({
   setCalendarID,
   setIsEventDialogOpen,
   setSelectedCalendarColor,
+  isCollapsed,
 }: {
   items: NavItem[];
   calendar: Calendar[];
@@ -62,6 +63,7 @@ export function NavMain({
   setCalendarID: (id: string) => void;
   setIsEventDialogOpen: (isOpen: boolean) => void;
   setSelectedCalendarColor: (colorId: string) => void;
+  isCollapsed: boolean;
 }) {
   const { deleteCalendar } = useDeleteCalendar();
   const { setIsEventTypeDialogOpen, setEditingEventType } = useCalendarDialog();
@@ -108,7 +110,11 @@ export function NavMain({
                   <CollapsibleTrigger asChild>
                     <Link href={item.url || "#"}>
                       <SidebarMenuButton tooltip={item.title}>
-                        {item.icon && <item.icon className="w-5 h-5" />}
+                        {item.icon && (
+                          <item.icon
+                            className={isCollapsed ? "w-5 h-5" : "w-8 h-8"}
+                          />
+                        )}
                         <span>{item.title}</span>
                         <div className="ml-auto flex items-center">
                           <div
@@ -205,7 +211,11 @@ export function NavMain({
                     href={item.url}
                     className="flex items-center gap-2 w-full text-left"
                   >
-                    {item.icon && <item.icon className="w-4 h-4" />}
+                    {item.icon && (
+                      <item.icon
+                        className={isCollapsed ? "w-5 h-5" : "w-8 h-8"}
+                      />
+                    )}
                     <span>{item.title}</span>
                   </a>
                 </SidebarMenuButton>

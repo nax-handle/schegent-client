@@ -18,10 +18,12 @@ export function useEventDragResize({
   updateEvent,
   view = "week",
   onUpdate,
+  onOptimisticUpdate,
 }: {
   updateEvent: UpdateEvent;
   view?: "day" | "week";
   onUpdate?: () => void;
+  onOptimisticUpdate?: (eventId: string, updatedEvent: Event) => void;
 }) {
   const [dragIndicator, setDragIndicator] = useState<{
     top: number;
@@ -94,12 +96,18 @@ export function useEventDragResize({
         if (newEndTime <= startTime)
           newEndTime.setTime(startTime.getTime() + 60000);
 
+        const updatedEvent = {
+          ...event,
+          endTime: newEndTime.toISOString(),
+        };
+
+        // Optimistic update
+        onOptimisticUpdate?.(event.id, updatedEvent);
+
+        // API update
         updateEvent({
           id: event.id,
-          data: {
-            ...event,
-            endTime: newEndTime.toISOString(),
-          },
+          data: updatedEvent,
         });
 
         onUpdate?.();
@@ -112,7 +120,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view, onUpdate]
+    [updateEvent, hourHeight, view, onUpdate, onOptimisticUpdate]
   );
 
   const handleMouseDownMoveBlock = useCallback(
@@ -215,13 +223,19 @@ export function useEventDragResize({
           newStart.setTime(newStart.getTime() - diff);
         }
 
+        const updatedEvent = {
+          ...event,
+          startTime: newStart.toISOString(),
+          endTime: newEnd.toISOString(),
+        };
+
+        // Optimistic update
+        onOptimisticUpdate?.(event.id, updatedEvent);
+
+        // API update
         updateEvent({
           id: event.id,
-          data: {
-            ...event,
-            startTime: newStart.toISOString(),
-            endTime: newEnd.toISOString(),
-          },
+          data: updatedEvent,
         });
 
         onUpdate?.();
@@ -234,7 +248,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view, onUpdate]
+    [updateEvent, hourHeight, view, onUpdate, onOptimisticUpdate]
   );
 
   const handleMouseDownDragToOtherDay = useCallback(
@@ -269,61 +283,62 @@ export function useEventDragResize({
         el.style.opacity = "0";
       }
 
+      let newStart: Date;
+      let newEnd: Date;
+      let targetColumn: number;
+      let minutesMoved: number;
+
       const onMouseMove = (moveEvent: MouseEvent) => {
         const diffY = moveEvent.clientY - startY;
 
         const gridRect = parent.getBoundingClientRect();
         const relativeX = moveEvent.clientX - gridRect.left;
-        let targetColumn = Math.floor(relativeX / columnWidth);
-        targetColumn = clamp(targetColumn, 0, 6);
-        const minutesMoved = Math.round((diffY / hourHeight) * 60);
+        targetColumn = clamp(Math.floor(relativeX / columnWidth), 0, 6);
+        minutesMoved = Math.round((diffY / hourHeight) * 60);
 
-        const newStart = new Date(initialStart);
+        newStart = new Date(initialStart);
         newStart.setDate(
           initialStart.getDate() + (targetColumn - currentDayIndex)
         );
         newStart.setMinutes(initialStart.getMinutes() + minutesMoved);
-        const newEnd = new Date(newStart.getTime() + duration);
+        newEnd = new Date(newStart.getTime() + duration);
 
         const top =
           newStart.getHours() * hourHeight +
           (newStart.getMinutes() / 60) * hourHeight;
 
-        updateEvent({
-          id: event.id,
-          data: {
-            ...event,
-            startTime: newStart.toISOString(),
-            endTime: newEnd.toISOString(),
-          },
-        });
-
         setDragIndicator({ top, column: targetColumn });
       };
 
       const onMouseUp = (upEvent: MouseEvent) => {
-        const diffY = upEvent.clientY - startY;
+        if (!newStart || !newEnd) {
+          const diffY = upEvent.clientY - startY;
+          const gridRect = parent.getBoundingClientRect();
+          const relativeX = upEvent.clientX - gridRect.left;
+          targetColumn = clamp(Math.floor(relativeX / columnWidth), 0, 6);
+          minutesMoved = Math.round((diffY / hourHeight) * 60);
 
-        const gridRect = parent.getBoundingClientRect();
-        const relativeX = upEvent.clientX - gridRect.left;
-        let targetColumn = Math.floor(relativeX / columnWidth);
-        targetColumn = clamp(targetColumn, 0, 6);
-        const minutesMoved = Math.round((diffY / hourHeight) * 60);
+          newStart = new Date(initialStart);
+          newStart.setDate(
+            initialStart.getDate() + (targetColumn - currentDayIndex)
+          );
+          newStart.setMinutes(initialStart.getMinutes() + minutesMoved);
+          newEnd = new Date(newStart.getTime() + duration);
+        }
 
-        const newStart = new Date(initialStart);
-        newStart.setDate(
-          initialStart.getDate() + (targetColumn - currentDayIndex)
-        );
-        newStart.setMinutes(initialStart.getMinutes() + minutesMoved);
-        const newEnd = new Date(newStart.getTime() + duration);
+        const updatedEvent = {
+          ...event,
+          startTime: newStart.toISOString(),
+          endTime: newEnd.toISOString(),
+        };
 
+        // Optimistic update
+        onOptimisticUpdate?.(event.id, updatedEvent);
+
+        // API update
         updateEvent({
           id: event.id,
-          data: {
-            ...event,
-            startTime: newStart.toISOString(),
-            endTime: newEnd.toISOString(),
-          },
+          data: updatedEvent,
         });
 
         onUpdate?.();
@@ -343,7 +358,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view, onUpdate]
+    [updateEvent, hourHeight, view, onUpdate, onOptimisticUpdate]
   );
 
   return {

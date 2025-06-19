@@ -3,7 +3,6 @@
 import React, { useEffect, useState } from "react";
 import {
   ListChecks,
-  CalendarClock,
   ChartColumnDecreasing,
   UsersRound,
   Settings2,
@@ -51,6 +50,7 @@ export function AppSidebar({
       </SidebarHeader>
       <SidebarContent>
         <NavMain
+          isCollapsed={props.collapsible === "icon"}
           setChecked={setChecked}
           setCalendarID={setCalendarID}
           setIsEventDialogOpen={setIsEventDialogOpen}
@@ -64,12 +64,6 @@ export function AppSidebar({
               isActive: true,
               items: calendar,
               url: "/",
-            },
-            {
-              type: "sub",
-              title: "Events",
-              icon: CalendarClock,
-              url: "/events",
             },
             {
               type: "sub",

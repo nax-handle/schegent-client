@@ -4,7 +4,13 @@ import React, { useEffect, useState } from "react";
 import type { Event } from "@/types";
 import { useUpdateEvent } from "@/hooks/calendar/use.events";
 import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
-import { Pencil, Trash2 } from "lucide-react";
+import { Pencil, Trash2, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
 interface PropEvent {
   eventsdata: Event[];
@@ -13,6 +19,7 @@ interface PropEvent {
   handleUpdateEvent: (event: Event) => void;
   handleDeleteEvent: (eventId: string) => void;
   setSelectedEvent: (event: Event | null) => void;
+  onOptimisticUpdate?: (eventId: string, updatedEvent: Event) => void;
 }
 
 export default function Day({
@@ -20,6 +27,7 @@ export default function Day({
   setSelectedEvent,
   setIsEventDialogOpen,
   handleDeleteEvent,
+  onOptimisticUpdate,
 }: PropEvent) {
   const [topOffset, setTopOffset] = useState(0);
   const { updateEvent } = useUpdateEvent();
@@ -28,9 +36,7 @@ export default function Day({
     useEventDragResize({
       updateEvent,
       view: "day",
-      onUpdate: () => {
-        window.location.reload();
-      },
+      onOptimisticUpdate,
     });
   const [events, setEvents] = useState<Event[]>(eventsdata);
 
@@ -87,9 +93,6 @@ export default function Day({
   };
 
   const handleMouseUp = () => {
-    if (isDragging) {
-      window.location.reload();
-    }
     setIsDragging(false);
   };
 
@@ -115,6 +118,10 @@ export default function Day({
         <div
           className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden"
           style={{ height: "calc(100vh - 225px)" }}
+          onDoubleClick={() => {
+            setIsEventDialogOpen(true);
+            setSelectedEvent(null);
+          }}
         >
           <div className="flex h-full w-full">
             <div className="w-full relative">
@@ -186,33 +193,29 @@ export default function Day({
                           <span className="text-xl font-semibold dark:text-white">
                             {event.title}
                           </span>
-                          <div
-                            className={`flex gap-2 ${
-                              isDragging
-                                ? "hidden"
-                                : "opacity-0 group-hover:opacity-100"
-                            } transition-opacity`}
-                          >
-                            <button
-                              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setSelectedEvent(event);
-                                setIsEventDialogOpen(true);
-                              }}
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </button>
-                            <button
-                              className="p-1 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                handleDeleteEvent(event.id);
-                              }}
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
-                          </div>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <button className="border-none outline-none">
+                                <MoreVertical className="w-5 h-5" />
+                              </button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem
+                                onClick={() => {
+                                  setSelectedEvent(event);
+                                  setIsEventDialogOpen(true);
+                                }}
+                              >
+                                <Pencil className="w-4 h-4 mr-2" /> Sửa
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDeleteEvent(event.id)}
+                                className="text-red-600 focus:text-red-700"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" /> Xóa
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                         <span className="spanText-event">
                           {formatTime(stateTime)} - {formatTime(endTime)}

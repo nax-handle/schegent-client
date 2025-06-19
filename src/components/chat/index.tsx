@@ -3,15 +3,15 @@
 import type React from "react";
 
 import { useState } from "react";
-import { MessageSquare, Send, X, Mic, ImageIcon, Smile } from "lucide-react";
+import { MessageSquare, Send, X, Mic, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Avatar } from "@/components/ui/avatar";
-// Utility to join class names conditionally
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 function cn(...classes: (string | undefined | false | null)[]) {
   return classes.filter(Boolean).join(" ");
 }
+import { useProfile } from "@/hooks/auth/use.auth";
 
 interface Message {
   id: string;
@@ -21,6 +21,7 @@ interface Message {
 }
 
 export default function AiChatWidget() {
+  const { data } = useProfile();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -93,10 +94,22 @@ export default function AiChatWidget() {
           {/* Header */}
           <div className="bg-primary text-primary-foreground p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Avatar className="h-8 w-8">s</Avatar>
+              <Avatar className="h-8 w-8 bg-white">
+                <AvatarImage
+                  src="/placeholder.svg?height=40&width=40"
+                  alt="User"
+                />
+                <AvatarFallback>
+                  <AvatarFallback className="text-black bg-white">
+                    {data?.username
+                      ? data.username.substring(0, 1).toUpperCase()
+                      : ""}
+                  </AvatarFallback>
+                </AvatarFallback>
+              </Avatar>
               <div>
-                <h3 className="text-sm font-medium">AI Assistant</h3>
-                <p className="text-xs opacity-90">Hoạt động</p>
+                <h3 className="text-sm font-medium text-white">AI Assistant</h3>
+                <p className="text-xs opacity-90 text-white">Hoạt động</p>
               </div>
             </div>
             <Button
@@ -110,7 +123,7 @@ export default function AiChatWidget() {
           </div>
 
           {/* Message area */}
-          <div className="flex-1 p-3 overflow-y-auto max-h-[50vh] flex flex-col gap-3 bg-gray-100 dark:bg-gray-900">
+          <div className="flex-1 p-3 overflow-y-auto max-h-[50vh] flex flex-col gap-3 bg-white dark:bg-gray-900">
             {messages.map((message) => (
               <div
                 key={message.id}
@@ -122,15 +135,12 @@ export default function AiChatWidget() {
                 )}
               >
                 <div className="flex items-start gap-2">
-                  {message.role === "assistant" && (
-                    <Avatar className="h-6 w-6 mt-1">s</Avatar>
-                  )}
                   <div
                     className={cn(
                       "p-2 rounded-lg",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground rounded-br-none"
-                        : "bg-gray-200 dark:bg-gray-800 text-foreground rounded-bl-none"
+                        : "bg-gray-100 dark:bg-gray-800 text-foreground rounded-bl-none"
                     )}
                   >
                     {message.content}
@@ -147,7 +157,7 @@ export default function AiChatWidget() {
           </div>
 
           {/* Input area */}
-          <div className="p-3 border-t">
+          <div className="p-3 border-t bg-slate-50 dark:bg-gray-800">
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
               <div className="flex items-center gap-2">
                 <Button
@@ -156,7 +166,7 @@ export default function AiChatWidget() {
                   size="icon"
                   className="h-8 w-8"
                 >
-                  <Mic className="h-4 w-4" />
+                  <ImageIcon className="h-4 w-4 text-black dark:text-white" />
                 </Button>
                 <Button
                   type="button"
@@ -164,25 +174,17 @@ export default function AiChatWidget() {
                   size="icon"
                   className="h-8 w-8"
                 >
-                  <ImageIcon className="h-4 w-4" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                >
-                  <Smile className="h-4 w-4" />
+                  <Mic className="h-4 w-4 text-black dark:text-white" />
                 </Button>
               </div>
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Aa"
-                className="flex-1"
+                className="flex-1 bg-white decored-input text-black"
               />
               <Button type="submit" size="icon" className="h-8 w-8">
-                <Send className="h-4 w-4" />
+                <Send className="h-4 w-4 text-white" />
               </Button>
             </form>
           </div>

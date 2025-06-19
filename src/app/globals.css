@@ -138,3 +138,10 @@ html {
 .spanText-event {
   @apply text-xs dark:text-white my-1;
 }
+
+.decored-selection {
+  @apply border border-gray-300 focus:border-blue-500 focus:ring-blue-500;
+}
+.decored-input {
+  @apply border border-gray-300 focus:border-blue-500 focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500;
+}

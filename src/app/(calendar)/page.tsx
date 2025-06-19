@@ -9,6 +9,7 @@ type CalendarView = "day" | "week" | "month";
 import {
   useMultiCalendarEvents,
   useDeleteEvent,
+  useUpdateEvent,
 } from "@/hooks/calendar/use.events";
 import { Event, SendEvent, Calendar } from "@/types";
 import { EventDialog } from "@/components/events/event-dialog";
@@ -33,8 +34,12 @@ export default function CalendarPage({
   selectedCalendarColor: string;
 }) {
   const [currentView, setCurrentView] = useState<CalendarView>("day");
-  const [mounted, setMounted] = useState(false);
   const { deleteEvent } = useDeleteEvent();
+  const {
+    updateEvent: updateEventAPI,
+    isUpdatingEvent,
+    updateEventError,
+  } = useUpdateEvent();
 
   const { updateCalendar } = useUpdateCalendar();
   const { createCalendar } = useCreateCalendar();
@@ -49,6 +54,9 @@ export default function CalendarPage({
   const [events, setEvents] = useState<Event[] | null>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [, setSelectedCalendarID] = useState<string>("");
+  const [optimisticUpdates, setOptimisticUpdates] = useState<
+    Map<string, Event>
+  >(new Map());
 
   const queryResults = useMultiCalendarEvents(
     checked,
@@ -57,20 +65,6 @@ export default function CalendarPage({
   );
 
   const data = queryResults.map((result) => result.data).filter(Boolean);
-
-  useEffect(() => {
-    const savedView = localStorage.getItem("view") as CalendarView;
-    if (savedView) {
-      setCurrentView(savedView);
-    }
-    setMounted(true);
-  }, []);
-
-  useEffect(() => {
-    if (mounted) {
-      localStorage.setItem("view", currentView);
-    }
-  }, [currentView, mounted]);
 
   useEffect(() => {
     const mergedEvents = data
@@ -122,20 +116,65 @@ export default function CalendarPage({
   const handleUpdateEvent = (eventData: Partial<Event>) => {
     if (!selectedEvent) return;
 
+    // Lưu trạng thái cũ để rollback nếu cần
+    const originalEvent = events?.find((e) => e.id === selectedEvent.id);
+    if (originalEvent) {
+      setOptimisticUpdates(
+        (prev) => new Map(prev.set(selectedEvent.id, originalEvent))
+      );
+    }
+
+    // Optimistic update cho dialog updates
     setEvents((prevEvents) => {
       if (!prevEvents) return prevEvents;
       return prevEvents.map((event) =>
         event.id === selectedEvent.id ? { ...event, ...eventData } : event
       );
     });
+
+    // Gọi API để cập nhật backend
+    updateEventAPI({
+      id: selectedEvent.id,
+      data: {
+        ...selectedEvent,
+        ...eventData,
+      } as SendEvent,
+    });
+
     setSelectedEvent(null);
   };
 
+  // Rollback optimistic updates nếu có lỗi
+  useEffect(() => {
+    if (updateEventError) {
+      setEvents((prevEvents) => {
+        if (!prevEvents) return prevEvents;
+        return prevEvents.map((event) => {
+          const originalEvent = optimisticUpdates.get(event.id);
+          return originalEvent || event;
+        });
+      });
+      setOptimisticUpdates(new Map());
+    }
+  }, [updateEventError, optimisticUpdates]);
+
   const handleDeleteEvent = (eventId: string) => {
-    deleteEvent(eventId);
     setEvents((prevEvents) => {
       if (!prevEvents) return prevEvents;
       return prevEvents.filter((event) => event.id !== eventId);
+    });
+
+    deleteEvent(eventId);
+  };
+
+  const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
+    // Chỉ cập nhật state cho drag/resize operations
+    // Dialog updates sẽ được xử lý bởi React Query
+    setEvents((prevEvents) => {
+      if (!prevEvents) return prevEvents;
+      return prevEvents.map((event) =>
+        event.id === eventId ? updatedEvent : event
+      );
     });
   };
 
@@ -181,6 +220,7 @@ export default function CalendarPage({
               handleUpdateEvent={handleUpdateEvent}
               setSelectedEvent={setSelectedEvent}
               handleDeleteEvent={handleDeleteEvent}
+              onOptimisticUpdate={handleOptimisticUpdate}
             />
           )}
           {currentView === "week" && (
@@ -191,6 +231,7 @@ export default function CalendarPage({
               handleUpdateEvent={handleUpdateEvent}
               setSelectedEvent={setSelectedEvent}
               handleDeleteEvent={handleDeleteEvent}
+              onOptimisticUpdate={handleOptimisticUpdate}
             />
           )}
           {currentView === "month" && <Month eventsdata={events ?? []} />}

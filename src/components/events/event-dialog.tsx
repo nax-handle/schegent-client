@@ -16,7 +16,7 @@ import type { Event, SendEvent } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import TimePicker from "@/components/picker-date-time/time-picker";
-import { Switch } from "../ui/switch";
+import { useGetAllCalendars } from "@/hooks/calendar/use.calendar";
 import { useCreateEvent, useUpdateEvent } from "@/hooks/calendar/use.events";
 
 interface EventDialogProps {
@@ -40,6 +40,7 @@ export function EventDialog({
   const modalRef = useRef<HTMLDivElement>(null);
   const { createEvent, createEventError } = useCreateEvent();
   const { updateEvent, updateEventError } = useUpdateEvent();
+  const { data: calendarData } = useGetAllCalendars();
 
   const [formData, setFormData] = useState<Partial<SendEvent>>({
     title: "",
@@ -86,6 +87,20 @@ export function EventDialog({
       }));
     }
   }, [event]);
+
+  useEffect(() => {
+    if (
+      !event &&
+      calendarData &&
+      calendarData.length > 0 &&
+      !formData.calendarId
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        calendarId: calendarData[0].id,
+      }));
+    }
+  }, [event, calendarData, formData.calendarId]);
 
   const handleSave = () => {
     if (!formData.calendarId) {
@@ -139,21 +154,53 @@ export function EventDialog({
                   setFormData({ ...formData, title: e.target.value })
                 }
                 placeholder={t("Enter event title")}
-              />
-            </div>{" "}
-            <div className="flex items-center">
-              <Label htmlFor="isAllDay">{t("All Day Event:")}</Label>
-              <Switch
-                id="isAllDay"
-                checked={formData.isAllDay || false}
-                onCheckedChange={(checked) =>
-                  setFormData({ ...formData, isAllDay: checked })
-                }
-                className="ml-2"
+                className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 focus:outline-none"
               />
             </div>
+            <div>
+              <Label htmlFor="eventType">{t("Event Type")}</Label>
+              <Select
+                value={formData.calendarId || "none"}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    calendarId: value === "none" ? undefined : value,
+                  })
+                }
+              >
+                <SelectTrigger className="w-full decored-selection">
+                  <SelectValue placeholder={t("Select event type")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {calendarData?.map((type) => (
+                    <SelectItem
+                      key={type.id}
+                      value={type.id}
+                      className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                    >
+                      <div className="flex items-center gap-2">
+                        <div
+                          className={`w-3 h-3 rounded-full ${type.colorId}`}
+                        />
+                        {type.name}
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
-
+          {/* <div className="flex items-center">
+            <Label htmlFor="isAllDay">{t("All Day Event:")}</Label>
+            <Switch
+              id="isAllDay"
+              checked={formData.isAllDay || false}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, isAllDay: checked })
+              }
+              className="ml-2"
+            />
+          </div> */}
           <div>
             <Label htmlFor="description">{t("Description")}</Label>
             <Textarea
@@ -164,6 +211,7 @@ export function EventDialog({
               }
               placeholder={t("Enter event description")}
               rows={3}
+              className="decored-selection"
             />
           </div>
 
@@ -179,13 +227,28 @@ export function EventDialog({
                   })
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full decored-selection">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="low">{t("Low")}</SelectItem>
-                  <SelectItem value="medium">{t("Medium")}</SelectItem>
-                  <SelectItem value="high">{t("High")}</SelectItem>
+                  <SelectItem
+                    value="low"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Low")}
+                  </SelectItem>
+                  <SelectItem
+                    value="medium"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Medium")}
+                  </SelectItem>
+                  <SelectItem
+                    value="high"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("High")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -198,6 +261,7 @@ export function EventDialog({
                   setFormData({ ...formData, hangoutLink: e.target.value })
                 }
                 placeholder={t("Enter event hangout link")}
+                className="decored-input"
               />
             </div>
           </div>
@@ -217,15 +281,40 @@ export function EventDialog({
                   setFormData({ ...formData, recurrence: value })
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full decored-selection">
                   <SelectValue placeholder={t("Select")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("None")}</SelectItem>
-                  <SelectItem value="daily">{t("Daily")}</SelectItem>
-                  <SelectItem value="weekly">{t("Weekly")}</SelectItem>
-                  <SelectItem value="monthly">{t("Monthly")}</SelectItem>
-                  <SelectItem value="yearly">{t("Yearly")}</SelectItem>
+                  <SelectItem
+                    value="none"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("None")}
+                  </SelectItem>
+                  <SelectItem
+                    value="daily"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Daily")}
+                  </SelectItem>
+                  <SelectItem
+                    value="weekly"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Weekly")}
+                  </SelectItem>
+                  <SelectItem
+                    value="monthly"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Monthly")}
+                  </SelectItem>
+                  <SelectItem
+                    value="yearly"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Yearly")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -238,13 +327,28 @@ export function EventDialog({
                   setFormData({ ...formData, visibility: value })
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full decored-selection">
                   <SelectValue placeholder={t("Select")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="default">{t("Default")}</SelectItem>
-                  <SelectItem value="public">{t("Public")}</SelectItem>
-                  <SelectItem value="private">{t("Private")}</SelectItem>
+                  <SelectItem
+                    value="default"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Default")}
+                  </SelectItem>
+                  <SelectItem
+                    value="public"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Public")}
+                  </SelectItem>
+                  <SelectItem
+                    value="private"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Private")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -259,6 +363,7 @@ export function EventDialog({
                 setFormData({ ...formData, location: e.target.value })
               }
               placeholder={t("Enter event location")}
+              className="decored-input"
             />
           </div>
 
@@ -274,13 +379,28 @@ export function EventDialog({
                   })
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full decored-selection">
                   <SelectValue placeholder={t("Select")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="confirmed">{t("Confirmed")}</SelectItem>
-                  <SelectItem value="tentative">{t("Tentative")}</SelectItem>
-                  <SelectItem value="cancelled">{t("Cancelled")}</SelectItem>
+                  <SelectItem
+                    value="confirmed"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Confirmed")}
+                  </SelectItem>
+                  <SelectItem
+                    value="tentative"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Tentative")}
+                  </SelectItem>
+                  <SelectItem
+                    value="cancelled"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Cancelled")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -296,13 +416,28 @@ export function EventDialog({
                   })
                 }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full decored-selection">
                   <SelectValue placeholder={t("Select")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="general">{t("General")}</SelectItem>
-                  <SelectItem value="habit">{t("Habit")}</SelectItem>
-                  <SelectItem value="task">{t("Task")}</SelectItem>
+                  <SelectItem
+                    value="general"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("General")}
+                  </SelectItem>
+                  <SelectItem
+                    value="habit"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Habit")}
+                  </SelectItem>
+                  <SelectItem
+                    value="task"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Task")}
+                  </SelectItem>
                 </SelectContent>
               </Select>
             </div>
