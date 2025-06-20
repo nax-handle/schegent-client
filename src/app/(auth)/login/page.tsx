@@ -31,9 +31,9 @@ export default function Login() {
 
   return (
     <div className="w-full h-screen flex items-center justify-center">
-      <div className="w-full max-w-md mx-auto p-6 backdrop-blur-2xl bg-gray-200/20 border-1 rounded-xl">
+      <div className="w-full max-w-md mx-auto p-6 backdrop-blur-2xl  border-1 rounded-xl">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-[#2e2e77] dark:text-[#6363c6]">
+          <h1 className="text-2xl font-bold text-black">
             {t("LogIn")}
           </h1>
         </div>

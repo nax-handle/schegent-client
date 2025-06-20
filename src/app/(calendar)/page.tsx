@@ -35,11 +35,7 @@ export default function CalendarPage({
 }) {
   const [currentView, setCurrentView] = useState<CalendarView>("day");
   const { deleteEvent } = useDeleteEvent();
-  const {
-    updateEvent: updateEventAPI,
-    isUpdatingEvent,
-    updateEventError,
-  } = useUpdateEvent();
+  const { updateEvent: updateEventAPI, updateEventError } = useUpdateEvent();
 
   const { updateCalendar } = useUpdateCalendar();
   const { createCalendar } = useCreateCalendar();
@@ -214,7 +210,7 @@ export default function CalendarPage({
         <div className={`flex-1  mr-1 `}>
           {currentView === "day" && (
             <Day
-              eventsdata={events ?? []}
+              eventsData={events ?? []}
               setCalendarID={setSelectedCalendarID}
               setIsEventDialogOpen={setIsEventDialogOpen}
               handleUpdateEvent={handleUpdateEvent}
