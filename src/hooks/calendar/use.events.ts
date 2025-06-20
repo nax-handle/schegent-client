@@ -1,9 +1,4 @@
-import {
-  useMutation,
-  useQuery,
-  useQueries,
-  useQueryClient,
-} from "@tanstack/react-query";
+import { useMutation, useQuery, useQueries } from "@tanstack/react-query";
 import * as events from "@/lib/services/events";
 import { SendEvent, ResponseEvent } from "@/types";
 
@@ -66,7 +61,7 @@ export const useUpdateEvent = () => {
     onSuccess: (data, variables) => {
       console.log("Event updated successfully:", variables.id);
     },
-    onError: (err, variables) => {
+    onError: (err) => {
       console.error("Failed to update event:", err);
     },
   });

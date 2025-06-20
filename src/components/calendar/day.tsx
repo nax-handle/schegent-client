@@ -11,9 +11,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import ContextMenuComponent from "../context-menu/create-event";
 
 interface PropEvent {
-  eventsdata: Event[];
+  eventsData: Event[];
   setCalendarID: (id: string) => void;
   setIsEventDialogOpen: (isOpen: boolean) => void;
   handleUpdateEvent: (event: Event) => void;
@@ -23,7 +24,7 @@ interface PropEvent {
 }
 
 export default function Day({
-  eventsdata,
+  eventsData,
   setSelectedEvent,
   setIsEventDialogOpen,
   handleDeleteEvent,
@@ -38,7 +39,7 @@ export default function Day({
       view: "day",
       onOptimisticUpdate,
     });
-  const [events, setEvents] = useState<Event[]>(eventsdata);
+  const [events, setEvents] = useState<Event[]>(eventsData);
 
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
@@ -71,8 +72,8 @@ export default function Day({
   }, []);
 
   useEffect(() => {
-    setEvents(eventsdata);
-  }, [eventsdata]);
+    setEvents(eventsData);
+  }, [eventsData]);
 
   const addOpacityToHex = (color: string) => {
     const alpha = Math.round(255 * 0.19)
@@ -115,142 +116,147 @@ export default function Day({
           </span>
           <span className="text-sm text-white border-b p-2 w-full"></span>
         </div>
-        <div
-          className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden"
-          style={{ height: "calc(100vh - 225px)" }}
-          onDoubleClick={() => {
+        <ContextMenuComponent
+          openDialog={() => {
             setIsEventDialogOpen(true);
             setSelectedEvent(null);
           }}
         >
-          <div className="flex h-full w-full">
-            <div className="w-full relative">
-              <div className="absolute -top-[10px] left-0 z-10">
-                {Array.from({ length: 24 }, (_, i) => (
-                  <div className="flex h-[65px]" key={i}>
-                    <div className="w-[85px] z-20 border-r">
-                      <p className="text-sm dark:text-white text-black w-18 px-4">
-                        {i === 0 ? "" : `${i}:00`}
-                      </p>
+          <div
+            className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden"
+            style={{ height: "calc(100vh - 225px)" }}
+          >
+            <div className="flex h-full w-full">
+              <div className="w-full relative">
+                <div className="absolute -top-[10px] left-0 z-10">
+                  {Array.from({ length: 24 }, (_, i) => (
+                    <div className="flex h-[65px]" key={i}>
+                      <div className="w-[85px] z-20 border-r">
+                        <p className="text-sm dark:text-white text-black w-18 px-4">
+                          {i === 0 ? "" : `${i}:00`}
+                        </p>
+                      </div>
                     </div>
-                  </div>
+                  ))}
+                </div>
+
+                {Array.from({ length: 24 }, (_, j) => (
+                  <div
+                    key={j}
+                    className={`absolute ${j > 0 && "border-b"} w-full left-18`}
+                    style={{ top: `${j * 65}px` }}
+                  ></div>
                 ))}
-              </div>
 
-              {Array.from({ length: 24 }, (_, j) => (
-                <div
-                  key={j}
-                  className={`absolute ${j > 0 && "border-b"} w-full left-18`}
-                  style={{ top: `${j * 65}px` }}
-                ></div>
-              ))}
+                {events
+                  .filter(
+                    (event) =>
+                      new Date(event.startTime).getDate() ===
+                      new Date().getDate()
+                  )
+                  .map((event) => {
+                    const stateTime = new Date(event.startTime);
+                    const hourStartTime = stateTime.getHours();
+                    const minuteStartTime = stateTime.getMinutes();
+                    const top =
+                      hourStartTime * 65 + (minuteStartTime / 60) * 65;
 
-              {events
-                .filter(
-                  (event) =>
-                    new Date(event.startTime).getDate() === new Date().getDate()
-                )
-                .map((event) => {
-                  const stateTime = new Date(event.startTime);
-                  const hourStartTime = stateTime.getHours();
-                  const minuteStartTime = stateTime.getMinutes();
-                  const top = hourStartTime * 65 + (minuteStartTime / 60) * 65;
+                    const endTime = new Date(event.endTime);
+                    const hourEndTime = endTime.getHours();
+                    const minuteEndTime = endTime.getMinutes();
+                    const height =
+                      (hourEndTime - hourStartTime) * 65 +
+                      (minuteEndTime - minuteStartTime) * (65 / 60);
 
-                  const endTime = new Date(event.endTime);
-                  const hourEndTime = endTime.getHours();
-                  const minuteEndTime = endTime.getMinutes();
-                  const height =
-                    (hourEndTime - hourStartTime) * 65 +
-                    (minuteEndTime - minuteStartTime) * (65 / 60);
+                    const formatTime = (date: Date) => {
+                      return date.toLocaleTimeString([], {
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        hour12: false,
+                      });
+                    };
 
-                  const formatTime = (date: Date) => {
-                    return date.toLocaleTimeString([], {
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      hour12: false,
-                    });
-                  };
-
-                  return (
-                    <div
-                      key={event.id}
-                      className="flex items-center w-full left-26 z-20 justify-right absolute right-0"
-                      style={{ top: `${top}px` }}
-                    >
-                      <span
-                        onMouseDown={(e) => handleMouseDown(e, event)}
-                        className={`p-3 w-full mr-30 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative ${
-                          isDragging ? "cursor-grabbing" : "cursor-move"
-                        } group`}
-                        style={{
-                          height: `${height}px`,
-                          borderLeftColor: event.colorId,
-                          backgroundColor: addOpacityToHex(event.colorId),
-                          overflow: "hidden",
-                        }}
+                    return (
+                      <div
+                        key={event.id}
+                        className="flex items-center w-full left-26 z-20 justify-right absolute right-0"
+                        style={{ top: `${top}px` }}
                       >
-                        <div className="flex justify-between items-start">
-                          <span className="text-xl font-semibold dark:text-white">
-                            {event.title}
+                        <span
+                          onMouseDown={(e) => handleMouseDown(e, event)}
+                          className={`p-3 w-full mr-30 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative ${
+                            isDragging ? "cursor-grabbing" : "cursor-move"
+                          } group`}
+                          style={{
+                            height: `${height}px`,
+                            borderLeftColor: event.colorId,
+                            backgroundColor: addOpacityToHex(event.colorId),
+                            overflow: "hidden",
+                          }}
+                        >
+                          <div className="flex justify-between items-start">
+                            <span className="text-xl font-semibold dark:text-white">
+                              {event.title}
+                            </span>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button className="border-none outline-none">
+                                  <MoreVertical className="w-5 h-5" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedEvent(event);
+                                    setIsEventDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="w-4 h-4 mr-2" /> Sửa
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteEvent(event.id)}
+                                  className="text-red-600 focus:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" /> Xóa
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          <span className="spanText-event">
+                            {formatTime(stateTime)} - {formatTime(endTime)}
                           </span>
-                          <DropdownMenu>
-                            <DropdownMenuTrigger asChild>
-                              <button className="border-none outline-none">
-                                <MoreVertical className="w-5 h-5" />
-                              </button>
-                            </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem
-                                onClick={() => {
-                                  setSelectedEvent(event);
-                                  setIsEventDialogOpen(true);
-                                }}
-                              >
-                                <Pencil className="w-4 h-4 mr-2" /> Sửa
-                              </DropdownMenuItem>
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteEvent(event.id)}
-                                className="text-red-600 focus:text-red-700"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" /> Xóa
-                              </DropdownMenuItem>
-                            </DropdownMenuContent>
-                          </DropdownMenu>
-                        </div>
-                        <span className="spanText-event">
-                          {formatTime(stateTime)} - {formatTime(endTime)}
-                        </span>
-                        <span className="spanText-event">
-                          <span className="font-bold">Description:</span>{" "}
-                          {event.description}
-                        </span>
-                        <span className="spanText-event">
-                          <span className="font-bold">Location:</span>{" "}
-                          {event.location}
-                        </span>
+                          <span className="spanText-event">
+                            <span className="font-bold">Description:</span>{" "}
+                            {event.description}
+                          </span>
+                          <span className="spanText-event">
+                            <span className="font-bold">Location:</span>{" "}
+                            {event.location}
+                          </span>
 
-                        {/* Resize Bottom */}
-                        <div
-                          className="resize-handle absolute bottom-0 left-0 w-full h-0.5 cursor-ns-resize z-50 hover:bg-gray-300 dark:hover:bg-gray-600"
-                          onMouseDown={(e) => handleMouseDownResize(e, event)}
-                        ></div>
-                      </span>
-                    </div>
-                  );
-                })}
+                          {/* Resize Bottom */}
+                          <div
+                            className="resize-handle absolute bottom-0 left-0 w-full h-0.5 cursor-ns-resize z-50 hover:bg-gray-300 dark:hover:bg-gray-600"
+                            onMouseDown={(e) => handleMouseDownResize(e, event)}
+                          ></div>
+                        </span>
+                      </div>
+                    );
+                  })}
 
-              {/* Dòng giờ hiện tại */}
-              <div
-                className="flex items-center w-full z-20 justify-right absolute right-0 left-19.5"
-                style={{ top: `${topOffset}px` }}
-              >
-                <span className="bg-red-500 h-[1px] w-full flex items-center">
-                  <span className="w-3 h-3 rounded-full p-1 bg-red-500"></span>
-                </span>
+                {/* Dòng giờ hiện tại */}
+                <div
+                  className="flex items-center w-full z-20 justify-right absolute right-0 left-19.5"
+                  style={{ top: `${topOffset}px` }}
+                >
+                  <span className="bg-red-500 h-[1px] w-full flex items-center">
+                    <span className="w-3 h-3 rounded-full p-1 bg-red-500"></span>
+                  </span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
+        </ContextMenuComponent>
       </div>
     </div>
   );

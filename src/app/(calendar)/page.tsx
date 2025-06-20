@@ -204,7 +204,7 @@ export default function CalendarPage({
         <div className={`flex-1  mr-1 `}>
           {currentView === "day" && (
             <Day
-              eventsdata={events ?? []}
+              eventsData={events ?? []}
               setCalendarID={setSelectedCalendarID}
               setIsEventDialogOpen={setIsEventDialogOpen}
               handleUpdateEvent={handleUpdateEvent}

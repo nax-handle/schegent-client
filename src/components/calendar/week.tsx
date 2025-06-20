@@ -10,6 +10,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
+import ContextMenuComponent from "../context-menu/create-event";
 
 interface PropEvent {
   eventsdata: Event[];
@@ -119,178 +120,183 @@ export default function Week({
           })}
         </div>
       </div>
-
-      <div
-        className="relative overflow-y-auto scrollbar-hidden"
-        style={{ height: "calc(100vh - 210px)" }}
-        onDoubleClick={() => {
+      <ContextMenuComponent
+        openDialog={() => {
           setIsEventDialogOpen(true);
           setSelectedEvent(null);
         }}
       >
-        <div className="absolute left-0 w-20 z-10 h-full">
-          {Array.from({ length: 24 }, (_, i) => (
-            <div
-              key={i}
-              className="flex h-14 items-center justify-center pr-2 border-r  text-xs "
-            >
-              <p className="mb-13.5">{i === 0 ? "" : `${i}:00`}</p>
-            </div>
-          ))}
-        </div>
+        <div
+          className="relative overflow-y-auto scrollbar-hidden"
+          style={{ height: "calc(100vh - 210px)" }}
+        >
+          <div className="absolute left-0 w-20 z-10 h-full">
+            {Array.from({ length: 24 }, (_, i) => (
+              <div
+                key={i}
+                className="flex h-14 items-center justify-center pr-2 border-r  text-xs "
+              >
+                <p className="mb-13.5">{i === 0 ? "" : `${i}:00`}</p>
+              </div>
+            ))}
+          </div>
 
-        <div className="flex w-full h-full relative pl-20 ">
-          <div className="grid grid-cols-7 divide-x divide-gray-200 flex-1 w-full">
-            {days.map((day, dayIndex) => {
-              const date = new Date(today);
-              const diff = dayIndex - todayIndex;
-              date.setDate(today.getDate() + diff);
-              const currentDate = date;
+          <div className="flex w-full h-full relative pl-20 ">
+            <div className="grid grid-cols-7 divide-x divide-gray-200 flex-1 w-full">
+              {days.map((day, dayIndex) => {
+                const date = new Date(today);
+                const diff = dayIndex - todayIndex;
+                date.setDate(today.getDate() + diff);
+                const currentDate = date;
 
-              return (
-                <div key={day} className="relative">
-                  {hours.map((hour, index) => (
-                    <div
-                      key={`${hour}-${index}`}
-                      className={`h-14 ${
-                        index === hours.length - 1
-                          ? ""
-                          : "border-b dark:border-gray-200 border-gray-300"
-                      }`}
-                    ></div>
-                  ))}
+                return (
+                  <div key={day} className="relative">
+                    {hours.map((hour, index) => (
+                      <div
+                        key={`${hour}-${index}`}
+                        className={`h-14 ${
+                          index === hours.length - 1
+                            ? ""
+                            : "border-b dark:border-gray-200 border-gray-300"
+                        }`}
+                      ></div>
+                    ))}
 
-                  {events
-                    .filter((event) => {
-                      const eventDate = new Date(event.startTime);
-                      return (
-                        eventDate.getDate() === currentDate.getDate() &&
-                        eventDate.getMonth() === currentDate.getMonth() &&
-                        eventDate.getFullYear() === currentDate.getFullYear()
-                      );
-                    })
-                    .map((event, index) => {
-                      const stateTime = new Date(event.startTime);
-                      const hourStartTime = stateTime.getHours();
-                      const minuteStartTime = stateTime.getMinutes();
-                      const top =
-                        hourStartTime * 56 + (minuteStartTime / 60) * 56;
+                    {events
+                      .filter((event) => {
+                        const eventDate = new Date(event.startTime);
+                        return (
+                          eventDate.getDate() === currentDate.getDate() &&
+                          eventDate.getMonth() === currentDate.getMonth() &&
+                          eventDate.getFullYear() === currentDate.getFullYear()
+                        );
+                      })
+                      .map((event, index) => {
+                        const stateTime = new Date(event.startTime);
+                        const hourStartTime = stateTime.getHours();
+                        const minuteStartTime = stateTime.getMinutes();
+                        const top =
+                          hourStartTime * 56 + (minuteStartTime / 60) * 56;
 
-                      const endTime = new Date(event.endTime);
-                      const hourEndTime = endTime.getHours();
-                      const minuteEndTime = endTime.getMinutes();
-                      const height =
-                        (hourEndTime - hourStartTime) * 56 +
-                        (minuteEndTime - minuteStartTime) * (56 / 60);
+                        const endTime = new Date(event.endTime);
+                        const hourEndTime = endTime.getHours();
+                        const minuteEndTime = endTime.getMinutes();
+                        const height =
+                          (hourEndTime - hourStartTime) * 56 +
+                          (minuteEndTime - minuteStartTime) * (56 / 60);
 
-                      return (
-                        <div
-                          key={index}
-                          className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none group`}
-                          style={{
-                            top: `${top}px`,
-                            height: `${height}px`,
-                            borderLeftColor: event.colorId,
-                            backgroundColor: addOpacityToHex(event.colorId),
-                            zIndex: 10,
-                          }}
-                        >
-                          <div className="flex justify-between items-start">
-                            <div className="text-xs truncate pointer-events-none">
-                              {new Date(event.startTime).toLocaleTimeString(
-                                [],
-                                {
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                }
-                              )}{" "}
-                              -{" "}
-                              {new Date(event.endTime).toLocaleTimeString([], {
-                                hour: "2-digit",
-                                minute: "2-digit",
-                              })}
+                        return (
+                          <div
+                            key={index}
+                            className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none group`}
+                            style={{
+                              top: `${top}px`,
+                              height: `${height}px`,
+                              borderLeftColor: event.colorId,
+                              backgroundColor: addOpacityToHex(event.colorId),
+                              zIndex: 10,
+                            }}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div className="text-xs truncate pointer-events-none">
+                                {new Date(event.startTime).toLocaleTimeString(
+                                  [],
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}{" "}
+                                -{" "}
+                                {new Date(event.endTime).toLocaleTimeString(
+                                  [],
+                                  {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  }
+                                )}
+                              </div>
+                              <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                  <button
+                                    className={`border-none outline-none ${
+                                      isDragging
+                                        ? "hidden"
+                                        : "opacity-0 group-hover:opacity-100"
+                                    } transition-opacity`}
+                                  >
+                                    <MoreVertical className="w-5 h-5" />
+                                  </button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end">
+                                  <DropdownMenuItem
+                                    onClick={() => {
+                                      setSelectedEvent(event);
+                                      setIsEventDialogOpen(true);
+                                    }}
+                                  >
+                                    <Pencil className="w-4 h-4 mr-2" /> Sửa
+                                  </DropdownMenuItem>
+                                  <DropdownMenuItem
+                                    onClick={() => handleDeleteEvent(event.id)}
+                                    className="text-red-600 focus:text-red-700"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" /> Xóa
+                                  </DropdownMenuItem>
+                                </DropdownMenuContent>
+                              </DropdownMenu>
                             </div>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <button
-                                  className={`border-none outline-none ${
-                                    isDragging
-                                      ? "hidden"
-                                      : "opacity-0 group-hover:opacity-100"
-                                  } transition-opacity`}
-                                >
-                                  <MoreVertical className="w-5 h-5" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setSelectedEvent(event);
-                                    setIsEventDialogOpen(true);
-                                  }}
-                                >
-                                  <Pencil className="w-4 h-4 mr-2" /> Sửa
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => handleDeleteEvent(event.id)}
-                                  className="text-red-600 focus:text-red-700"
-                                >
-                                  <Trash2 className="w-4 h-4 mr-2" /> Xóa
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
+                            <div
+                              className={`h-full w-full ${
+                                isDragging ? "cursor-grabbing" : "cursor-move"
+                              }`}
+                              onMouseDown={(e) => handleMouseDown(e, event)}
+                            ></div>
+                            <div
+                              className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                handleMouseDownResize(e, event);
+                              }}
+                            />
+                            <div
+                              className="absolute top-0 left-0 right-0 h-2 cursor-move"
+                              onMouseDown={(e) => {
+                                e.stopPropagation();
+                                handleMouseDownMoveBlock(e, event);
+                              }}
+                            />
                           </div>
-                          <div
-                            className={`h-full w-full ${
-                              isDragging ? "cursor-grabbing" : "cursor-move"
-                            }`}
-                            onMouseDown={(e) => handleMouseDown(e, event)}
-                          ></div>
-                          <div
-                            className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize"
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              handleMouseDownResize(e, event);
-                            }}
-                          />
-                          <div
-                            className="absolute top-0 left-0 right-0 h-2 cursor-move"
-                            onMouseDown={(e) => {
-                              e.stopPropagation();
-                              handleMouseDownMoveBlock(e, event);
-                            }}
-                          />
+                        );
+                      })}
+
+                    {dayIndex === todayIndex && (
+                      <div
+                        className="absolute top-0 left-0 right-0 z-20"
+                        style={{ top: `${topOffset}px` }}
+                      >
+                        <div className="relative w-full h-[1px] bg-red-500">
+                          <span className="absolute -left-1 top-0 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500"></span>
                         </div>
-                      );
-                    })}
-
-                  {dayIndex === todayIndex && (
-                    <div
-                      className="absolute top-0 left-0 right-0 z-20"
-                      style={{ top: `${topOffset}px` }}
-                    >
-                      <div className="relative w-full h-[1px] bg-red-500">
-                        <span className="absolute -left-1 top-0 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500"></span>
                       </div>
-                    </div>
-                  )}
+                    )}
 
-                  {dragIndicator && dragIndicator.column === dayIndex && (
-                    <div
-                      className="absolute h-0.5 bg-blue-500 z-30 pointer-events-none"
-                      style={{
-                        top: `${dragIndicator.top}px`,
-                        left: "4px",
-                        right: "4px",
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })}
+                    {dragIndicator && dragIndicator.column === dayIndex && (
+                      <div
+                        className="absolute h-0.5 bg-blue-500 z-30 pointer-events-none"
+                        style={{
+                          top: `${dragIndicator.top}px`,
+                          left: "4px",
+                          right: "4px",
+                        }}
+                      />
+                    )}
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
-      </div>
+      </ContextMenuComponent>
     </div>
   );
 }
