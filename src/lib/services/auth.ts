@@ -1,6 +1,6 @@
 import { axiosInstance } from "../axios";
 import Cookies from "js-cookie";
-import { getAuthToken } from "../auth";
+import { getAuthToken, getSessionId, clearSessionId } from "../auth";
 
 const isClient = typeof window !== "undefined";
 
@@ -78,14 +78,13 @@ const API_ENDPOINTS = {
   VERIFY: "/auth/verify-email",
   LOGIN: "/auth/login",
   LOGOUT: "/auth/logout",
+  FORGOT_PASSWORD: "/auth/forgot-password",
+  RESET_PASSWORD: "/auth/reset-password",
   GET_USER: "/auth",
-  REFRESH: "/auth/refresh",
-  REVOKE_ALL_SESSIONS: "/auth/revoke-all-sessions",
-  REVOKE_SESSION: "/auth/revoke-session",
-  SESSIONS: "/auth/sessions",
+  REVOKE_ALL_SESSIONS: "/auth/session/revoke-all-sessions",
+  REVOKE_SESSION: "/auth/session/revoke-session",
+  SESSIONS: "/auth/session/sessions",
 } as const;
-
-const TOKEN_EXPIRY = 7;
 
 export async function register(data: RegisterData): Promise<AuthResponse> {
   const { data: response } = await axiosInstance.post<AuthResponse>(
@@ -96,9 +95,6 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
 }
 
 export async function verify(data: VerifyData): Promise<AuthResponse> {
-  console.log("Verifying with data:", {
-    ...data,
-  });
   const { data: response } = await axiosInstance.post<AuthResponse>(
     API_ENDPOINTS.VERIFY,
     data
@@ -108,25 +104,21 @@ export async function verify(data: VerifyData): Promise<AuthResponse> {
 
 export async function login(data: LoginData): Promise<AuthResponse> {
   try {
-    console.log("Attempting login with data:", {
-      ...data,
-      password: "[REDACTED]",
-    });
     const { data: response } = await axiosInstance.post<AuthResponse>(
       API_ENDPOINTS.LOGIN,
       data
     );
-    console.log("Login successful:", {
-      user: response.data,
-    });
     if (isClient) {
       Cookies.set("accessToken", response.data.accessToken, {
-        expires: TOKEN_EXPIRY,
+        expires: 7,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
       });
-      Cookies.set("refreshToken", response.data.refreshToken, {
-        expires: TOKEN_EXPIRY,
+      Cookies.set("sessionId", response.data.sessionId, {
+        expires: 7,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: "strict",
       });
-      localStorage.setItem("sessionId", response.data.sessionId);
     }
     return response;
   } catch (error) {
@@ -136,39 +128,34 @@ export async function login(data: LoginData): Promise<AuthResponse> {
 }
 
 export async function logout(): Promise<void> {
-  await axiosInstance.post(API_ENDPOINTS.LOGOUT);
-  if (isClient) {
-    Cookies.remove("accessToken");
-    Cookies.remove("refreshToken");
-    localStorage.removeItem("sessionId");
-  }
-}
-
-export async function refreshToken(): Promise<AuthResponse> {
-  const refreshToken = Cookies.get("refreshToken");
-  const { data: response } = await axiosInstance.post<AuthResponse>(
-    API_ENDPOINTS.REFRESH,
-    { refreshToken }
+  const token = getAuthToken();
+  const sessionID = getSessionId();
+  await axiosInstance.post(
+    API_ENDPOINTS.LOGOUT,
+    {
+      sessionId: sessionID,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-session-id": sessionID,
+      },
+    }
   );
-  if (isClient && response.data.accessToken) {
-    Cookies.set("accessToken", response.data.accessToken, {
-      expires: TOKEN_EXPIRY,
-    });
-    Cookies.set("refreshToken", response.data.refreshToken, {
-      expires: TOKEN_EXPIRY,
-    });
-    localStorage.setItem("sessionId", response.data.sessionId);
+
+  if (isClient) {
+    clearSessionId();
   }
-  return response;
 }
 
 export function isAuthenticated(): boolean {
   return isClient ? !!Cookies.get("accessToken") : false;
 }
 
+// Profile
 export async function getCurrentUser(): Promise<UserResponse> {
   const token = getAuthToken();
-  const sessionID = localStorage.getItem("sessionId");
+  const sessionID = getSessionId();
   const response = await axiosInstance.get<UserResponse>(
     API_ENDPOINTS.GET_USER,
     {
@@ -183,30 +170,38 @@ export async function getCurrentUser(): Promise<UserResponse> {
 }
 
 export async function revokeAllSessions(): Promise<void> {
-  const token = getAuthToken();
-  const sessionID = localStorage.getItem("sessionId");
-
-  await axiosInstance.post(
-    API_ENDPOINTS.REVOKE_ALL_SESSIONS,
-    {},
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "x-session-id": sessionID ?? "",
-      },
-    }
-  );
-
-  Cookies.remove("accessToken");
-  Cookies.remove("refreshToken");
-  localStorage.removeItem("sessionId");
+  await axiosInstance.post(API_ENDPOINTS.REVOKE_ALL_SESSIONS);
+  clearSessionId();
 }
 
 export async function getSessions(): Promise<SessionRespone> {
-  const token = getAuthToken();
-  const sessionID = localStorage.getItem("sessionId");
   const response = await axiosInstance.get<SessionRespone>(
-    API_ENDPOINTS.SESSIONS,
+    API_ENDPOINTS.SESSIONS
+  );
+  return response.data;
+}
+
+export async function revokeSession(data: RevokeSessionData): Promise<void> {
+  await axiosInstance.post(API_ENDPOINTS.REVOKE_SESSION, data);
+  if (isClient) {
+    const currentSessionId = localStorage.getItem("sessionId");
+    if (currentSessionId === data.sessionId) {
+      clearSessionId();
+    }
+  }
+}
+
+export async function refreshToken(): Promise<AuthResponse> {
+  const token = getAuthToken();
+  const sessionID = getSessionId();
+
+  if (!token || !sessionID) {
+    throw new Error("No valid session found");
+  }
+
+  const response = await axiosInstance.post<AuthResponse>(
+    API_ENDPOINTS.LOGIN,
+    {},
     {
       headers: {
         Authorization: `Bearer ${token}`,
@@ -214,23 +209,34 @@ export async function getSessions(): Promise<SessionRespone> {
       },
     }
   );
+
+  if (isClient) {
+    Cookies.set("accessToken", response.data.data.accessToken, {
+      expires: 7,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+    });
+  }
+
   return response.data;
 }
 
-export async function revokeSession(data: RevokeSessionData): Promise<void> {
-  const token = getAuthToken();
-  await axiosInstance.post(API_ENDPOINTS.REVOKE_SESSION, data, {
-    headers: {
-      Authorization: `Bearer ${token}`,
-      "x-session-id": data.sessionId,
-    },
+export async function forgot_password(email: string): Promise<void> {
+  const response = await axiosInstance.post(API_ENDPOINTS.FORGOT_PASSWORD, {
+    email,
   });
   if (isClient) {
-    const currentSessionId = localStorage.getItem("sessionId");
-    if (currentSessionId === data.sessionId) {
-      Cookies.remove("accessToken");
-      Cookies.remove("refreshToken");
-      localStorage.removeItem("sessionId");
-    }
+    alert("Password reset link has been sent to your email.");
   }
+  return response.data;
+}
+
+export async function resetPassword(newPassword: string): Promise<void> {
+  const response = await axiosInstance.post(API_ENDPOINTS.RESET_PASSWORD, {
+    newPassword,
+  });
+  if (isClient) {
+    alert("Your password has been reset successfully.");
+  }
+  return response.data;
 }

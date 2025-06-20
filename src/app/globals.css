@@ -1,6 +1,10 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 
+html {
+  scroll-behavior: smooth;
+}
+
 .scrollbar-hidden::-webkit-scrollbar {
   display: none;
 }
@@ -41,7 +45,8 @@
   --color-secondary-foreground: var(--secondary-foreground);
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
+  --color-primary: #007bff;
+  --color-secondary: #8ec447;
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
@@ -128,4 +133,15 @@
   body {
     @apply bg-background text-foreground;
   }
+}
+
+.spanText-event {
+  @apply text-xs dark:text-white my-1;
+}
+
+.decored-selection {
+  @apply border border-gray-300 focus:border-blue-500 focus:ring-blue-500;
+}
+.decored-input {
+  @apply border border-gray-300 focus:border-blue-500 focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500;
 }

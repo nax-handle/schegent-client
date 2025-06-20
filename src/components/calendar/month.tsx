@@ -1,10 +1,9 @@
 import React from "react";
 import { cn } from "@/lib/utils";
-import events from "@/constant/events";
-import { colors } from "@/lib/constants/constants";
 import LunarJS from "lunar-javascript";
+import type { Event } from "@/types";
 
-export default function Month() {
+export default function Month({ eventsdata }: { eventsdata: Event[] }) {
   const { Lunar } = LunarJS;
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const today = new Date(
@@ -29,12 +28,11 @@ export default function Month() {
     };
   });
 
-  const getColorByTitle = (title: string) => {
-    let sum = 0;
-    for (let i = 0; i < title.length; i++) {
-      sum += title.charCodeAt(i);
-    }
-    return colors[sum % colors.length];
+  const addOpacityToHex = (color: string) => {
+    const alpha = Math.round(255 * 0.19)
+      .toString(16)
+      .padStart(2, "0");
+    return color + alpha;
   };
 
   const totalCells = Math.ceil((daysInMonth + firstDayOfMonth) / 7) * 7;
@@ -54,16 +52,17 @@ export default function Month() {
 
       <div
         className="grid grid-cols-7 grid-rows-5 "
-        style={{ height: "calc(100vh - 217px)" }}
+        style={{ height: "calc(100vh - 227px)" }}
       >
         {Array.from({ length: totalCells }, (_, i) => {
           const date = i - firstDayOfMonth + 1;
           const isCurrentMonth = date > 0 && date <= daysInMonth;
           const isToday = date === todayDate;
-
           const dateObj = isCurrentMonth ? calendarDates[date - 1] : null;
 
-          const dateEvents = events.filter((event) => event.date === date);
+          const dateEvents = eventsdata.filter(
+            (event) => new Date(event.startTime).getDate() === date
+          );
 
           return (
             <div
@@ -101,13 +100,23 @@ export default function Month() {
 
                   <div className="mt-1">
                     {dateEvents.map((event, idx) => {
-                      const bgColor = getColorByTitle(event.title);
+                      const stateTime = new Date(event.startTime);
+                      const dateOnly = `${stateTime
+                        .getDate()
+                        .toString()
+                        .padStart(2, "0")}/${(stateTime.getMonth() + 1)
+                        .toString()
+                        .padStart(2, "0")}/${stateTime.getFullYear()}`;
                       return (
                         <div
                           key={idx}
-                          className={`text-xs text-black px-3 py-1 border-l-4 rounded-md truncate ${bgColor}`}
+                          className={`text-xs text-black dark:text-white px-3 py-1 border-l-4 rounded-md truncate bg-opacity-20`}
+                          style={{
+                            borderLeftColor: event.colorId,
+                            backgroundColor: addOpacityToHex(event.colorId),
+                          }}
                         >
-                          <span className="font-semibold">{event.time}</span> –{" "}
+                          <span className="font-semibold">{dateOnly}</span> –{" "}
                           {event.title}
                         </div>
                       );

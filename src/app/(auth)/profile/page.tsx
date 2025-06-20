@@ -22,7 +22,6 @@ export default function ProfilePage() {
   useEffect(() => {
     if (data) {
       setUser(data);
-      console.log("User data:", data);
       setEditedUser(data);
     }
   }, [data]);
@@ -65,11 +64,7 @@ export default function ProfilePage() {
             </Button>
           ) : (
             <div className="flex gap-2">
-              <Button
-                className="w-full bg-[#5052fb] hover:bg-[#5370d1] text-white "
-                onClick={handleSave}
-                variant="default"
-              >
+              <Button className="w-fit" onClick={handleSave} variant="decorate">
                 <Save className="h-4 w-4" />
                 {t("Save")}
               </Button>

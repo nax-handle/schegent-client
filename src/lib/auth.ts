@@ -1,19 +1,25 @@
 import Cookies from "js-cookie";
-
 export function getAuthToken(): string | undefined {
+  Cookies.get("accessToken");
   return Cookies.get("accessToken");
 }
 
-export function setAuthTokens(accessToken: string, refreshToken: string) {
-  Cookies.set("accessToken", accessToken, { expires: 7 });
-  Cookies.set("refreshToken", refreshToken, { expires: 7 });
+export function setAuthTokens(accessToken: string) {
+  Cookies.set("accessToken", accessToken);
 }
 
-export function clearAuthTokens() {
-  Cookies.remove("accessToken");
-  Cookies.remove("refreshToken");
+export function getSessionId(): string | null {
+  return localStorage.getItem("sessionId");
 }
 
-export function getRefreshToken(): string | undefined {
-  return Cookies.get("refreshToken");
+export function setSessionId(sessionId: string) {
+  localStorage.setItem("sessionId", sessionId);
+}
+
+export function clearSessionId() {
+  localStorage.removeItem("sessionId");
+}
+
+export function getCookie() {
+  return Cookies.get("accessToken");
 }

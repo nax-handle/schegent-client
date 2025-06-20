@@ -1,61 +1,52 @@
 "use client";
 
-import * as React from "react";
-import { Languages } from "lucide-react";
+import { useState, useEffect } from "react";
+import { motion } from "framer-motion";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
-interface LanguageSwitcherProps {
-  onLanguageSelect?: () => void;
-}
 
-export default function LanguageSwitcher({
-  onLanguageSelect,
-}: LanguageSwitcherProps) {
+export default function LanguageToggle() {
   const { i18n } = useTranslation();
-  const [language, setLanguage] = React.useState(i18n.language);
-  const [open, setOpen] = React.useState(false);
+  const [language, setLanguage] = useState(i18n.language || "en");
 
-  const handleChange = (value: string) => {
-    setLanguage(value);
-    i18n.changeLanguage(value);
-    setOpen(false);
-    if (onLanguageSelect) {
-      onLanguageSelect();
-    }
+  useEffect(() => {
+    setLanguage(i18n.language);
+  }, [i18n.language]);
+
+  const toggleLanguage = () => {
+    const nextLang = language === "en" ? "vi" : "en";
+    i18n.changeLanguage(nextLang);
+    setLanguage(nextLang);
+  };
+
+  const backgroundStyle = {
+    vi: "bg-[url('/images/Flag_of_Vietnam.png')]",
+    en: "bg-[url('/images/Flag_of_the_United_Kingdom.png')]",
   };
 
   return (
-    <div className=" py-1">
-      <button
-        type="button"
-        onClick={() => setOpen((prev) => !prev)}
-        className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-muted"
-      >
-        <Languages className="w-4 h-4" />
-        <span>Language</span>
-        <span className="ml-auto text-xs">{open ? "▲" : "▼"}</span>
-      </button>
-
-      {open && (
-        <div className="ml-6 mt-1 space-y-1">
-          <button
-            onClick={() => handleChange("en")}
-            className={`block w-full text-left px-2 py-1 text-sm rounded hover:bg-muted ${
-              language === "en" ? "font-medium text-blue-500" : ""
-            }`}
-          >
-            English
-          </button>
-          <button
-            onClick={() => handleChange("vi")}
-            className={`block w-full text-left px-2 py-1 text-sm rounded hover:bg-muted ${
-              language === "vi" ? "font-medium text-blue-500" : ""
-            }`}
-          >
-            Tiếng Việt
-          </button>
-        </div>
-      )}
+    <div className="transition-colors duration-500">
+      <div className="flex items-center justify-center">
+        <motion.button
+          onClick={toggleLanguage}
+          className={`relative w-20 h-10 rounded-full bg-cover bg-center p-1 border border-gray-300 shadow-inner overflow-hidden ${
+            backgroundStyle[language as "vi" | "en"]
+          }`}
+          whileTap={{ scale: 0.95 }}
+        >
+          <motion.div
+            className="w-8 h-8 rounded-full bg-white shadow-md"
+            animate={{
+              x: language === "vi" ? 40 : 0,
+            }}
+            transition={{
+              type: "spring",
+              stiffness: 500,
+              damping: 30,
+            }}
+          />
+        </motion.button>
+      </div>
     </div>
   );
 }

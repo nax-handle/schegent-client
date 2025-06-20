@@ -24,29 +24,95 @@ export interface UserType {
   updatedAt: string;
 }
 
+export interface SendCalendar {
+  name: string;
+  description: string;
+  colorId: string;
+  isPrimary: boolean;
+  isShared: boolean;
+}
+
+export interface Calendar {
+  id: string;
+  name: string;
+  description: string;
+  colorId: string;
+  isPrimary: boolean;
+  isShared: boolean;
+}
+
+export interface ResponseCalendar {
+  data: {
+    id: string;
+    name: string;
+    description: string;
+    colorId: string;
+    isPrimary: boolean;
+    isShared: boolean;
+  }[];
+}
+
+export interface SendEvent {
+  title: string;
+  description: string;
+  location: string | null;
+  startTime: string;
+  endTime: string;
+  hangoutLink: string | null;
+  recurrence: string;
+  icon: string | null;
+  visibility: string;
+  status: "confirmed" | "tentative" | "cancelled";
+  priority: "low" | "medium" | "high";
+  eventCategory: "general" | "habit" | "task";
+  colorId: string;
+  isAllDay: boolean;
+  calendarId: string;
+}
+
 export interface Event {
   id: string;
   title: string;
   description: string;
-  eventTypeId: string | null;
-  priority: "low" | "medium" | "high";
-  startDate: string;
+  location: string | null;
   startTime: string;
-  duration: number;
-  participants: string[];
-  attachments: string[];
-  notes: string;
-  isRecurring: boolean;
-  recurringType?: "daily" | "weekly" | "monthly";
-  reminders: number[];
-  status: "pending" | "accepted" | "declined";
-  invitedBy?: string;
+  endTime: string;
+  hangoutLink: string | null;
+  recurrence: string;
+  icon: string | null;
+  visibility: string;
+  status: "confirmed" | "tentative" | "cancelled";
+  priority: "low" | "medium" | "high";
+  eventCategory: "general" | "habit" | "task";
+  colorId: string;
+  isAllDay: boolean;
+  calendarId: string;
 }
 
-export interface EventType {
+export interface UpdateEvent {
   id: string;
-  name: string;
-  color: string;
+  data: Partial<SendEvent>;
+}
+
+export interface ResponseEvent {
+  data: {
+    id: string;
+    title: string;
+    description: string;
+    location: string | null;
+    startTime: string;
+    endTime: string;
+    hangoutLink: string | null;
+    recurrence: string;
+    icon: string | null;
+    visibility: string;
+    status: "confirmed" | "tentative" | "cancelled";
+    priority: "low" | "medium" | "high";
+    eventCategory: "general" | "habit" | "task";
+    colorId: string;
+    isAllDay: boolean;
+    calendarId: string;
+  }[];
 }
 
 export interface Reminder {

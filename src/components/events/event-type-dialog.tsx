@@ -1,6 +1,4 @@
 "use client";
-
-import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -10,38 +8,45 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import type { EventType } from "@/types";
+import type { SendCalendar, Calendar } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
+import { Switch } from "@/components/ui/switch";
+import ColorPicker from "@/components/ui/color-picker";
+import {
+  useCreateCalendar,
+  useUpdateCalendar,
+} from "@/hooks/calendar/use.calendar";
+import { useEffect, useState } from "react";
 
 interface EventTypeDialogProps {
   isOpen: boolean;
   onClose: () => void;
-  onSave: (eventType: Partial<EventType>) => void;
-  eventType?: EventType | null;
+  eventType?: Calendar | null;
+  handleCreateEventType?: (data: SendCalendar) => void;
+  handleUpdateEventType?: (data: SendCalendar, id: string) => void;
 }
-
-const colorOptions = [
-  { name: "Xanh dương", value: "bg-blue-500" },
-  { name: "Xanh lá", value: "bg-green-500" },
-  { name: "Tím", value: "bg-purple-500" },
-  { name: "Cam", value: "bg-orange-500" },
-  { name: "Đỏ", value: "bg-red-500" },
-  { name: "Vàng", value: "bg-yellow-500" },
-  { name: "Hồng", value: "bg-pink-500" },
-  { name: "Xám", value: "bg-gray-500" },
-];
 
 export function EventTypeDialog({
   isOpen,
   onClose,
-  onSave,
   eventType,
+  handleCreateEventType,
+  handleUpdateEventType,
 }: EventTypeDialogProps) {
   const { t } = useTranslation();
-  const [formData, setFormData] = useState<Partial<EventType>>({
+  const { createCalendar, isCreatingCalendar, createCalendarError } =
+    useCreateCalendar();
+
+  const { updateCalendar, isUpdatingCalendar, updateCalendarError } =
+    useUpdateCalendar();
+
+  const [formData, setFormData] = useState<SendCalendar>({
     name: "",
-    color: "bg-blue-500",
+    description: "",
+    isPrimary: false,
+    isShared: false,
+    colorId: "",
   });
 
   useEffect(() => {
@@ -50,18 +55,38 @@ export function EventTypeDialog({
     } else {
       setFormData({
         name: "",
-        color: "bg-blue-500",
+        description: "",
+        isPrimary: false,
+        isShared: false,
+        colorId: "",
       });
     }
-  }, [eventType]);
+  }, [eventType, isOpen]);
 
-  const handleSave = () => {
-    if (formData.name?.trim()) {
-      onSave(formData);
-      onClose();
+  const handleCreateSubmit = () => {
+    if (handleCreateEventType) {
+      handleCreateEventType(formData);
     }
   };
 
+  const handleUpdateSubmit = (e: React.FormEvent<HTMLButtonElement>) => {
+    if (!eventType) return;
+    e.preventDefault();
+    updateCalendar(
+      { data: formData, id: eventType.id },
+      {
+        onSuccess: () => {
+          onClose();
+        },
+        onError: (error: unknown) => {
+          console.error("Update calendar failed", error);
+        },
+      }
+    );
+    if (handleUpdateEventType) {
+      handleUpdateEventType(formData, eventType.id);
+    }
+  };
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -78,31 +103,59 @@ export function EventTypeDialog({
               id="name"
               value={formData.name}
               onChange={(e) =>
-                setFormData({ ...formData, name: e.target.value })
+                setFormData((prev) => ({ ...prev, name: e.target.value }))
               }
-              className="my-3 rounded-sm focus-visible:ring-blue-500  dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+              className="my-3 rounded-sm focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
               placeholder={t("Enter event type name")}
             />
           </div>
-
           <div>
-            <Label>{t("Color")}</Label>
-            <div className="grid grid-cols-4 gap-2 mt-2">
-              {colorOptions.map((color) => (
-                <button
-                  key={color.value}
-                  type="button"
-                  className={`w-full h-10 rounded-lg border-2 transition-all ${
-                    formData.color === color.value
-                      ? "border-white shadow-lg scale-105"
-                      : "border-gray-300 hover:border-gray-400"
-                  } ${color.value}`}
-                  onClick={() =>
-                    setFormData({ ...formData, color: color.value })
-                  }
-                  title={color.name}
-                />
-              ))}
+            <Label htmlFor="description">{t("Description")}</Label>
+            <Input
+              id="description"
+              value={formData.description}
+              onChange={(e) =>
+                setFormData((prev) => ({
+                  ...prev,
+                  description: e.target.value,
+                }))
+              }
+              className="my-3 rounded-sm focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+              placeholder={t("Enter description")}
+            />
+          </div>
+          <div className="flex justify-between px-2 gap-4">
+            <div className="flex items-center">
+              <Label htmlFor="isPrimary">{t("isPrimary")}</Label>
+              <Switch
+                id="isPrimary"
+                checked={formData.isPrimary}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, isPrimary: checked }))
+                }
+                className="ml-2"
+              />
+            </div>
+            <div className="flex items-center">
+              <Label htmlFor="isShared">{t("isShared")}</Label>
+              <Switch
+                id="isShared"
+                checked={formData.isShared}
+                onCheckedChange={(checked) =>
+                  setFormData((prev) => ({ ...prev, isShared: checked }))
+                }
+                className="ml-2"
+              />
+            </div>
+            <div className="flex items-center">
+              <Label htmlFor="colorId">{t("Color")}</Label>
+              <ColorPicker
+                className="ml-2"
+                value={formData.colorId || "#ffffff"}
+                onChange={(colorId: string) =>
+                  setFormData((prev) => ({ ...prev, colorId }))
+                }
+              />
             </div>
           </div>
 
@@ -111,14 +164,25 @@ export function EventTypeDialog({
               {t("Cancel")}
             </Button>
             <Button
+              type="submit"
               variant={"decorate"}
-              onClick={handleSave}
+              onClick={eventType ? handleUpdateSubmit : handleCreateSubmit}
               className="w-fit rounded-sm"
-              disabled={!formData.name?.trim()}
+              disabled={eventType ? isUpdatingCalendar : isCreatingCalendar}
             >
-              {eventType ? t("Update") : "Create Event Type"}
+              {eventType ? t("Update") : t("Create Event Type")}
             </Button>
           </div>
+          {createCalendarError && (
+            <p className="text-sm text-red-500">
+              {String(createCalendarError)}
+            </p>
+          )}
+          {updateCalendarError && (
+            <p className="text-sm text-red-500">
+              {String(updateCalendarError)}
+            </p>
+          )}
         </div>
       </DialogContent>
     </Dialog>

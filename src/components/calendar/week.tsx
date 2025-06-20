@@ -1,9 +1,51 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { colors } from "@/lib/constants/constants";
-import events from "@/constant/events";
+import type { Event } from "@/types";
+import { useUpdateEvent } from "@/hooks/calendar/use.events";
+import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
+import { Pencil, Trash2, MoreVertical } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
 
-export default function Week() {
+interface PropEvent {
+  eventsdata: Event[];
+  setCalendarID: (id: string) => void;
+  setIsEventDialogOpen: (isOpen: boolean) => void;
+  handleUpdateEvent: (event: Event) => void;
+  setSelectedEvent: (event: Event | null) => void;
+  handleDeleteEvent: (eventId: string) => void;
+  onOptimisticUpdate?: (eventId: string, updatedEvent: Event) => void;
+}
+
+export default function Week({
+  eventsdata,
+  setSelectedEvent,
+  setIsEventDialogOpen,
+  handleDeleteEvent,
+  onOptimisticUpdate,
+}: PropEvent) {
+  const { updateEvent } = useUpdateEvent();
+  const [events, setEvents] = useState<Event[]>(eventsdata);
+  const [isDragging, setIsDragging] = useState(false);
+  const {
+    handleMouseDownResize,
+    handleMouseDownMoveBlock,
+    handleMouseDownDragToOtherDay,
+    dragIndicator,
+  } = useEventDragResize({
+    updateEvent,
+    view: "week",
+    onOptimisticUpdate,
+  });
+
+  useEffect(() => {
+    setEvents(eventsdata);
+  }, [eventsdata]);
+
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
@@ -18,19 +60,40 @@ export default function Week() {
     (_, i) => `${i.toString().padStart(2, "0")}:00`
   );
 
-  const getColorByTitle = (title: string) => {
-    let sum = 0;
-    for (let i = 0; i < title.length; i++) {
-      sum += title.charCodeAt(i);
-    }
-    return colors[sum % colors.length];
+  const addOpacityToHex = (color: string) => {
+    const alpha = Math.round(255 * 0.19)
+      .toString(16)
+      .padStart(2, "0");
+    return color + alpha;
   };
 
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
 
+  const handleMouseDown = (
+    e: React.MouseEvent<HTMLDivElement>,
+    event: Event
+  ) => {
+    if ((e.target as HTMLElement).closest("button")) {
+      return;
+    }
+    setIsDragging(true);
+    handleMouseDownDragToOtherDay(e, event);
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    document.addEventListener("mouseup", handleMouseUp);
+    return () => {
+      document.removeEventListener("mouseup", handleMouseUp);
+    };
+  }, [isDragging]);
+
   return (
     <div className="w-full relative rounded-tr-xl rounded-br-xl rou border-gray-300 border-t-1 border-b-1 border-r-1">
-      <div className="w-full flex sticky top-0 z-50 rounded-t-lg">
+      <div className=" w-full flex sticky top-0 z-50 rounded-t-lg">
         <div className="grid grid-cols-7 pl-19 border-b border-gray-200 flex-1 w-full ">
           {days.map((day, index) => {
             const date = new Date(today);
@@ -59,7 +122,11 @@ export default function Week() {
 
       <div
         className="relative overflow-y-auto scrollbar-hidden"
-        style={{ height: "calc(100vh - 250px)" }}
+        style={{ height: "calc(100vh - 210px)" }}
+        onDoubleClick={() => {
+          setIsEventDialogOpen(true);
+          setSelectedEvent(null);
+        }}
       >
         <div className="absolute left-0 w-20 z-10 h-full">
           {Array.from({ length: 24 }, (_, i) => (
@@ -74,57 +141,153 @@ export default function Week() {
 
         <div className="flex w-full h-full relative pl-20 ">
           <div className="grid grid-cols-7 divide-x divide-gray-200 flex-1 w-full">
-            {days.map((day, dayIndex) => (
-              <div key={day} className="relative">
-                {hours.map((hour, index) => (
-                  <div
-                    key={`${hour}-${index}`}
-                    className={`h-14 ${
-                      index === hours.length - 1
-                        ? ""
-                        : "border-b dark:border-gray-200 border-gray-300"
-                    }`}
-                  ></div>
-                ))}
+            {days.map((day, dayIndex) => {
+              const date = new Date(today);
+              const diff = dayIndex - todayIndex;
+              date.setDate(today.getDate() + diff);
+              const currentDate = date;
 
-                {events
-                  .filter((event) => {
-                    return event.date === dayIndex;
-                  })
-                  .map((event, index) => {
-                    const top = event.startHour * 56;
-                    const height = event.duration * 56;
-                    const bgColor = getColorByTitle(event.title);
+              return (
+                <div key={day} className="relative">
+                  {hours.map((hour, index) => (
+                    <div
+                      key={`${hour}-${index}`}
+                      className={`h-14 ${
+                        index === hours.length - 1
+                          ? ""
+                          : "border-b dark:border-gray-200 border-gray-300"
+                      }`}
+                    ></div>
+                  ))}
 
-                    return (
-                      <div
-                        key={index}
-                        className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black border-l-4 ${bgColor}`}
-                        style={{
-                          top: `${top}px`,
-                          height: `${height}px`,
-                        }}
-                      >
-                        <div className="text-xs font-semibold truncate">
-                          {event.time}
+                  {events
+                    .filter((event) => {
+                      const eventDate = new Date(event.startTime);
+                      return (
+                        eventDate.getDate() === currentDate.getDate() &&
+                        eventDate.getMonth() === currentDate.getMonth() &&
+                        eventDate.getFullYear() === currentDate.getFullYear()
+                      );
+                    })
+                    .map((event, index) => {
+                      const stateTime = new Date(event.startTime);
+                      const hourStartTime = stateTime.getHours();
+                      const minuteStartTime = stateTime.getMinutes();
+                      const top =
+                        hourStartTime * 56 + (minuteStartTime / 60) * 56;
+
+                      const endTime = new Date(event.endTime);
+                      const hourEndTime = endTime.getHours();
+                      const minuteEndTime = endTime.getMinutes();
+                      const height =
+                        (hourEndTime - hourStartTime) * 56 +
+                        (minuteEndTime - minuteStartTime) * (56 / 60);
+
+                      return (
+                        <div
+                          key={index}
+                          className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none group`}
+                          style={{
+                            top: `${top}px`,
+                            height: `${height}px`,
+                            borderLeftColor: event.colorId,
+                            backgroundColor: addOpacityToHex(event.colorId),
+                            zIndex: 10,
+                          }}
+                        >
+                          <div className="flex justify-between items-start">
+                            <div className="text-xs truncate pointer-events-none">
+                              {new Date(event.startTime).toLocaleTimeString(
+                                [],
+                                {
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                }
+                              )}{" "}
+                              -{" "}
+                              {new Date(event.endTime).toLocaleTimeString([], {
+                                hour: "2-digit",
+                                minute: "2-digit",
+                              })}
+                            </div>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger asChild>
+                                <button
+                                  className={`border-none outline-none ${
+                                    isDragging
+                                      ? "hidden"
+                                      : "opacity-0 group-hover:opacity-100"
+                                  } transition-opacity`}
+                                >
+                                  <MoreVertical className="w-5 h-5" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent align="end">
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setSelectedEvent(event);
+                                    setIsEventDialogOpen(true);
+                                  }}
+                                >
+                                  <Pencil className="w-4 h-4 mr-2" /> Sửa
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => handleDeleteEvent(event.id)}
+                                  className="text-red-600 focus:text-red-700"
+                                >
+                                  <Trash2 className="w-4 h-4 mr-2" /> Xóa
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                          <div
+                            className={`h-full w-full ${
+                              isDragging ? "cursor-grabbing" : "cursor-move"
+                            }`}
+                            onMouseDown={(e) => handleMouseDown(e, event)}
+                          ></div>
+                          <div
+                            className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleMouseDownResize(e, event);
+                            }}
+                          />
+                          <div
+                            className="absolute top-0 left-0 right-0 h-2 cursor-move"
+                            onMouseDown={(e) => {
+                              e.stopPropagation();
+                              handleMouseDownMoveBlock(e, event);
+                            }}
+                          />
                         </div>
-                        <div className="text-xs truncate">{event.title}</div>
-                      </div>
-                    );
-                  })}
+                      );
+                    })}
 
-                {dayIndex === todayIndex && (
-                  <div
-                    className="absolute top-0 left-0 right-0 z-20"
-                    style={{ top: `${topOffset}px` }}
-                  >
-                    <div className="relative w-full h-[1px] bg-red-500">
-                      <span className="absolute -left-1 top-0 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500"></span>
+                  {dayIndex === todayIndex && (
+                    <div
+                      className="absolute top-0 left-0 right-0 z-20"
+                      style={{ top: `${topOffset}px` }}
+                    >
+                      <div className="relative w-full h-[1px] bg-red-500">
+                        <span className="absolute -left-1 top-0 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500"></span>
+                      </div>
                     </div>
-                  </div>
-                )}
-              </div>
-            ))}
+                  )}
+
+                  {dragIndicator && dragIndicator.column === dayIndex && (
+                    <div
+                      className="absolute h-0.5 bg-blue-500 z-30 pointer-events-none"
+                      style={{
+                        top: `${dragIndicator.top}px`,
+                        left: "4px",
+                        right: "4px",
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>

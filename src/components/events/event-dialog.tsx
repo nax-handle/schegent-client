@@ -12,126 +12,124 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
-import { X, Plus, Upload } from "lucide-react";
-import type { Event, EventType } from "@/types";
+import type { Event, SendEvent } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import TimePicker from "@/components/picker-date-time/time-picker";
-import DatePickerWithRange from "../picker-date-time/date-picker-with-range";
+import { useGetAllCalendars } from "@/hooks/calendar/use.calendar";
+import { useCreateEvent, useUpdateEvent } from "@/hooks/calendar/use.events";
 
 interface EventDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onSave: (event: Partial<Event>) => void;
   event?: Event | null;
-  eventTypes: EventType[];
+  calendarID?: string | null;
+  colorId?: string;
 }
 
 export function EventDialog({
+  calendarID,
   isOpen,
   onClose,
   onSave,
   event,
-  eventTypes,
+  colorId,
 }: EventDialogProps) {
   const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
+  const { createEvent, createEventError } = useCreateEvent();
+  const { updateEvent, updateEventError } = useUpdateEvent();
+  const { data: calendarData } = useGetAllCalendars();
 
-  const [formData, setFormData] = useState<Partial<Event>>({
+  const [formData, setFormData] = useState<Partial<SendEvent>>({
     title: "",
     description: "",
-    eventTypeId: null,
+    location: "",
+    startTime: "",
+    endTime: "",
+    hangoutLink: "",
+    recurrence: "",
+    icon: "",
+    visibility: "default",
+    status: "confirmed",
     priority: "medium",
-    startDate: new Date().toISOString().split("T")[0],
-    startTime: "09:00",
-    duration: 0,
-    participants: [],
-    attachments: [],
-    notes: "",
-    isRecurring: false,
-    recurringType: undefined,
-    reminders: [],
-    status: "pending",
+    eventCategory: "general",
+    colorId: colorId || "",
+    isAllDay: false,
+    calendarId: calendarID || "",
   });
 
-  const [newParticipant, setNewParticipant] = useState("");
-  const [newReminder, setNewReminder] = useState("");
+  useEffect(() => {
+    if (calendarID) {
+      setFormData((prev) => ({
+        ...prev,
+        calendarId: calendarID,
+      }));
+    }
+  }, [calendarID]);
+
+  useEffect(() => {
+    if (colorId) {
+      setFormData((prev) => ({
+        ...prev,
+        colorId: colorId,
+      }));
+    }
+  }, [colorId]);
 
   useEffect(() => {
     if (event) {
-      setFormData(event);
+      setFormData((prev) => ({
+        ...prev,
+        ...event,
+        calendarId: event.calendarId ?? prev.calendarId,
+      }));
     }
   }, [event]);
 
-  const handleSave = () => {
-    if (newReminder) {
-      formData.reminders = [
-        ...(formData.reminders || []),
-        typeof newReminder === "string" ? parseInt(newReminder) : newReminder,
-      ];
+  useEffect(() => {
+    if (
+      !event &&
+      calendarData &&
+      calendarData.length > 0 &&
+      !formData.calendarId
+    ) {
+      setFormData((prev) => ({
+        ...prev,
+        calendarId: calendarData[0].id,
+      }));
     }
+  }, [event, calendarData, formData.calendarId]);
+
+  const handleSave = () => {
+    if (!formData.calendarId) {
+      console.error("Calendar ID is required");
+      return;
+    }
+
     onSave(formData);
     onClose();
-  };
 
-  const addParticipant = () => {
-    if (newParticipant.trim()) {
-      setFormData({
-        ...formData,
-        participants: [...(formData.participants || []), newParticipant.trim()],
+    if (event) {
+      updateEvent(
+        { data: formData as SendEvent, id: event.id },
+        {
+          onSuccess: () => onClose(),
+          onError: (error) => {
+            console.error("Error updating event:", error);
+          },
+        }
+      );
+    } else {
+      createEvent(formData as SendEvent, {
+        onSuccess: () => onClose(),
+        onError: (error) => {
+          console.error("Error creating event:", error);
+        },
       });
-      setNewParticipant("");
     }
   };
-
-  const removeParticipant = (index: number) => {
-    setFormData({
-      ...formData,
-      participants: formData.participants?.filter((_, i) => i !== index) || [],
-    });
-  };
-
-  const handleChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
-    let val = e.target.value;
-    if (val.endsWith("@")) {
-      val += "gmail.com";
-    }
-    setNewParticipant(val);
-  };
-
-  const handleFileUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
-    const fileNames = files.map((file) => file.name);
-    setFormData({
-      ...formData,
-      attachments: [...(formData.attachments || []), ...fileNames],
-    });
-  };
-
-  const removeAttachment = (index: number) => {
-    setFormData({
-      ...formData,
-      attachments: formData.attachments?.filter((_, i) => i !== index) || [],
-    });
-  };
-
-  // useEffect(() => {
-  //   function handleClickOutside(event: MouseEvent) {
-  //     if (
-  //       modalRef.current &&
-  //       !modalRef.current.contains(event.target as Node)
-  //     ) {
-  //       onClose();
-  //     }
-  //   }
-  //   if (isOpen) {
-  //     document.addEventListener("mousedown", handleClickOutside);
-  //   }
-  //   return () => {
-  //     document.removeEventListener("mousedown", handleClickOutside);
-  //   };
-  // }, [isOpen, onClose]);
 
   if (!isOpen) return null;
 
@@ -156,29 +154,34 @@ export function EventDialog({
                   setFormData({ ...formData, title: e.target.value })
                 }
                 placeholder={t("Enter event title")}
-                className="focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+                className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 focus:outline-none"
               />
             </div>
             <div>
               <Label htmlFor="eventType">{t("Event Type")}</Label>
               <Select
-                value={formData.eventTypeId || "none"}
+                value={formData.calendarId || "none"}
                 onValueChange={(value) =>
                   setFormData({
                     ...formData,
-                    eventTypeId: value === "none" ? null : value,
+                    calendarId: value === "none" ? undefined : value,
                   })
                 }
               >
-                <SelectTrigger className="w-full  focus:ring-blue-500 hover:border-blue-600">
+                <SelectTrigger className="w-full decored-selection">
                   <SelectValue placeholder={t("Select event type")} />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="none">{t("Work to be done")}</SelectItem>
-                  {eventTypes.map((type) => (
-                    <SelectItem key={type.id} value={type.id}>
+                  {calendarData?.map((type) => (
+                    <SelectItem
+                      key={type.id}
+                      value={type.id}
+                      className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                    >
                       <div className="flex items-center gap-2">
-                        <div className={`w-3 h-3 rounded-full ${type.color}`} />
+                        <div
+                          className={`w-3 h-3 rounded-full ${type.colorId}`}
+                        />
                         {type.name}
                       </div>
                     </SelectItem>
@@ -187,7 +190,17 @@ export function EventDialog({
               </Select>
             </div>
           </div>
-
+          {/* <div className="flex items-center">
+            <Label htmlFor="isAllDay">{t("All Day Event:")}</Label>
+            <Switch
+              id="isAllDay"
+              checked={formData.isAllDay || false}
+              onCheckedChange={(checked) =>
+                setFormData({ ...formData, isAllDay: checked })
+              }
+              className="ml-2"
+            />
+          </div> */}
           <div>
             <Label htmlFor="description">{t("Description")}</Label>
             <Textarea
@@ -198,39 +211,41 @@ export function EventDialog({
               }
               placeholder={t("Enter event description")}
               rows={3}
-              className="focus:ring-blue-500 hover:border-blue-600"
+              className="decored-selection"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>{t("Priority Level")}</Label>
+              <Label htmlFor="prioritylevel">{t("Priority Level")}</Label>
               <Select
                 value={formData.priority}
-                onValueChange={(value: "low" | "medium" | "high") =>
-                  setFormData({ ...formData, priority: value })
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    priority: value as "low" | "medium" | "high",
+                  })
                 }
               >
-                <SelectTrigger className="w-full focus:ring-blue-500 hover:border-blue-600">
-                  <SelectValue className="" />
+                <SelectTrigger className="w-full decored-selection">
+                  <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem
                     value="low"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
                     {t("Low")}
                   </SelectItem>
-
                   <SelectItem
                     value="medium"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
                     {t("Medium")}
                   </SelectItem>
                   <SelectItem
                     value="high"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
                     {t("High")}
                   </SelectItem>
@@ -238,93 +253,101 @@ export function EventDialog({
               </Select>
             </div>
             <div>
-              <Label>{t("Date")}</Label>
-              <DatePickerWithRange />
+              <Label htmlFor="hangoutLink">{t("Hangout Link")}</Label>
+              <Input
+                id="hangoutLink"
+                value={formData.hangoutLink || ""}
+                onChange={(e) =>
+                  setFormData({ ...formData, hangoutLink: e.target.value })
+                }
+                placeholder={t("Enter event hangout link")}
+                className="decored-input"
+              />
             </div>
           </div>
 
-          <TimePicker />
+          <TimePicker
+            setFormData={setFormData}
+            startDate={event?.startTime || ""}
+            endDate={event?.endTime || ""}
+          />
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>{t("Repeat Event")}</Label>
+              <Label htmlFor="repeatEvent">{t("Repeat Event")}</Label>
               <Select
-                value={formData.recurringType}
-                onValueChange={(value: string | undefined) =>
-                  setFormData({
-                    ...formData,
-                    recurringType: value as
-                      | "daily"
-                      | "weekly"
-                      | "monthly"
-                      | undefined,
-                  })
+                value={formData.recurrence || "none"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, recurrence: value })
                 }
               >
-                <SelectTrigger className="w-full focus:ring-blue-500 hover:border-blue-600">
+                <SelectTrigger className="w-full decored-selection">
                   <SelectValue placeholder={t("Select")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem
-                    value="Not"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    value="none"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
-                    {t("Not")}
+                    {t("None")}
                   </SelectItem>
                   <SelectItem
                     value="daily"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
                     {t("Daily")}
                   </SelectItem>
                   <SelectItem
                     value="weekly"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
                     {t("Weekly")}
                   </SelectItem>
                   <SelectItem
                     value="monthly"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
                     {t("Monthly")}
+                  </SelectItem>
+                  <SelectItem
+                    value="yearly"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Yearly")}
                   </SelectItem>
                 </SelectContent>
               </Select>
             </div>
+
             <div>
-              <Label>{t("Early reminder")}</Label>
+              <Label>{t("Visibility")}</Label>
               <Select
-                value={newReminder}
-                onValueChange={(value) => setNewReminder(value)}
+                value={formData.visibility || "default"}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, visibility: value })
+                }
               >
-                <SelectTrigger className="w-full">
+                <SelectTrigger className="w-full decored-selection">
                   <SelectValue placeholder={t("Select")} />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem
-                    value="5m"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    value="default"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
-                    5 {t("minutes")}
+                    {t("Default")}
                   </SelectItem>
                   <SelectItem
-                    value="15m"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    value="public"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
-                    15 {t("minutes")}
+                    {t("Public")}
                   </SelectItem>
                   <SelectItem
-                    value="30m"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
+                    value="private"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
-                    30 {t("minutes")}
-                  </SelectItem>
-                  <SelectItem
-                    value="1h"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-600"
-                  >
-                    1 {t("hours")}
+                    {t("Private")}
                   </SelectItem>
                 </SelectContent>
               </Select>
@@ -332,72 +355,108 @@ export function EventDialog({
           </div>
 
           <div>
-            <Label>{t("Participant")}</Label>
-            <div className="flex items-center gap-2 mb-2">
-              <Input
-                value={newParticipant}
-                onChange={handleChangeEmail}
-                placeholder={t("Enter participant email")}
-                onKeyPress={(e) => e.key === "Enter" && addParticipant()}
-                className="focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
-              />
-              <Button
-                type="button"
-                variant="outline"
-                onClick={addParticipant}
-                size="sm"
-              >
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2">
-              {formData.participants?.map((p, index) => (
-                <Badge
-                  key={index}
-                  className="flex items-center gap-1 cursor-pointer bg-blue-500"
-                  onClick={() => removeParticipant(index)}
-                >
-                  {p}
-                  <X className="w-3 h-3" />
-                </Badge>
-              ))}
-            </div>
-          </div>
-
-          <div>
-            <Label>{t("File Attachments")}</Label>
+            <Label htmlFor="location">{t("Location")}</Label>
             <Input
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+              id="location"
+              value={formData.location || ""}
+              onChange={(e) =>
+                setFormData({ ...formData, location: e.target.value })
+              }
+              placeholder={t("Enter event location")}
+              className="decored-input"
             />
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.attachments?.map((file, index) => (
-                <Badge
-                  key={index}
-                  className="flex items-center gap-1 cursor-pointer bg-blue-500"
-                  onClick={() => removeAttachment(index)}
-                >
-                  <Upload className="w-3 h-3" />
-                  {file}
-                  <X className="w-3 h-3" />
-                </Badge>
-              ))}
+          </div>
+
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="status">{t("Status")}</Label>
+              <Select
+                value={formData.status || "confirmed"}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    status: value as "confirmed" | "tentative" | "cancelled",
+                  })
+                }
+              >
+                <SelectTrigger className="w-full decored-selection">
+                  <SelectValue placeholder={t("Select")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="confirmed"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Confirmed")}
+                  </SelectItem>
+                  <SelectItem
+                    value="tentative"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Tentative")}
+                  </SelectItem>
+                  <SelectItem
+                    value="cancelled"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Cancelled")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="eventCategory">{t("Event Category")}</Label>
+              <Select
+                value={formData.eventCategory || "general"}
+                onValueChange={(value) =>
+                  setFormData({
+                    ...formData,
+                    eventCategory: value as "general" | "habit" | "task",
+                  })
+                }
+              >
+                <SelectTrigger className="w-full decored-selection">
+                  <SelectValue placeholder={t("Select")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="general"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("General")}
+                  </SelectItem>
+                  <SelectItem
+                    value="habit"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Habit")}
+                  </SelectItem>
+                  <SelectItem
+                    value="task"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {t("Task")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-4">
-            <Button variant="outline" onClick={onClose}>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="ghost" onClick={onClose}>
               {t("Cancel")}
             </Button>
-            <Button
-              variant="decorate"
-              className="w-fit rounded-sm px-10"
-              onClick={handleSave}
-            >
+            <Button type="submit" onClick={handleSave}>
               {t("Save")}
             </Button>
+            {(createEventError || updateEventError) && (
+              <span className="ml-2 text-sm text-red-500">
+                {createEventError?.message ||
+                  updateEventError?.message ||
+                  t("An error occurred")}
+              </span>
+            )}
           </div>
         </div>
       </div>

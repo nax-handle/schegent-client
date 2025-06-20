@@ -17,9 +17,9 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
   const currentYear = today.getFullYear();
 
   return (
-    <div className="flex items-center justify-between border-gray-300   w-full pl-6">
-      <div className="flex items-center gap-4">
-        <h1 className="text-md border-2 px-4 py-2 rounded-full ">
+    <div className="flex items-center justify-between border-gray-300   w-full pl-6 pb-6">
+      <div className="flex items-center gap-4 ml-8">
+        <h1 className="text-md border-2 px-4 py-2 rounded-full">
           {t("Today")}
         </h1>
         <div className="flex items-center ">
