@@ -38,7 +38,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
   if (calendarPaths.includes(pathname)) {
     return (
-      <SidebarProvider className="">
+      <SidebarProvider>
         <AppSidebar
           setChecked={setChecked}
           setCalendarID={setCalendarID}

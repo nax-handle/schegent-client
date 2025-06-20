@@ -11,7 +11,6 @@ import { Label } from "@/components/ui/label";
 import type { SendCalendar, Calendar } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
-import { Switch } from "@/components/ui/switch";
 import ColorPicker from "@/components/ui/color-picker";
 import {
   useCreateCalendar,
@@ -35,8 +34,7 @@ export function EventTypeDialog({
   handleUpdateEventType,
 }: EventTypeDialogProps) {
   const { t } = useTranslation();
-  const { createCalendar, isCreatingCalendar, createCalendarError } =
-    useCreateCalendar();
+  const { isCreatingCalendar, createCalendarError } = useCreateCalendar();
 
   const { updateCalendar, isUpdatingCalendar, updateCalendarError } =
     useUpdateCalendar();
@@ -105,7 +103,8 @@ export function EventTypeDialog({
               onChange={(e) =>
                 setFormData((prev) => ({ ...prev, name: e.target.value }))
               }
-              className="my-3 rounded-sm focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+              className="my-3 rounded-sm decored-input {
+"
               placeholder={t("Enter event type name")}
             />
           </div>
@@ -120,33 +119,12 @@ export function EventTypeDialog({
                   description: e.target.value,
                 }))
               }
-              className="my-3 rounded-sm focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+              className="my-3 rounded-sm decored-input {
+"
               placeholder={t("Enter description")}
             />
           </div>
           <div className="flex justify-between px-2 gap-4">
-            <div className="flex items-center">
-              <Label htmlFor="isPrimary">{t("isPrimary")}</Label>
-              <Switch
-                id="isPrimary"
-                checked={formData.isPrimary}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, isPrimary: checked }))
-                }
-                className="ml-2"
-              />
-            </div>
-            <div className="flex items-center">
-              <Label htmlFor="isShared">{t("isShared")}</Label>
-              <Switch
-                id="isShared"
-                checked={formData.isShared}
-                onCheckedChange={(checked) =>
-                  setFormData((prev) => ({ ...prev, isShared: checked }))
-                }
-                className="ml-2"
-              />
-            </div>
             <div className="flex items-center">
               <Label htmlFor="colorId">{t("Color")}</Label>
               <ColorPicker
