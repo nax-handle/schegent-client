@@ -108,18 +108,6 @@ export async function login(data: LoginData): Promise<AuthResponse> {
       API_ENDPOINTS.LOGIN,
       data
     );
-    if (isClient) {
-      Cookies.set("accessToken", response.data.accessToken, {
-        expires: 7,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-      Cookies.set("sessionId", response.data.sessionId, {
-        expires: 7,
-        secure: process.env.NODE_ENV === "production",
-        sameSite: "strict",
-      });
-    }
     return response;
   } catch (error) {
     console.error("Login failed:", error);

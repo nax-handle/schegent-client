@@ -3,28 +3,28 @@ import { useState, useEffect } from "react";
 import { DropResult } from "@hello-pangea/dnd";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
-import { EventDialog } from "@/components/events/event-dialog";
+import { TaskDialog } from "@/components/tasks/task-dialog";
 import { EventTypeDialog } from "@/components/events/calendar-dialog";
-import type { Event, Calendar, SendEvent } from "@/types";
+import type { Task, Calendar, SendTask } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import {
   useGetAllCalendars,
   useDeleteCalendar,
 } from "@/hooks/calendar/use.calendar";
-import EventManager from "@/components/events/event-manager";
-import { useGetAllEvents } from "@/hooks/calendar/use.events";
+import TaskManager from "@/components/tasks/task-manager";
+import { useGetAllTasks } from "@/hooks/calendar/user.tasks";
 
-export default function EventManagement() {
+export default function TaskManagement() {
   const { t } = useTranslation();
-  const [eventTypes, setEventTypes] = useState<Calendar[]>([]);
-  const [events, setEvents] = useState<Event[]>([]);
-  const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
-  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [taskTypes, setTaskTypes] = useState<Calendar[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [isTaskDialogOpen, setIsTaskDialogOpen] = useState(false);
   const [calendarID, setCalendarID] = useState<string>("");
   const [isEventTypeDialogOpen, setIsEventTypeDialogOpen] = useState(false);
   const { data, isLoading } = useGetAllCalendars();
-  const { data: dataEvents, isLoading: loadingEvents } = useGetAllEvents();
+  const { data: dataTasks, isLoading: loadingTasks } = useGetAllTasks();
 
   const { deleteCalendar } = useDeleteCalendar();
   const [editingEventType, setEditingEventType] = useState<Calendar | null>(
@@ -33,12 +33,12 @@ export default function EventManagement() {
 
   useEffect(() => {
     if (data) {
-      setEventTypes(data);
+      setTaskTypes(data);
     }
-    if (dataEvents) {
-      setEvents(dataEvents);
+    if (dataTasks) {
+      setTasks(dataTasks);
     }
-  }, [data, dataEvents]);
+  }, [data, dataTasks]);
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
@@ -48,72 +48,68 @@ export default function EventManagement() {
     if (type === "column") {
       if (source.index === destination.index) return;
 
-      const newEventTypes = Array.from(eventTypes);
-      const [removed] = newEventTypes.splice(source.index, 1);
-      newEventTypes.splice(destination.index, 0, removed);
+      const newTaskTypes = Array.from(taskTypes);
+      const [removed] = newTaskTypes.splice(source.index, 1);
+      newTaskTypes.splice(destination.index, 0, removed);
 
-      setEventTypes(newEventTypes);
+      setTaskTypes(newTaskTypes);
       return;
     }
 
     if (source.droppableId !== destination.droppableId) {
-      const newEventTypeId =
-        destination.droppableId === "no-type" ? null : destination.droppableId;
+      const newTaskTypeId =
+        destination.droppableId === "no-type"
+          ? undefined
+          : destination.droppableId;
 
-      setEvents(
-        events.map((event) =>
-          event.id === draggableId
-            ? { ...event, eventTypeId: newEventTypeId }
-            : event
+      setTasks(
+        tasks.map((task) =>
+          task.id === draggableId
+            ? { ...task, calendarId: newTaskTypeId }
+            : task
         )
       );
     }
   };
 
-  const getEventsByType = (eventTypeId: string | null) => {
-    return events.filter((event) => event.calendarId === eventTypeId);
+  const getTasksByType = (taskTypeId: string | null) => {
+    return tasks.filter((task) => task.calendarId === taskTypeId);
   };
 
-  const handleCreateEvent = (eventData: Partial<SendEvent>) => {
-    const newEvent: Event = {
+  const handleCreateTask = (taskData: Partial<SendTask>) => {
+    const newTask: Task = {
       id: Date.now().toString(),
-      title: eventData.title || "",
-      description: eventData.description || "",
-      location: eventData.location || null,
-      startTime: eventData.startTime || new Date().toISOString(),
-      endTime: eventData.endTime || new Date().toISOString(),
-      hangoutLink: eventData.hangoutLink || null,
-      recurrence: eventData.recurrence || "",
-      icon: eventData.icon || null,
-      visibility: eventData.visibility || "default",
-      status: eventData.status || "confirmed",
-      priority: eventData.priority || "medium",
-      eventCategory: eventData.eventCategory || "general",
-      colorId: eventData.colorId || "bg-gray-500",
-      isAllDay: eventData.isAllDay || false,
+      title: taskData.title || "",
+      description: taskData.description || "",
+      status: taskData.status || "todo",
+      priority: taskData.priority || "medium",
+      dueDate: taskData.dueDate,
+      startDate: taskData.startDate,
+      endDate: taskData.endDate,
+      estimatedDuration: taskData.estimatedDuration,
       calendarId: calendarID || "",
     };
-    setEvents([...events, newEvent]);
+    setTasks([...tasks, newTask]);
   };
 
-  const handleUpdateEvent = (eventData: Partial<Event>) => {
-    if (!selectedEvent) return;
+  const handleUpdateTask = (taskData: Partial<Task>) => {
+    if (!selectedTask) return;
 
-    setEvents(
-      events.map((event) =>
-        event.id === selectedEvent.id ? { ...event, ...eventData } : event
+    setTasks(
+      tasks.map((task) =>
+        task.id === selectedTask.id ? { ...task, ...taskData } : task
       )
     );
-    setSelectedEvent(null);
+    setSelectedTask(null);
   };
 
-  const handleDeleteEvent = (eventId: string) => {
-    setEvents(events.filter((event) => event.id !== eventId));
+  const handleDeleteTask = (taskId: string) => {
+    setTasks(tasks.filter((task) => task.id !== taskId));
   };
 
   const handleDeleteEventType = (eventTypeId: string) => {
-    setEvents(events.filter((event) => event.id !== eventTypeId));
-    setEventTypes(eventTypes.filter((type) => type.id !== eventTypeId));
+    setTasks(tasks.filter((task) => task.id !== eventTypeId));
+    setTaskTypes(taskTypes.filter((type) => type.id !== eventTypeId));
     deleteCalendar(eventTypeId);
   };
 
@@ -126,24 +122,24 @@ export default function EventManagement() {
       isPrimary: eventTypeData.isPrimary || false,
       isShared: eventTypeData.isShared || false,
     };
-    setEventTypes([...eventTypes, newEventType]);
+    setTaskTypes([...taskTypes, newEventType]);
   };
 
   const handleUpdateEventType = (eventTypeData: Partial<Calendar>) => {
     if (!editingEventType) return;
 
-    setEventTypes(
-      eventTypes.map((type) =>
+    setTaskTypes(
+      taskTypes.map((type) =>
         type.id === editingEventType.id ? { ...type, ...eventTypeData } : type
       )
     );
     setEditingEventType(null);
   };
 
-  if (isLoading || loadingEvents) {
+  if (isLoading || loadingTasks) {
     return <div>Đang tải dữ liệu...</div>;
   }
-  if (!eventTypes) return <div>Không có thông tin lịch</div>;
+  if (!taskTypes) return <div>Không có thông tin lịch</div>;
 
   return (
     <div
@@ -154,10 +150,10 @@ export default function EventManagement() {
         <div className="md:flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold dark:text-white text-black">
-              {t("Event Management")}
+              {t("Task Management")}
             </h1>
             <p className="dark:text-white text-black mt-2">
-              {t("Manage your events and event types efficiently.")}
+              {t("Manage your tasks and task types efficiently.")}
             </p>
           </div>
           <Button
@@ -166,32 +162,32 @@ export default function EventManagement() {
             className="w-fit dark:text-white "
           >
             <Plus className="w-4 h-4 mr-2 dark:text-white" />
-            {t("Add Event Type")}
+            {t("Add Task Type")}
           </Button>
         </div>
 
-        <EventManager
+        <TaskManager
           setCalendarID={setCalendarID}
           handleDragEnd={handleDragEnd}
-          getEventsByType={getEventsByType}
-          eventTypes={eventTypes}
-          setIsEventDialogOpen={setIsEventDialogOpen}
-          setSelectedEvent={setSelectedEvent}
+          getTasksByType={getTasksByType}
+          taskTypes={taskTypes}
+          setIsTaskDialogOpen={setIsTaskDialogOpen}
+          setSelectedTask={setSelectedTask}
           setIsEventTypeDialogOpen={setIsEventTypeDialogOpen}
           setEditingEventType={setEditingEventType}
           handleDeleteEventType={handleDeleteEventType}
-          handleDeleteEvent={handleDeleteEvent}
+          handleDeleteTask={handleDeleteTask}
         />
 
-        <EventDialog
+        <TaskDialog
           calendarID={calendarID}
-          isOpen={isEventDialogOpen}
+          isOpen={isTaskDialogOpen}
           onClose={() => {
-            setIsEventDialogOpen(false);
-            setSelectedEvent(null);
+            setIsTaskDialogOpen(false);
+            setSelectedTask(null);
           }}
-          onSave={selectedEvent ? handleUpdateEvent : handleCreateEvent}
-          event={selectedEvent}
+          onSave={selectedTask ? handleUpdateTask : handleCreateTask}
+          task={selectedTask}
         />
 
         <EventTypeDialog

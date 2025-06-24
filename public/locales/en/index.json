@@ -1,37 +1,3 @@
 {
-  "welcome": "Welcome to our website!"
+  "Login": "Login"
 }
-
-//   "LogIn": "LogIn",
-//   "Register": "Register",
-//   "Sign Up with Google": "Sign Up with Google",
-//   "Your Email": "Your Email",
-//   "Password": "Password",
-//   "Remember me": "Remember me",
-//   "Forgot Password": "Forgot Password",
-//   "We've sent a verification code to": "We've sent a verification code to",
-//   "Create Your Account": "Create Your Account",
-//   "Verify Your Email": "Verify Your Email",
-//   "OR": "OR",
-//   "Passwords do not match": "Passwords do not match",
-//   "Continue ": "Continue",
-//   "Already have an account": "Already have an account",
-//   "Enter the 6-digit code we sent to your email": "Enter the 6-digit code we sent to your email",
-//   "Didn't receive the code?": "Didn't receive the code?",
-//   "Resend Code": "Resend Code",
-//   "Confirm Password": "Confirm Password",
-//   "Continue": "Continue",
-
-//   "Profile": "Profile",
-//   "Edit Profile": "Edit Profile",
-//   "Cancel": "Cancel",
-//   "Change avatar": "Change avatar",
-//   "Personal Information": "Personal Information",
-//   "Password is set and hidden for security": "Password is set and hidden for security",
-//   "Change Password": "Change Password",
-//   "Current Password": "Current Password",
-//   "New Password": "New Password",
-//   "Name": "Name",
-//   "Phone": "Phone",
-//   "Gender": "Gender",
-//   "Address": "Address",

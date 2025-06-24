@@ -1,9 +1,9 @@
 // next.config.ts
 import type { NextConfig } from "next";
-import nextI18NextConfig from "./next-i18next.config";
+import i18nConfig from "./next-i18next.config";
 
 const nextConfig: NextConfig = {
-  ...nextI18NextConfig,
+  i18n: i18nConfig.i18n,
   reactStrictMode: true,
   env: {
     DEV: process.env.DEV,
