@@ -357,7 +357,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view, onUpdate, onOptimisticUpdate]
+    [updateEvent, hourHeight, onUpdate, onOptimisticUpdate]
   );
 
   return {

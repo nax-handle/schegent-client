@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Day from "@/components/calendar/day";
-import Week from "@/components/calendar/week";
-import Month from "@/components/calendar/month";
+import Day from "./day";
+import Week from "./week";
+import Month from "./month";
 import NavMenu from "@/components/header-nav/nav-menu";
 type CalendarView = "day" | "week" | "month";
 import {
@@ -79,7 +79,7 @@ export default function CalendarPage({
     if (mergedIds !== currentIds) {
       setEvents(mergedEvents);
     }
-  }, [data]);
+  }, [data, events]);
 
   const handleCreateEvent = (eventData: Partial<SendEvent>) => {
     if (typeof eventData.title === "string") {
