@@ -102,6 +102,19 @@ export function EventDialog({
     }
   }, [event, calendarData, formData.calendarId]);
 
+  useEffect(() => {
+    if (!isOpen) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        onClose();
+      }
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isOpen, onClose]);
+
   const handleSave = () => {
     if (!formData.calendarId) {
       console.error("Calendar ID is required");
