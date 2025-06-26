@@ -112,7 +112,6 @@ export default function TaskManager({
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    {/* task card  */}
                     <Droppable droppableId={taskType.id ?? ""} type="task">
                       {(provided) => (
                         <div
@@ -123,7 +122,7 @@ export default function TaskManager({
                           {getTasksByType(taskType.id).map((task, index) => (
                             <Draggable
                               key={task.id}
-                              draggableId={task.id}
+                              draggableId={String(task.id)}
                               index={index}
                             >
                               {(provided) => (

@@ -29,9 +29,16 @@ export function TaskCard({
 }: TaskCardProps) {
   const { t } = useTranslation();
 
-  const formatDate = (date: Date | undefined) => {
+  const formatDate = (date: Date | string | undefined) => {
     if (!date) return "";
-    return date.toLocaleDateString("vi-VN");
+    const d =
+      typeof date === "string"
+        ? new Date(date)
+        : date instanceof Date
+        ? date
+        : new Date(date as Date);
+    if (!(d instanceof Date) || isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("vi-VN");
   };
 
   const formatDuration = (minutes: number | undefined) => {

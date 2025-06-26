@@ -17,6 +17,9 @@ import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import { useGetAllCalendars } from "@/hooks/calendar/use.calendar";
 import { useCreateTask, useUpdateTask } from "@/hooks/calendar/user.tasks";
+import DatePickerWithRange from "../picker-date-time/date-picker-with-range";
+import { DateRange } from "react-day-picker";
+import { DatePicker } from "../picker-date-time/date-picker";
 
 interface TaskDialogProps {
   isOpen: boolean;
@@ -231,23 +234,11 @@ export function TaskDialog({
           <div className="grid grid-cols-2 gap-4">
             <div>
               <Label htmlFor="dueDate">{t("Due Date")}</Label>
-              <Input
-                id="dueDate"
-                type="date"
+              <DatePicker
                 value={
-                  formData.dueDate
-                    ? new Date(formData.dueDate).toISOString().split("T")[0]
-                    : ""
+                  formData.dueDate ? new Date(formData.dueDate) : undefined
                 }
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    dueDate: e.target.value
-                      ? new Date(e.target.value)
-                      : undefined,
-                  })
-                }
-                className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 focus:outline-none"
+                onChange={(date) => setFormData({ ...formData, dueDate: date })}
               />
             </div>
             <div>
@@ -272,49 +263,25 @@ export function TaskDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="startDate">{t("Start Date")}</Label>
-              <Input
-                id="startDate"
-                type="date"
-                value={
-                  formData.startDate
-                    ? new Date(formData.startDate).toISOString().split("T")[0]
-                    : ""
-                }
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    startDate: e.target.value
-                      ? new Date(e.target.value)
-                      : undefined,
-                  })
-                }
-                className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 focus:outline-none"
-              />
-            </div>
-            <div>
-              <Label htmlFor="endDate">{t("End Date")}</Label>
-              <Input
-                id="endDate"
-                type="date"
-                value={
-                  formData.endDate
-                    ? new Date(formData.endDate).toISOString().split("T")[0]
-                    : ""
-                }
-                onChange={(e) =>
-                  setFormData({
-                    ...formData,
-                    endDate: e.target.value
-                      ? new Date(e.target.value)
-                      : undefined,
-                  })
-                }
-                className="border border-gray-300 focus:border-blue-500 focus:ring-2 focus-visible:ring-blue-500 dark:selection:bg-[#658DBD] selection:bg-blue-500 focus:outline-none"
-              />
-            </div>
+          <div className="w-full">
+            <Label htmlFor="dateRange">{t("Time Range")}</Label>
+            <DatePickerWithRange
+              value={
+                formData.startDate && formData.endDate
+                  ? {
+                      from: new Date(formData.startDate),
+                      to: new Date(formData.endDate),
+                    }
+                  : undefined
+              }
+              onChange={(range: DateRange | undefined) => {
+                setFormData({
+                  ...formData,
+                  startDate: range?.from ? new Date(range.from) : undefined,
+                  endDate: range?.to ? new Date(range.to) : undefined,
+                });
+              }}
+            />
           </div>
 
           <div className="flex justify-end space-x-2 pt-4">

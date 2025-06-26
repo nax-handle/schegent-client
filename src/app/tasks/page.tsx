@@ -13,7 +13,11 @@ import {
   useDeleteCalendar,
 } from "@/hooks/calendar/use.calendar";
 import TaskManager from "@/components/tasks/task-manager";
-import { useGetAllTasks } from "@/hooks/calendar/user.tasks";
+import {
+  useGetAllTasks,
+  useUpdateTask,
+  useDeleteTask,
+} from "@/hooks/calendar/user.tasks";
 
 export default function TaskManagement() {
   const { t } = useTranslation();
@@ -25,7 +29,8 @@ export default function TaskManagement() {
   const [isEventTypeDialogOpen, setIsEventTypeDialogOpen] = useState(false);
   const { data, isLoading } = useGetAllCalendars();
   const { data: dataTasks, isLoading: loadingTasks } = useGetAllTasks();
-
+  const { updateTask } = useUpdateTask();
+  const { deleteTask } = useDeleteTask();
   const { deleteCalendar } = useDeleteCalendar();
   const [editingEventType, setEditingEventType] = useState<Calendar | null>(
     null
@@ -39,6 +44,10 @@ export default function TaskManagement() {
       setTasks(dataTasks);
     }
   }, [data, dataTasks]);
+
+  useEffect(() => {
+    console.log("dataTasks from backend:", dataTasks);
+  }, [dataTasks]);
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
@@ -62,19 +71,36 @@ export default function TaskManagement() {
           ? undefined
           : destination.droppableId;
 
-      setTasks(
-        tasks.map((task) =>
-          task.id === draggableId
-            ? { ...task, calendarId: newTaskTypeId }
-            : task
-        )
+      const movedTask = tasks.find(
+        (task) => String(task.id) === String(draggableId)
       );
+      if (movedTask) {
+        updateTask(
+          {
+            data: {
+              ...movedTask,
+              calendarId: newTaskTypeId,
+            },
+            id: movedTask.id,
+          },
+          {
+            onSuccess: () => {
+              setTasks(
+                tasks.map((task) =>
+                  String(task.id) === String(draggableId)
+                    ? { ...task, calendarId: newTaskTypeId }
+                    : task
+                )
+              );
+            },
+          }
+        );
+      }
     }
   };
 
-  const getTasksByType = (taskTypeId: string | null) => {
-    return tasks.filter((task) => task.calendarId === taskTypeId);
-  };
+  const getTasksByType = (taskTypeId: string | null) =>
+    tasks.filter((task) => String(task.calendarId) === String(taskTypeId));
 
   const handleCreateTask = (taskData: Partial<SendTask>) => {
     const newTask: Task = {
@@ -104,6 +130,7 @@ export default function TaskManagement() {
   };
 
   const handleDeleteTask = (taskId: string) => {
+    deleteTask(taskId);
     setTasks(tasks.filter((task) => task.id !== taskId));
   };
 
