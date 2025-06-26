@@ -129,6 +129,10 @@ export default function Week({
         <div
           className="relative overflow-y-auto scrollbar-hidden"
           style={{ height: "calc(100vh - 210px)" }}
+          onDoubleClick={() => {
+            setIsEventDialogOpen(true);
+            setSelectedEvent(null);
+          }}
         >
           <div className="absolute left-0 w-20 z-10 h-full">
             {Array.from({ length: 24 }, (_, i) => (

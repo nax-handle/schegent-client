@@ -81,7 +81,7 @@ export default function EditPassword() {
       </div>
       <Button
         type="submit"
-        variant={"decoder"}
+        variant={"decorate"}
         className=" py-3 transition-colors duration-200"
       >
         {t("Update Password")}

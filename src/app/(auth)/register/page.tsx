@@ -34,7 +34,7 @@ export default function CreateAccount() {
         setValue("email", `${local}@gmail.com`);
       }
     }
-  }, [emailValue]);
+  }, [emailValue, setValue]);
 
   const handleRegister = (data: RegisterFormData) => {
     onRegister(data);

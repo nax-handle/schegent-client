@@ -5,7 +5,7 @@ import {
   Draggable,
   DropResult,
 } from "@hello-pangea/dnd";
-import { EventCard } from "@/components/events/event-card";
+import { TaskCard } from "@/components/tasks/task-card";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,32 +17,33 @@ import { Plus, MoreHorizontal } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import { getPriorityColor } from "@/utils";
-import type { Event, Calendar } from "@/types";
+import type { Task, Calendar } from "@/types";
 
-interface EventManagerProps {
+interface TaskManagerProps {
   handleDragEnd: (result: DropResult) => void;
-  getEventsByType: (typeId: string | null) => Event[];
-  eventTypes: Calendar[];
-  setIsEventDialogOpen: (isOpen: boolean) => void;
-  setSelectedEvent: (event: Event) => void;
+  getTasksByType: (typeId: string | null) => Task[];
+  taskTypes: Calendar[];
+  setIsTaskDialogOpen: (isOpen: boolean) => void;
+  setSelectedTask: (task: Task) => void;
   setIsEventTypeDialogOpen: (isOpen: boolean) => void;
   setEditingEventType: (eventType: Calendar) => void;
   handleDeleteEventType: (id: string) => void;
-  handleDeleteEvent: (id: string) => void;
+  handleDeleteTask: (id: string) => void;
   setCalendarID?: (id: string) => void;
 }
-export default function EventManager({
+
+export default function TaskManager({
   handleDragEnd,
-  getEventsByType,
-  eventTypes,
+  getTasksByType,
+  taskTypes,
   setCalendarID,
-  setIsEventDialogOpen,
-  setSelectedEvent,
+  setIsTaskDialogOpen,
+  setSelectedTask,
   setIsEventTypeDialogOpen,
   setEditingEventType,
   handleDeleteEventType,
-  handleDeleteEvent,
-}: EventManagerProps) {
+  handleDeleteTask,
+}: TaskManagerProps) {
   const { t } = useTranslation();
 
   return (
@@ -55,10 +56,10 @@ export default function EventManager({
             className="flex flex-wrap gap-6 items-start"
           >
             {/* List Calendar type*/}
-            {eventTypes.map((eventType, columnIndex) => (
+            {taskTypes.map((taskType, columnIndex) => (
               <Draggable
-                key={eventType.id}
-                draggableId={`column-${eventType.id}`}
+                key={taskType.id}
+                draggableId={`column-${taskType.id}`}
                 index={columnIndex}
               >
                 {(provided) => (
@@ -74,10 +75,10 @@ export default function EventManager({
                       <div className="flex items-center gap-2">
                         <div
                           className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: eventType.colorId }}
+                          style={{ backgroundColor: taskType.colorId }}
                         />
                         <h2 className="text-lg font-semibold dark:text-white">
-                          {eventType.name}
+                          {taskType.name}
                         </h2>
                       </div>
                       <DropdownMenu>
@@ -95,34 +96,33 @@ export default function EventManager({
                             onClick={() => {
                               setTimeout(() => {
                                 setIsEventTypeDialogOpen(true);
-                                setEditingEventType(eventType);
+                                setEditingEventType(taskType);
                               }, 0);
                             }}
                           >
-                            {t("Edit Event Table")}
+                            {t("Edit Task Table")}
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
-                            onClick={() => handleDeleteEventType(eventType.id)}
+                            onClick={() => handleDeleteEventType(taskType.id)}
                             className="text-red-400"
                           >
-                            {t("Delete Event Table")}
+                            {t("Delete Task Table")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
                     </div>
-                    {/* event card  */}
-                    <Droppable droppableId={eventType.id ?? ""} type="event">
+                    <Droppable droppableId={taskType.id ?? ""} type="task">
                       {(provided) => (
                         <div
                           ref={provided.innerRef}
                           {...provided.droppableProps}
                           className="space-y-3 min-h-[20px]"
                         >
-                          {getEventsByType(eventType.id).map((event, index) => (
+                          {getTasksByType(taskType.id).map((task, index) => (
                             <Draggable
-                              key={event.id}
-                              draggableId={event.id}
+                              key={task.id}
+                              draggableId={String(task.id)}
                               index={index}
                             >
                               {(provided) => (
@@ -131,13 +131,13 @@ export default function EventManager({
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
                                 >
-                                  <EventCard
-                                    event={event}
+                                  <TaskCard
+                                    task={task}
                                     onEdit={() => {
-                                      setSelectedEvent(event);
-                                      setIsEventDialogOpen(true);
+                                      setSelectedTask(task);
+                                      setIsTaskDialogOpen(true);
                                     }}
-                                    onDelete={() => handleDeleteEvent(event.id)}
+                                    onDelete={() => handleDeleteTask(task.id)}
                                     getPriorityColor={getPriorityColor}
                                   />
                                 </div>
@@ -153,14 +153,14 @@ export default function EventManager({
                       variant="ghost"
                       className="w-full mt-3  dark:hover:text-white text-black dark:text-white dark:hover:bg-slate-700 hover:bg-slate-200"
                       onClick={() => {
-                        setIsEventDialogOpen(true);
+                        setIsTaskDialogOpen(true);
                         if (setCalendarID) {
-                          setCalendarID(eventType.id);
+                          setCalendarID(taskType.id);
                         }
                       }}
                     >
                       <Plus className="w-4 h-4 mr-2" />
-                      {t("Add Event")}
+                      {t("Add Task")}
                     </Button>
                   </div>
                 )}

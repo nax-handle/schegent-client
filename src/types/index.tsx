@@ -126,9 +126,38 @@ export interface Task {
   id: string;
   title: string;
   description: string;
+  status: "todo" | "in-progress" | "done";
   priority: "low" | "medium" | "high";
   dueDate?: Date;
-  completed: boolean;
-  createdAt: Date;
-  reminders: Reminder[];
+  startDate?: Date;
+  endDate?: Date;
+  estimatedDuration?: number;
+  calendarId?: string;
+}
+
+export interface SendTask {
+  title: string;
+  description: string;
+  status: "todo" | "in-progress" | "done";
+  priority: "low" | "medium" | "high";
+  dueDate?: Date;
+  startDate?: Date;
+  endDate?: Date;
+  estimatedDuration?: number;
+  calendarId?: string;
+}
+
+export interface ResponseTask {
+  data: {
+    id: string;
+    title: string;
+    description: string;
+    status: "todo" | "in-progress" | "done";
+    priority: "low" | "medium" | "high";
+    dueDate?: Date;
+    startDate?: Date;
+    endDate?: Date;
+    estimatedDuration?: number;
+    calendarId?: string;
+  }[];
 }

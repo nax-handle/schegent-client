@@ -8,7 +8,6 @@ function clamp(num: number, min: number, max: number) {
 
 type UpdateEvent = (params: { id: string; data: Event }) => void;
 
-// Constants for different views
 const HOUR_HEIGHT = {
   day: 65,
   week: 56,
@@ -120,7 +119,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view, onUpdate, onOptimisticUpdate]
+    [updateEvent, hourHeight, onUpdate, onOptimisticUpdate]
   );
 
   const handleMouseDownMoveBlock = useCallback(
@@ -248,7 +247,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view, onUpdate, onOptimisticUpdate]
+    [updateEvent, hourHeight, onUpdate, onOptimisticUpdate]
   );
 
   const handleMouseDownDragToOtherDay = useCallback(
@@ -358,7 +357,7 @@ export function useEventDragResize({
       document.addEventListener("mousemove", onMouseMove);
       document.addEventListener("mouseup", onMouseUp);
     },
-    [updateEvent, hourHeight, view, onUpdate, onOptimisticUpdate]
+    [updateEvent, hourHeight, onUpdate, onOptimisticUpdate]
   );
 
   return {

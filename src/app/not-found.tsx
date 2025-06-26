@@ -11,7 +11,7 @@ export default function NotFoundPage() {
   useEffect(() => {
     setIsNotFound(true);
     return () => setIsNotFound(false);
-  }, []);
+  }, [setIsNotFound]);
 
   return (
     <main className="grid min-h-full h-screen items-center bg-white px-6 py-24">
@@ -21,7 +21,7 @@ export default function NotFoundPage() {
           Page not found
         </h1>
         <p className="mt-6 text-lg text-gray-500">
-          Sorry, we couldn’t find the page you’re looking for.
+          Sorry, we could not find the page you are looking for.
         </p>
         <div className="mt-10 flex items-center justify-center gap-x-6">
           <Link

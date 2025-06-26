@@ -134,7 +134,7 @@ export default function TimePicker({
       startTime: buildTimeISO(timeRange.start),
       endTime: buildTimeISO(timeRange.end),
     }));
-  }, [timeRange, setFormData]);
+  }, [timeRange, setFormData, isEnglish]);
 
   return (
     <div>

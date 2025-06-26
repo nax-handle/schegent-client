@@ -3,17 +3,8 @@
 import { Card, CardContent } from "@/components/ui/card";
 import Check_button from "@/components/check-button";
 import { Button } from "@/components/ui/button";
-import {
-  // Calendar,
-  // Users,
-  // Paperclip,
-  // Bell,
-  // Repeat,
-  Clock,
-  Edit,
-  Trash2,
-} from "lucide-react";
-import type { Event } from "@/types";
+import { Clock, Edit, Trash2 } from "lucide-react";
+import type { Task } from "@/types";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,45 +14,49 @@ import {
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 
-interface EventCardProps {
-  event: Event;
+interface TaskCardProps {
+  task: Task;
   onEdit: () => void;
   onDelete: () => void;
   getPriorityColor: (priority: string) => string;
 }
 
-export function EventCard({
-  event,
+export function TaskCard({
+  task,
   onEdit,
   onDelete,
   getPriorityColor,
-}: EventCardProps) {
+}: TaskCardProps) {
   const { t } = useTranslation();
 
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("vi-VN");
+  const formatDate = (date: Date | string | undefined) => {
+    if (!date) return "";
+    const d =
+      typeof date === "string"
+        ? new Date(date)
+        : date instanceof Date
+        ? date
+        : new Date(date as Date);
+    if (!(d instanceof Date) || isNaN(d.getTime())) return "";
+    return d.toLocaleDateString("vi-VN");
   };
 
-  const formatTime = (time: string) => {
-    return time;
+  const formatDuration = (minutes: number | undefined) => {
+    if (!minutes) return "";
+    const hours = Math.floor(minutes / 60);
+    const mins = minutes % 60;
+    if (hours > 0) {
+      return `${hours}h${mins > 0 ? ` ${mins}m` : ""}`;
+    }
+    return `${mins}m`;
   };
-
-  // const formatDuration = (minutes: number) => {
-  //   const hours = Math.floor(minutes / 60);
-  //   const mins = minutes % 60;
-  //   if (hours > 0) {
-  //     return `${hours}h${mins > 0 ? ` ${mins}m` : ""}`;
-  //   }
-  //   return `${mins}m`;
-  // };
 
   return (
     <Card className="dark:bg-gray-700 h-fit bg-white dark:border-slate-600 border-gray-100 hover:bg-slate-650 transition-colors cursor-pointer group">
       <CardContent className="p-4">
         <div
           className={`w-10 h-3 mb-3 rounded-full ${getPriorityColor(
-            event.priority
+            task.priority
           )}`}
         />
         <div className="flex items-start justify-between mb-3 group relative">
@@ -71,11 +66,11 @@ export function EventCard({
             </div>
             <div className="flex-1 transform transition-transform duration-500 ease-in-out group-hover:translate-x-6">
               <h3 className="font-medium dark:text-slate-300 text-black text-sm leading-tight mb-1">
-                {event.title}
+                {task.title}
               </h3>
-              {event.description && (
+              {task.description && (
                 <p className="dark:text-slate-300 text-black text-xs mb-2 line-clamp-2">
-                  {event.description}
+                  {task.description}
                 </p>
               )}
             </div>
@@ -111,45 +106,44 @@ export function EventCard({
         </div>
 
         <div className="space-y-2">
-          <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
-            <Clock className="w-3 h-3 ml-2" />
-            <span>{formatDate(event.startTime)}</span>
-            {" - "}
-            <span>{formatTime(event.endTime)}</span>
-          </div>
+          {task.dueDate && (
+            <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
+              <Clock className="w-3 h-3 ml-2" />
+              <span>Due: {formatDate(task.dueDate)}</span>
+            </div>
+          )}
 
-          {/* {event. > 0 && (
+          {task.startDate && task.endDate && (
             <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
               <Clock className="w-3 h-3" />
-              <span>{formatDuration(event.duration)}</span>
+              <span>
+                {formatDate(task.startDate)} - {formatDate(task.endDate)}
+              </span>
             </div>
           )}
 
-          {event.participants.length > 0 && (
+          {task.estimatedDuration && (
             <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
-              <Users className="w-3 h-3" />
-              <span>{event.participants.length} người</span>
+              <Clock className="w-3 h-3" />
+              <span>{formatDuration(task.estimatedDuration)}</span>
             </div>
           )}
 
-          {event.attachments.length > 0 && (
-            <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
-              <Paperclip className="w-3 h-3" />
-              <span>{event.attachments.length} file</span>
-            </div>
-          )}
+          <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
+            <span
+              className={`px-2 py-1 rounded-full text-xs ${
+                task.status === "todo"
+                  ? "bg-yellow-100 text-yellow-800"
+                  : task.status === "in-progress"
+                  ? "bg-blue-100 text-blue-800"
+                  : "bg-green-100 text-green-800"
+              }`}
+            >
+              {task.status}
+            </span>
+          </div>
 
-          <div className="flex items-center gap-2 mt-3">
-            {event.isRecurring && (
-              <Repeat className="w-3 h-3 dark:text-slate-400 text-black" />
-            )}
-
-            {event.reminders.length > 0 && (
-              <Bell className="w-3 h-3 dark:text-slate-400 text-black" />
-            )}
-          </div> */}
-
-          {event.description && (
+          {task.description && (
             <div className="mt-2 p-2 dark:bg-slate-600 bg-gray-100 rounded text-xs text-slate-300">
               <div className="flex items-center gap-1 mb-1">
                 <div className="w-3 h-3 dark:bg-slate-500 bg-gray-50 rounded flex items-center justify-center">
@@ -162,7 +156,7 @@ export function EventCard({
                 </span>
               </div>
               <p className="line-clamp-2 dark:text-white text-black">
-                {event.description}
+                {task.description}
               </p>
             </div>
           )}

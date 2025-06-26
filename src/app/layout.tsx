@@ -7,7 +7,7 @@ import { ThemeProvider } from "@/components/theme/theme-provider";
 import { Providers } from "@/components/providers";
 import { usePathname } from "next/navigation";
 import { NotFoundProvider, useNotFound } from "@/context/not-found-context";
-import CalendarPage from "./(calendar)/page";
+import Calendar from "@/components/calendar/index";
 import Chat from "@/components/chat/index";
 import { AppSidebar } from "@/components/nav-sidebar/app-sidebar";
 import {
@@ -38,7 +38,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
 
   if (calendarPaths.includes(pathname)) {
     return (
-      <SidebarProvider className="">
+      <SidebarProvider>
         <AppSidebar
           setChecked={setChecked}
           setCalendarID={setCalendarID}
@@ -55,7 +55,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
             <div className="flex flex-col min-h-[80vh] relative">
               <ScrollAnimation />
               <div className="flex flex-1">
-                <CalendarPage
+                <Calendar
                   checked={checked}
                   calendarID={calendarID}
                   isEventDialogOpen={isEventDialogOpen}

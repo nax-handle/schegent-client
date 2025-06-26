@@ -32,7 +32,6 @@ export default function CreateAccount({ setStep, email }: CreateAccountProps) {
   };
 
   useEffect(() => {
-    console.log("Current path:", pathname);
     if (isSuccess && pathname === "/forgot-password") {
       setStep(3);
     }
@@ -41,7 +40,7 @@ export default function CreateAccount({ setStep, email }: CreateAccountProps) {
       console.log("Registration successful, redirecting to login");
       router.push("/login");
     }
-  }, [isSuccess, pathname]);
+  }, [isSuccess, pathname, setStep, router]);
 
   return (
     <div className="space-y-6">

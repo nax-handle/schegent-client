@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import Day from "@/components/calendar/day";
-import Week from "@/components/calendar/week";
-import Month from "@/components/calendar/month";
+import Day from "./day";
+import Week from "./week";
+import Month from "./month";
 import NavMenu from "@/components/header-nav/nav-menu";
 type CalendarView = "day" | "week" | "month";
 import {
@@ -17,7 +17,7 @@ import {
   useUpdateCalendar,
   useCreateCalendar,
 } from "@/hooks/calendar/use.calendar";
-import { EventTypeDialog } from "@/components/events/event-type-dialog";
+import { EventTypeDialog } from "@/components/events/calendar-dialog";
 import { useCalendarDialog } from "@/context/calendar-dialog-context";
 
 export default function CalendarPage({
@@ -79,7 +79,7 @@ export default function CalendarPage({
     if (mergedIds !== currentIds) {
       setEvents(mergedEvents);
     }
-  }, [data]);
+  }, [data, events]);
 
   const handleCreateEvent = (eventData: Partial<SendEvent>) => {
     if (typeof eventData.title === "string") {
@@ -112,7 +112,6 @@ export default function CalendarPage({
   const handleUpdateEvent = (eventData: Partial<Event>) => {
     if (!selectedEvent) return;
 
-    // Lưu trạng thái cũ để rollback nếu cần
     const originalEvent = events?.find((e) => e.id === selectedEvent.id);
     if (originalEvent) {
       setOptimisticUpdates(
@@ -120,7 +119,6 @@ export default function CalendarPage({
       );
     }
 
-    // Optimistic update cho dialog updates
     setEvents((prevEvents) => {
       if (!prevEvents) return prevEvents;
       return prevEvents.map((event) =>
@@ -128,7 +126,6 @@ export default function CalendarPage({
       );
     });
 
-    // Gọi API để cập nhật backend
     updateEventAPI({
       id: selectedEvent.id,
       data: {
@@ -140,7 +137,6 @@ export default function CalendarPage({
     setSelectedEvent(null);
   };
 
-  // Rollback optimistic updates nếu có lỗi
   useEffect(() => {
     if (updateEventError) {
       setEvents((prevEvents) => {
@@ -164,8 +160,6 @@ export default function CalendarPage({
   };
 
   const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
-    // Chỉ cập nhật state cho drag/resize operations
-    // Dialog updates sẽ được xử lý bởi React Query
     setEvents((prevEvents) => {
       if (!prevEvents) return prevEvents;
       return prevEvents.map((event) =>

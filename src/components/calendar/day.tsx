@@ -125,6 +125,10 @@ export default function Day({
           <div
             className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden"
             style={{ height: "calc(100vh - 225px)" }}
+            onDoubleClick={() => {
+              setIsEventDialogOpen(true);
+              setSelectedEvent(null);
+            }}
           >
             <div className="flex h-full w-full">
               <div className="w-full relative">
