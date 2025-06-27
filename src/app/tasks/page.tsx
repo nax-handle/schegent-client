@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { DropResult } from "@hello-pangea/dnd";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import { EventTypeDialog } from "@/components/events/calendar-dialog";
 import type { Task, Calendar, SendTask } from "@/types";
@@ -183,14 +181,6 @@ export default function TaskManagement() {
               {t("Manage your tasks and task types efficiently.")}
             </p>
           </div>
-          <Button
-            variant={"decorate"}
-            onClick={() => setIsEventTypeDialogOpen(true)}
-            className="w-fit dark:text-white "
-          >
-            <Plus className="w-4 h-4 mr-2 dark:text-white" />
-            {t("Add Task Type")}
-          </Button>
         </div>
 
         <TaskManager

@@ -203,21 +203,25 @@ export default function Week({
                           >
                             <div className="flex justify-between items-start">
                               <div className="text-xs truncate pointer-events-none">
-                                {new Date(event.startTime).toLocaleTimeString(
-                                  [],
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )}{" "}
-                                -{" "}
-                                {new Date(event.endTime).toLocaleTimeString(
-                                  [],
-                                  {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  }
-                                )}
+                                <p className="font-bold">
+                                  {new Date(event.startTime).toLocaleTimeString(
+                                    [],
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}{" "}
+                                  -{" "}
+                                  {new Date(event.endTime).toLocaleTimeString(
+                                    [],
+                                    {
+                                      hour: "2-digit",
+                                      minute: "2-digit",
+                                    }
+                                  )}
+                                </p>
+                                <p className="mt-2">{event.title}</p>
+                                <p className="mt-2">{event.description}</p>
                               </div>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>

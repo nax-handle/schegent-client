@@ -33,7 +33,10 @@ export default function CalendarPage({
   setIsEventDialogOpen: (isOpen: boolean) => void;
   selectedCalendarColor: string;
 }) {
-  const [currentView, setCurrentView] = useState<CalendarView>("day");
+  const CurrentViewLocalStorage = localStorage.getItem("currentView");
+  const [currentView, setCurrentView] = useState<CalendarView>(
+    (CurrentViewLocalStorage as CalendarView) || "day"
+  );
   const { deleteEvent } = useDeleteEvent();
   const { updateEvent: updateEventAPI, updateEventError } = useUpdateEvent();
 

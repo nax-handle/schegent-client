@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Inter } from "next/font/google";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme/theme-provider";
-import { Providers } from "@/components/providers";
+import { Providers } from "../providers";
 import { usePathname } from "next/navigation";
 import { NotFoundProvider, useNotFound } from "@/context/not-found-context";
 import Calendar from "@/components/calendar/index";

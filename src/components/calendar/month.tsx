@@ -100,13 +100,6 @@ export default function Month({ eventsdata }: { eventsdata: Event[] }) {
 
                   <div className="mt-1">
                     {dateEvents.map((event, idx) => {
-                      const stateTime = new Date(event.startTime);
-                      const dateOnly = `${stateTime
-                        .getDate()
-                        .toString()
-                        .padStart(2, "0")}/${(stateTime.getMonth() + 1)
-                        .toString()
-                        .padStart(2, "0")}/${stateTime.getFullYear()}`;
                       return (
                         <div
                           key={idx}
@@ -116,8 +109,7 @@ export default function Month({ eventsdata }: { eventsdata: Event[] }) {
                             backgroundColor: addOpacityToHex(event.colorId),
                           }}
                         >
-                          <span className="font-semibold">{dateOnly}</span> –{" "}
-                          {event.title}
+                          <span className="font-semibold">{event.title}</span>
                         </div>
                       );
                     })}

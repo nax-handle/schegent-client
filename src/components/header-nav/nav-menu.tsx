@@ -15,6 +15,10 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
     month: "long",
   });
   const currentYear = today.getFullYear();
+  const handleCurrentView = (currentView: string) => {
+    localStorage.setItem("currentView", currentView);
+    setCurrentView(currentView as "day" | "week" | "month");
+  };
 
   return (
     <div className="flex items-center justify-between border-gray-300   w-full pl-6 pb-6">
@@ -45,7 +49,7 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
                               ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
                               : "hover:bg-white/10"
                           }`}
-              onClick={() => setCurrentView("day")}
+              onClick={() => handleCurrentView("day")}
             >
               {t("Day")}
             </button>
@@ -56,7 +60,7 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
                               ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
                               : "hover:bg-white/10"
                           }`}
-              onClick={() => setCurrentView("week")}
+              onClick={() => handleCurrentView("week")}
             >
               {t("Week")}
             </button>
@@ -68,7 +72,7 @@ export default function NavMenu({ currentView, setCurrentView }: HeaderProps) {
                               ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
                               : "hover:bg-white/10"
                           }`}
-              onClick={() => setCurrentView("month")}
+              onClick={() => handleCurrentView("month")}
             >
               {t("Month")}
             </button>
