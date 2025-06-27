@@ -130,9 +130,11 @@ export default function Week({
         <div
           className="relative overflow-y-auto scrollbar-hidden"
           style={{ height: "calc(100vh - 210px)" }}
-          onDoubleClick={() => {
-            setIsEventDialogOpen(true);
-            setSelectedEvent(null);
+          onDoubleClick={(e) => {
+            if (!(e.target as HTMLElement).closest("[data-event]")) {
+              setIsEventDialogOpen(true);
+              setSelectedEvent(null);
+            }
           }}
         >
           <div className="absolute left-0 w-20 z-10 h-full">
@@ -195,6 +197,7 @@ export default function Week({
                         return (
                           <div
                             key={index}
+                            data-event="true"
                             className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none group`}
                             style={{
                               top: `${top}px`,
@@ -202,6 +205,11 @@ export default function Week({
                               borderLeftColor: event.colorId,
                               backgroundColor: addOpacityToHex(event.colorId),
                               zIndex: 10,
+                            }}
+                            onDoubleClick={(e) => {
+                              e.stopPropagation();
+                              setSelectedEvent(event);
+                              setIsEventDialogOpen(true);
                             }}
                           >
                             <div className="flex justify-between items-start">

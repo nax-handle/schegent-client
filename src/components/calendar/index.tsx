@@ -82,7 +82,7 @@ export default function CalendarPage({
     setCurrentDate(new Date());
   };
 
-  const { deleteEvent } = useDeleteEvent();
+  const { deleteEvent, deleteEventError } = useDeleteEvent();
   const { updateEvent: updateEventAPI, updateEventError } = useUpdateEvent();
 
   const { updateCalendar } = useUpdateCalendar();
@@ -199,13 +199,23 @@ export default function CalendarPage({
   }, [updateEventError, optimisticUpdates]);
 
   const handleDeleteEvent = (eventId: string) => {
+    // Optimistic update - remove from local state immediately
     setEvents((prevEvents) => {
       if (!prevEvents) return prevEvents;
       return prevEvents.filter((event) => event.id !== eventId);
     });
 
+    // Call API to delete
     deleteEvent(eventId);
   };
+
+  // Handle delete error - restore the event if deletion failed
+  useEffect(() => {
+    if (deleteEventError) {
+      console.error("Failed to delete event:", deleteEventError);
+      // The query invalidation will restore the event from server data
+    }
+  }, [deleteEventError]);
 
   const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
     setEvents((prevEvents) => {
@@ -282,7 +292,12 @@ export default function CalendarPage({
             />
           )}
           {currentView === "month" && (
-            <Month eventsdata={events ?? []} currentDate={currentDate} />
+            <Month
+              eventsdata={events ?? []}
+              currentDate={currentDate}
+              setSelectedEvent={setSelectedEvent}
+              setIsEventDialogOpen={setIsEventDialogOpen}
+            />
           )}
         </div>
         <EventDialog

@@ -6,9 +6,13 @@ import type { Event } from "@/types";
 export default function Month({
   eventsdata,
   currentDate,
+  setSelectedEvent,
+  setIsEventDialogOpen,
 }: {
   eventsdata: Event[];
   currentDate: Date;
+  setSelectedEvent: (event: Event | null) => void;
+  setIsEventDialogOpen: (isOpen: boolean) => void;
 }) {
   const { Lunar } = LunarJS;
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -116,10 +120,16 @@ export default function Month({
                       return (
                         <div
                           key={idx}
-                          className={`text-xs text-black dark:text-white px-3 py-1 border-l-4 rounded-md truncate bg-opacity-20`}
+                          data-event="true"
+                          className={`text-xs text-black dark:text-white px-3 py-1 border-l-4 rounded-md truncate bg-opacity-20 cursor-pointer hover:bg-opacity-30`}
                           style={{
                             borderLeftColor: event.colorId,
                             backgroundColor: addOpacityToHex(event.colorId),
+                          }}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEvent(event);
+                            setIsEventDialogOpen(true);
                           }}
                         >
                           <span className="font-semibold">{event.title}</span>

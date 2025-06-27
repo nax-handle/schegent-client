@@ -1,4 +1,9 @@
-import { useMutation, useQuery, useQueries } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueries,
+  useQueryClient,
+} from "@tanstack/react-query";
 import * as events from "@/lib/services/events";
 import { SendEvent, ResponseEvent } from "@/types";
 
@@ -76,8 +81,14 @@ export const useUpdateEvent = () => {
 
 // Delete an existing event
 export const useDeleteEvent = () => {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: events.deleteEvent,
+    onSuccess: () => {
+      // Invalidate all event queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
+    },
   });
   return {
     deleteEvent: mutation.mutate,

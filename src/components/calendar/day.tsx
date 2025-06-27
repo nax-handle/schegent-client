@@ -124,9 +124,11 @@ export default function Day({
           <div
             className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden"
             style={{ height: "calc(100vh - 225px)" }}
-            onDoubleClick={() => {
-              setIsEventDialogOpen(true);
-              setSelectedEvent(null);
+            onDoubleClick={(e) => {
+              if (!(e.target as HTMLElement).closest("[data-event]")) {
+                setIsEventDialogOpen(true);
+                setSelectedEvent(null);
+              }
             }}
           >
             <div className="flex h-full w-full">
@@ -189,7 +191,13 @@ export default function Day({
                         style={{ top: `${top}px` }}
                       >
                         <span
+                          data-event="true"
                           onMouseDown={(e) => handleMouseDown(e, event)}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEvent(event);
+                            setIsEventDialogOpen(true);
+                          }}
                           className={`p-3 w-full mr-30 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative ${
                             isDragging ? "cursor-grabbing" : "cursor-move"
                           } group`}
