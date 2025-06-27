@@ -21,6 +21,7 @@ interface PropEvent {
   handleDeleteEvent: (eventId: string) => void;
   setSelectedEvent: (event: Event | null) => void;
   onOptimisticUpdate?: (eventId: string, updatedEvent: Event) => void;
+  currentDate: Date;
 }
 
 export default function Day({
@@ -29,6 +30,7 @@ export default function Day({
   setIsEventDialogOpen,
   handleDeleteEvent,
   onOptimisticUpdate,
+  currentDate,
 }: PropEvent) {
   const [topOffset, setTopOffset] = useState(0);
   const { updateEvent } = useUpdateEvent();
@@ -41,10 +43,6 @@ export default function Day({
     });
   const [events, setEvents] = useState<Event[]>(eventsData);
 
-  const today = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
-  );
-  const todayDate = today.getDate();
   const daysVN = [
     "Sunday",
     "Monday",
@@ -54,8 +52,9 @@ export default function Day({
     "Friday",
     "Saturday",
   ];
-  const date = new Date();
+  const date = currentDate;
   const weekday = daysVN[date.getDay()];
+  const displayDate = date.getDate();
 
   const calculateTopOffset = () => {
     const now = new Date();
@@ -107,7 +106,7 @@ export default function Day({
   return (
     <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl black overflow-hidden border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
       <p className="p-2 pl-6 text-2xl dark:text-white w-fit rounded-full">
-        {weekday}, {todayDate}
+        {weekday}, {displayDate}
       </p>
       <div className="h-full w-full">
         <div className="mx-2 flex">
@@ -153,11 +152,14 @@ export default function Day({
                 ))}
 
                 {events
-                  .filter(
-                    (event) =>
-                      new Date(event.startTime).getDate() ===
-                      new Date().getDate()
-                  )
+                  .filter((event) => {
+                    const eventDate = new Date(event.startTime);
+                    return (
+                      eventDate.getDate() === currentDate.getDate() &&
+                      eventDate.getMonth() === currentDate.getMonth() &&
+                      eventDate.getFullYear() === currentDate.getFullYear()
+                    );
+                  })
                   .map((event) => {
                     const stateTime = new Date(event.startTime);
                     const hourStartTime = stateTime.getHours();

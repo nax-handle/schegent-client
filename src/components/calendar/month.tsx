@@ -3,14 +3,20 @@ import { cn } from "@/lib/utils";
 import LunarJS from "lunar-javascript";
 import type { Event } from "@/types";
 
-export default function Month({ eventsdata }: { eventsdata: Event[] }) {
+export default function Month({
+  eventsdata,
+  currentDate,
+}: {
+  eventsdata: Event[];
+  currentDate: Date;
+}) {
   const { Lunar } = LunarJS;
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
-  const year = today.getFullYear();
-  const month = today.getMonth();
+  const year = currentDate.getFullYear();
+  const month = currentDate.getMonth();
   const daysInMonth = new Date(year, month + 1, 0).getDate();
   const todayDate = today.getDate();
 
@@ -60,9 +66,14 @@ export default function Month({ eventsdata }: { eventsdata: Event[] }) {
           const isToday = date === todayDate;
           const dateObj = isCurrentMonth ? calendarDates[date - 1] : null;
 
-          const dateEvents = eventsdata.filter(
-            (event) => new Date(event.startTime).getDate() === date
-          );
+          const dateEvents = eventsdata.filter((event) => {
+            const eventDate = new Date(event.startTime);
+            return (
+              eventDate.getDate() === date &&
+              eventDate.getMonth() === month &&
+              eventDate.getFullYear() === year
+            );
+          });
 
           return (
             <div
@@ -78,7 +89,9 @@ export default function Month({ eventsdata }: { eventsdata: Event[] }) {
                 <>
                   <div className="flex justify-between items-start p-1">
                     <div className="flex flex-col items-center">
-                      {isToday ? (
+                      {isToday &&
+                      month === today.getMonth() &&
+                      year === today.getFullYear() ? (
                         <div className="w-7 h-7 rounded-full bg-[#3A82F6] text-white font-bold flex items-center justify-center">
                           {date}
                         </div>

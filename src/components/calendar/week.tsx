@@ -20,6 +20,7 @@ interface PropEvent {
   setSelectedEvent: (event: Event | null) => void;
   handleDeleteEvent: (eventId: string) => void;
   onOptimisticUpdate?: (eventId: string, updatedEvent: Event) => void;
+  currentDate: Date;
 }
 
 export default function Week({
@@ -28,6 +29,7 @@ export default function Week({
   setIsEventDialogOpen,
   handleDeleteEvent,
   onOptimisticUpdate,
+  currentDate,
 }: PropEvent) {
   const { updateEvent } = useUpdateEvent();
   const [events, setEvents] = useState<Event[]>(eventsdata);
@@ -52,7 +54,6 @@ export default function Week({
   );
   const hour = today.getHours();
   const minute = today.getMinutes();
-  const todayIndex = today.getDay();
 
   const topOffset = hour * 56 + (minute / 60) * 56;
 
@@ -97,11 +98,11 @@ export default function Week({
       <div className=" w-full flex sticky top-0 z-50 rounded-t-lg">
         <div className="grid grid-cols-7 pl-19 border-b border-gray-200 flex-1 w-full ">
           {days.map((day, index) => {
-            const date = new Date(today);
-            const diff = index - todayIndex;
-            date.setDate(today.getDate() + diff);
+            const date = new Date(currentDate);
+            const diff = index - currentDate.getDay();
+            date.setDate(currentDate.getDate() + diff);
 
-            const isToday = index === todayIndex;
+            const isToday = date.toDateString() === today.toDateString();
             return (
               <div key={day} className="py-2 text-center ">
                 <div className="font-medium">{day}</div>
@@ -148,10 +149,10 @@ export default function Week({
           <div className="flex w-full h-full relative pl-20 ">
             <div className="grid grid-cols-7 divide-x divide-gray-200 flex-1 w-full">
               {days.map((day, dayIndex) => {
-                const date = new Date(today);
-                const diff = dayIndex - todayIndex;
-                date.setDate(today.getDate() + diff);
-                const currentDate = date;
+                const date = new Date(currentDate);
+                const diff = dayIndex - currentDate.getDay();
+                date.setDate(currentDate.getDate() + diff);
+                const currentDateForDay = date;
 
                 return (
                   <div key={day} className="relative">
@@ -170,9 +171,11 @@ export default function Week({
                       .filter((event) => {
                         const eventDate = new Date(event.startTime);
                         return (
-                          eventDate.getDate() === currentDate.getDate() &&
-                          eventDate.getMonth() === currentDate.getMonth() &&
-                          eventDate.getFullYear() === currentDate.getFullYear()
+                          eventDate.getDate() === currentDateForDay.getDate() &&
+                          eventDate.getMonth() ===
+                            currentDateForDay.getMonth() &&
+                          eventDate.getFullYear() ===
+                            currentDateForDay.getFullYear()
                         );
                       })
                       .map((event, index) => {
@@ -277,16 +280,17 @@ export default function Week({
                         );
                       })}
 
-                    {dayIndex === todayIndex && (
-                      <div
-                        className="absolute top-0 left-0 right-0 z-20"
-                        style={{ top: `${topOffset}px` }}
-                      >
-                        <div className="relative w-full h-[1px] bg-red-500">
-                          <span className="absolute -left-1 top-0 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500"></span>
+                    {dayIndex === currentDate.getDay() &&
+                      date.toDateString() === today.toDateString() && (
+                        <div
+                          className="absolute top-0 left-0 right-0 z-20"
+                          style={{ top: `${topOffset}px` }}
+                        >
+                          <div className="relative w-full h-[1px] bg-red-500">
+                            <span className="absolute -left-1 top-0 -translate-y-1/2 w-2 h-2 rounded-full bg-red-500"></span>
+                          </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
                     {dragIndicator && dragIndicator.column === dayIndex && (
                       <div

@@ -33,10 +33,55 @@ export default function CalendarPage({
   setIsEventDialogOpen: (isOpen: boolean) => void;
   selectedCalendarColor: string;
 }) {
-  const CurrentViewLocalStorage = localStorage.getItem("currentView");
-  const [currentView, setCurrentView] = useState<CalendarView>(
-    (CurrentViewLocalStorage as CalendarView) || "day"
-  );
+  const [currentView, setCurrentView] = useState<CalendarView>("day");
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+
+  useEffect(() => {
+    const storedView = localStorage.getItem("currentView") as CalendarView;
+    if (storedView) setCurrentView(storedView);
+  }, []);
+
+  useEffect(() => {
+    localStorage.setItem("currentView", currentView);
+  }, [currentView]);
+
+  // Navigation functions
+  const navigateToPrevious = () => {
+    const newDate = new Date(currentDate);
+    switch (currentView) {
+      case "day":
+        newDate.setDate(currentDate.getDate() - 1);
+        break;
+      case "week":
+        newDate.setDate(currentDate.getDate() - 7);
+        break;
+      case "month":
+        newDate.setMonth(currentDate.getMonth() - 1);
+        break;
+    }
+    setCurrentDate(newDate);
+  };
+
+  const navigateToNext = () => {
+    const newDate = new Date(currentDate);
+    switch (currentView) {
+      case "day":
+        newDate.setDate(currentDate.getDate() + 1);
+        break;
+      case "week":
+        newDate.setDate(currentDate.getDate() + 7);
+        break;
+      case "month":
+        newDate.setMonth(currentDate.getMonth() + 1);
+        break;
+    }
+    setCurrentDate(newDate);
+  };
+
+  const navigateToToday = () => {
+    setCurrentDate(new Date());
+  };
+
   const { deleteEvent } = useDeleteEvent();
   const { updateEvent: updateEventAPI, updateEventError } = useUpdateEvent();
 
@@ -49,7 +94,7 @@ export default function CalendarPage({
     setEditingEventType,
   } = useCalendarDialog();
 
-  const currentDate = new Date().toISOString().split("T")[0];
+  const currentDateString = currentDate.toISOString().split("T")[0];
   const [events, setEvents] = useState<Event[] | null>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [, setSelectedCalendarID] = useState<string>("");
@@ -60,7 +105,7 @@ export default function CalendarPage({
   const queryResults = useMultiCalendarEvents(
     checked,
     currentView,
-    currentDate
+    currentDateString
   );
 
   const data = queryResults.map((result) => result.data).filter(Boolean);
@@ -202,7 +247,14 @@ export default function CalendarPage({
 
   return (
     <div className="w-full">
-      <NavMenu currentView={currentView} setCurrentView={setCurrentView} />
+      <NavMenu
+        currentView={currentView}
+        setCurrentView={setCurrentView}
+        currentDate={currentDate}
+        onNavigatePrevious={navigateToPrevious}
+        onNavigateNext={navigateToNext}
+        onNavigateToday={navigateToToday}
+      />
       <div className={`flex`}>
         <div className={`flex-1  mr-1 `}>
           {currentView === "day" && (
@@ -214,6 +266,7 @@ export default function CalendarPage({
               setSelectedEvent={setSelectedEvent}
               handleDeleteEvent={handleDeleteEvent}
               onOptimisticUpdate={handleOptimisticUpdate}
+              currentDate={currentDate}
             />
           )}
           {currentView === "week" && (
@@ -225,9 +278,12 @@ export default function CalendarPage({
               setSelectedEvent={setSelectedEvent}
               handleDeleteEvent={handleDeleteEvent}
               onOptimisticUpdate={handleOptimisticUpdate}
+              currentDate={currentDate}
             />
           )}
-          {currentView === "month" && <Month eventsdata={events ?? []} />}
+          {currentView === "month" && (
+            <Month eventsdata={events ?? []} currentDate={currentDate} />
+          )}
         </div>
         <EventDialog
           calendarID={calendarID}
