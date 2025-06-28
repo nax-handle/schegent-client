@@ -12,17 +12,30 @@ function cn(...classes: (string | undefined | false | null)[]) {
   return classes.filter(Boolean).join(" ");
 }
 import { useProfile } from "@/hooks/auth/use.auth";
+import {
+  useSendMessage,
+  useCreateMultipleEvents,
+} from "@/hooks/chat/use.chatbot";
+import EventSuggestions from "./event-suggestions";
+import type { SuggestedEvent } from "@/lib/services/chatbot";
+import type { SendEvent } from "@/types";
 
 interface Message {
   id: string;
   content: string;
   role: "user" | "assistant";
   timestamp: string;
+  events?: SuggestedEvent[];
 }
 
 export default function AiChatWidget() {
   const { data } = useProfile();
+  const { sendMessageAsync, isSending } = useSendMessage();
+  const { createEventsAsync, isCreating } = useCreateMultipleEvents();
   const [isOpen, setIsOpen] = useState(false);
+  const [pendingEvents, setPendingEvents] = useState<{
+    [messageId: string]: SuggestedEvent[];
+  }>({});
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -40,14 +53,85 @@ export default function AiChatWidget() {
     setIsOpen(!isOpen);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAcceptEvents = async (
+    messageId: string,
+    events: SuggestedEvent[]
+  ) => {
+    try {
+      // Convert SuggestedEvent to SendEvent format
+      const sendEvents: SendEvent[] = events.map((event) => ({
+        title: event.title,
+        description: event.description,
+        location: event.location,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        hangoutLink: event.hangoutLink,
+        recurrence: event.recurrence,
+        icon: event.icon,
+        visibility: event.visibility,
+        status: event.status,
+        priority: event.priority,
+        eventCategory: event.eventCategory,
+        colorId: event.colorId,
+        isAllDay: event.isAllDay,
+        calendarId: event.calendarId,
+      }));
+
+      await createEventsAsync(sendEvents);
+
+      // Remove from pending events
+      setPendingEvents((prev) => {
+        const newPending = { ...prev };
+        delete newPending[messageId];
+        return newPending;
+      });
+
+      // Add success message
+      const successMessage: Message = {
+        id: Date.now().toString(),
+        content: `✅ Đã thêm thành công ${events.length} sự kiện vào lịch của bạn!`,
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, successMessage]);
+    } catch (error) {
+      console.error("Error creating events:", error);
+
+      // Add error message
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: "❌ Có lỗi xảy ra khi thêm sự kiện. Vui lòng thử lại.",
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+  };
+
+  const handleRejectEvents = (messageId: string) => {
+    setPendingEvents((prev) => {
+      const newPending = { ...prev };
+      delete newPending[messageId];
+      return newPending;
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isSending) return;
+
+    const userInputText = input.trim();
 
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: input,
+      content: userInputText,
       role: "user",
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
@@ -55,23 +139,51 @@ export default function AiChatWidget() {
       }),
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-    // Simulate AI response after a short delay
-    setTimeout(() => {
-      const aiMessage: Message = {
+    try {
+      // Call the chatbot API
+      const response = await sendMessageAsync({ message: userInputText });
+
+      if (response.success && response.data) {
+        const messageId = (Date.now() + 1).toString();
+        const aiMessage: Message = {
+          id: messageId,
+          content: response.data.response,
+          role: "assistant",
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          events: response.data.events_data,
+        };
+
+        // Store pending events if any
+        if (response.data.events_data && response.data.events_data.length > 0) {
+          setPendingEvents((prev) => ({
+            ...prev,
+            [messageId]: response.data.events_data,
+          }));
+        }
+
+        setMessages((prev) => [...prev, aiMessage]);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+
+      // Add error message
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content:
-          "Tôi đã nhận được tin nhắn của bạn. Tôi có thể giúp gì thêm không?",
+        content: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.",
         role: "assistant",
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
       };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+      setMessages((prev) => [...prev, errorMessage]);
+    }
   };
 
   return (
@@ -152,8 +264,47 @@ export default function AiChatWidget() {
                 <span className="text-xs text-gray-500 mt-1">
                   {message.timestamp}
                 </span>
+
+                {/* Event suggestions */}
+                {message.role === "assistant" &&
+                  message.events &&
+                  message.events.length > 0 &&
+                  pendingEvents[message.id] && (
+                    <div className="mt-2 w-full">
+                      <EventSuggestions
+                        events={pendingEvents[message.id]}
+                        onAccept={(events) =>
+                          handleAcceptEvents(message.id, events)
+                        }
+                        onReject={() => handleRejectEvents(message.id)}
+                        isLoading={isCreating}
+                      />
+                    </div>
+                  )}
               </div>
             ))}
+
+            {/* Typing indicator */}
+            {isSending && (
+              <div className="flex flex-col max-w-[80%] mr-auto items-start">
+                <div className="bg-gray-100 dark:bg-gray-800 text-foreground p-2 rounded-lg rounded-bl-none">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                  </div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  Đang soạn tin...
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Input area */}
@@ -182,8 +333,14 @@ export default function AiChatWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Aa"
                 className="flex-1 bg-white decored-input text-black"
+                disabled={isSending}
               />
-              <Button type="submit" size="icon" className="h-8 w-8">
+              <Button
+                type="submit"
+                size="icon"
+                className="h-8 w-8"
+                disabled={isSending || !input.trim()}
+              >
                 <Send className="h-4 w-4 text-white" />
               </Button>
             </form>

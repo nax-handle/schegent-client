@@ -3,6 +3,7 @@ import { SendEvent, ResponseEvent } from "@/types";
 
 const API_ENDPOINTS = {
   CREATE: "/event/create",
+  CREATE_MULTIPLE: "/event/create/multiple",
   ALL: "/event/",
   GETEVENT: "/event",
   GETALL: "/event/calendar/",
@@ -64,4 +65,13 @@ export async function updateEvent(
 // This function deletes an event by its ID
 export async function deleteEvent(id: string): Promise<void> {
   await axiosInstance.delete(`${API_ENDPOINTS.ALL}${id}`);
+}
+
+// This function creates multiple events
+export async function createMultipleEvents(events: SendEvent[]): Promise<void> {
+  const { data: response } = await axiosInstance.post(
+    API_ENDPOINTS.CREATE_MULTIPLE,
+    { events }
+  );
+  return response;
 }
