@@ -60,7 +60,7 @@ export function AppSidebar({
               icon: Calendar1,
               isActive: true,
               items: calendar,
-              url: "/",
+              url: "/calendar",
             },
             {
               type: "sub",

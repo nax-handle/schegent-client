@@ -43,10 +43,6 @@ export default function TaskManagement() {
     }
   }, [data, dataTasks]);
 
-  useEffect(() => {
-    console.log("dataTasks from backend:", dataTasks);
-  }, [dataTasks]);
-
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
 
