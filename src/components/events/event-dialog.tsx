@@ -25,7 +25,6 @@ interface EventDialogProps {
   onSave: (event: Partial<Event>) => void;
   event?: Event | null;
   calendarID?: string | null;
-  colorId?: string;
 }
 
 export function EventDialog({
@@ -34,12 +33,11 @@ export function EventDialog({
   onClose,
   onSave,
   event,
-  colorId,
 }: EventDialogProps) {
   const { t } = useTranslation();
   const modalRef = useRef<HTMLDivElement>(null);
-  const { createEvent, createEventError } = useCreateEvent();
-  const { updateEvent, updateEventError } = useUpdateEvent();
+  const { createEvent, createEventError, isCreatingEvent } = useCreateEvent();
+  const { updateEvent, updateEventError, isUpdatingEvent } = useUpdateEvent();
   const { data: calendarData } = useGetAllCalendars();
 
   const [formData, setFormData] = useState<Partial<SendEvent>>({
@@ -55,28 +53,23 @@ export function EventDialog({
     status: "confirmed",
     priority: "medium",
     eventCategory: "general",
-    colorId: colorId || "",
+    colorId: "",
     isAllDay: false,
     calendarId: calendarID || "",
   });
 
   useEffect(() => {
     if (calendarID) {
+      const selectedCalendar = calendarData?.find(
+        (calendar) => calendar.id === calendarID
+      );
       setFormData((prev) => ({
         ...prev,
         calendarId: calendarID,
+        colorId: selectedCalendar?.colorId || "",
       }));
     }
-  }, [calendarID]);
-
-  useEffect(() => {
-    if (colorId) {
-      setFormData((prev) => ({
-        ...prev,
-        colorId: colorId,
-      }));
-    }
-  }, [colorId]);
+  }, [calendarID, calendarData]);
 
   useEffect(() => {
     if (event) {
@@ -84,9 +77,12 @@ export function EventDialog({
         ...prev,
         ...event,
         calendarId: event.calendarId ?? prev.calendarId,
+        colorId:
+          calendarData?.find((calendar) => calendar.id === event.calendarId)
+            ?.colorId || "",
       }));
     }
-  }, [event]);
+  }, [event, calendarData]);
 
   useEffect(() => {
     if (
@@ -98,6 +94,7 @@ export function EventDialog({
       setFormData((prev) => ({
         ...prev,
         calendarId: calendarData[0].id,
+        colorId: calendarData[0].colorId,
       }));
     }
   }, [event, calendarData, formData.calendarId]);
@@ -115,20 +112,53 @@ export function EventDialog({
     };
   }, [isOpen, onClose]);
 
+  useEffect(() => {
+    if (calendarData && formData.calendarId) {
+      const selectedCalendar = calendarData.find(
+        (calendar) => calendar.id === formData.calendarId
+      );
+      if (selectedCalendar && selectedCalendar.colorId !== formData.colorId) {
+        setFormData((prev) => ({
+          ...prev,
+          colorId: selectedCalendar.colorId,
+        }));
+      }
+    }
+  }, [calendarData, formData.calendarId, formData.colorId]);
+
+  useEffect(() => {
+    if (
+      calendarData &&
+      calendarData.length > 0 &&
+      formData.calendarId &&
+      !formData.colorId
+    ) {
+      const selectedCalendar = calendarData.find(
+        (calendar) => calendar.id === formData.calendarId
+      );
+      if (selectedCalendar) {
+        setFormData((prev) => ({
+          ...prev,
+          colorId: selectedCalendar.colorId,
+        }));
+      }
+    }
+  }, [calendarData, formData.calendarId, formData.colorId]);
+
   const handleSave = () => {
     if (!formData.calendarId) {
       console.error("Calendar ID is required");
       return;
     }
 
-    onSave(formData);
-    onClose();
-
     if (event) {
       updateEvent(
         { data: formData as SendEvent, id: event.id },
         {
-          onSuccess: () => onClose(),
+          onSuccess: () => {
+            onSave(formData);
+            onClose();
+          },
           onError: (error) => {
             console.error("Error updating event:", error);
           },
@@ -136,7 +166,10 @@ export function EventDialog({
       );
     } else {
       createEvent(formData as SendEvent, {
-        onSuccess: () => onClose(),
+        onSuccess: () => {
+          onSave(formData);
+          onClose();
+        },
         onError: (error) => {
           console.error("Error creating event:", error);
         },
@@ -174,12 +207,16 @@ export function EventDialog({
               <Label htmlFor="eventType">{t("Event Type")}</Label>
               <Select
                 value={formData.calendarId || "none"}
-                onValueChange={(value) =>
+                onValueChange={(value) => {
+                  const selectedCalendar = calendarData?.find(
+                    (calendar) => calendar.id === value
+                  );
                   setFormData({
                     ...formData,
                     calendarId: value === "none" ? undefined : value,
-                  })
-                }
+                    colorId: selectedCalendar?.colorId || "",
+                  });
+                }}
               >
                 <SelectTrigger className="w-full decored-selection">
                   <SelectValue placeholder={t("Select event type")} />
@@ -193,7 +230,8 @@ export function EventDialog({
                     >
                       <div className="flex items-center gap-2">
                         <div
-                          className={`w-3 h-3 rounded-full ${type.colorId}`}
+                          className="w-3 h-3 rounded-full border border-gray-300"
+                          style={{ backgroundColor: type.colorId }}
                         />
                         {type.name}
                       </div>
@@ -457,11 +495,19 @@ export function EventDialog({
           </div>
 
           <div className="flex justify-end gap-2 mt-4">
-            <Button variant="ghost" onClick={onClose}>
+            <Button
+              variant="ghost"
+              onClick={onClose}
+              disabled={isCreatingEvent || isUpdatingEvent}
+            >
               {t("Cancel")}
             </Button>
-            <Button type="submit" onClick={handleSave}>
-              {t("Save")}
+            <Button
+              type="submit"
+              onClick={handleSave}
+              disabled={isCreatingEvent || isUpdatingEvent}
+            >
+              {isCreatingEvent || isUpdatingEvent ? t("Saving...") : t("Save")}
             </Button>
             {(createEventError || updateEventError) && (
               <span className="ml-2 text-sm text-red-500">

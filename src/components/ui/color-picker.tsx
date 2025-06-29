@@ -48,7 +48,7 @@ const ColorPicker = forwardRef<
         </Button>
         {open && (
           <div
-            className="absolute z-10 mt-2 bg-white border rounded shadow p-4"
+            className="absolute z-10 mt-2 top-0 left-15 bg-white border rounded shadow p-2"
             style={{ minWidth: 220 }}
           >
             <HexColorPicker color={parsedValue} onChange={onChange} />
@@ -62,8 +62,13 @@ const ColorPicker = forwardRef<
               value={parsedValue}
               className="mt-2"
             />
-            <div className="flex justify-end mt-2">
-              <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
+            <div className="flex justify-end">
+              <Button
+                size="sm"
+                className="mt-2"
+                variant="decorate"
+                onClick={() => setOpen(false)}
+              >
                 Đóng
               </Button>
             </div>

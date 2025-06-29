@@ -25,13 +25,11 @@ export default function CalendarPage({
   calendarID,
   isEventDialogOpen,
   setIsEventDialogOpen,
-  selectedCalendarColor,
 }: {
   checked: string[];
   calendarID: string;
   isEventDialogOpen: boolean;
   setIsEventDialogOpen: (isOpen: boolean) => void;
-  selectedCalendarColor: string;
 }) {
   const [currentView, setCurrentView] = useState<CalendarView>("day");
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
@@ -45,7 +43,6 @@ export default function CalendarPage({
     localStorage.setItem("currentView", currentView);
   }, [currentView]);
 
-  // Navigation functions
   const navigateToPrevious = () => {
     const newDate = new Date(currentDate);
     switch (currentView) {
@@ -82,8 +79,12 @@ export default function CalendarPage({
     setCurrentDate(new Date());
   };
 
+  const navigateToDate = (date: Date) => {
+    setCurrentDate(date);
+  };
+
   const { deleteEvent, deleteEventError } = useDeleteEvent();
-  const { updateEvent: updateEventAPI, updateEventError } = useUpdateEvent();
+  useUpdateEvent();
 
   const { updateCalendar } = useUpdateCalendar();
   const { createCalendar } = useCreateCalendar();
@@ -98,9 +99,6 @@ export default function CalendarPage({
   const [events, setEvents] = useState<Event[] | null>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [, setSelectedCalendarID] = useState<string>("");
-  const [optimisticUpdates, setOptimisticUpdates] = useState<
-    Map<string, Event>
-  >(new Map());
 
   const queryResults = useMultiCalendarEvents(
     checked,
@@ -131,80 +129,20 @@ export default function CalendarPage({
 
   const handleCreateEvent = (eventData: Partial<SendEvent>) => {
     if (typeof eventData.title === "string") {
-      const newEvent: Event = {
-        id: Date.now().toString(),
-        title: eventData.title,
-        description: eventData.description ?? "",
-        location: eventData.location ?? null,
-        startTime: eventData.startTime ?? new Date().toISOString(),
-        endTime: eventData.endTime ?? new Date().toISOString(),
-        hangoutLink: eventData.hangoutLink ?? null,
-        recurrence: eventData.recurrence ?? "",
-        icon: eventData.icon ?? null,
-        visibility: eventData.visibility ?? "default",
-        status: eventData.status ?? "confirmed",
-        priority: eventData.priority ?? "medium",
-        eventCategory: eventData.eventCategory ?? "general",
-        colorId: eventData.colorId ?? "",
-        isAllDay: eventData.isAllDay ?? false,
-        calendarId: calendarID,
-      };
-
-      setEvents((prevEvents) => [...(prevEvents || []), newEvent]);
-      setIsEventDialogOpen(false);
+      // Don't do optimistic update for create, let React Query handle it
+      // The API call is handled in EventDialog component
+      console.log("Event created successfully, React Query will refresh data");
     } else {
       console.error("Event title is required");
     }
   };
 
-  const handleUpdateEvent = (eventData: Partial<Event>) => {
+  const handleUpdateEvent = () => {
     if (!selectedEvent) return;
-
-    const originalEvent = events?.find((e) => e.id === selectedEvent.id);
-    if (originalEvent) {
-      setOptimisticUpdates(
-        (prev) => new Map(prev.set(selectedEvent.id, originalEvent))
-      );
-    }
-
-    setEvents((prevEvents) => {
-      if (!prevEvents) return prevEvents;
-      return prevEvents.map((event) =>
-        event.id === selectedEvent.id ? { ...event, ...eventData } : event
-      );
-    });
-
-    updateEventAPI({
-      id: selectedEvent.id,
-      data: {
-        ...selectedEvent,
-        ...eventData,
-      } as SendEvent,
-    });
-
     setSelectedEvent(null);
   };
 
-  useEffect(() => {
-    if (updateEventError) {
-      setEvents((prevEvents) => {
-        if (!prevEvents) return prevEvents;
-        return prevEvents.map((event) => {
-          const originalEvent = optimisticUpdates.get(event.id);
-          return originalEvent || event;
-        });
-      });
-      setOptimisticUpdates(new Map());
-    }
-  }, [updateEventError, optimisticUpdates]);
-
   const handleDeleteEvent = (eventId: string) => {
-    // Optimistic update - remove from local state immediately
-    setEvents((prevEvents) => {
-      if (!prevEvents) return prevEvents;
-      return prevEvents.filter((event) => event.id !== eventId);
-    });
-
     // Call API to delete
     deleteEvent(eventId);
   };
@@ -216,15 +154,6 @@ export default function CalendarPage({
       // The query invalidation will restore the event from server data
     }
   }, [deleteEventError]);
-
-  const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
-    setEvents((prevEvents) => {
-      if (!prevEvents) return prevEvents;
-      return prevEvents.map((event) =>
-        event.id === eventId ? updatedEvent : event
-      );
-    });
-  };
 
   const handleCreateEventType = (eventTypeData: Partial<Calendar>) => {
     if (typeof eventTypeData.name === "string") {
@@ -256,7 +185,7 @@ export default function CalendarPage({
   };
 
   return (
-    <div className="w-full">
+    <div className="w-full sm:mt-0 mt-4">
       <NavMenu
         currentView={currentView}
         setCurrentView={setCurrentView}
@@ -264,9 +193,10 @@ export default function CalendarPage({
         onNavigatePrevious={navigateToPrevious}
         onNavigateNext={navigateToNext}
         onNavigateToday={navigateToToday}
+        onNavigateToDate={navigateToDate}
       />
       <div className={`flex`}>
-        <div className={`flex-1  mr-1 `}>
+        <div className={`flex-1`}>
           {currentView === "day" && (
             <Day
               eventsData={events ?? []}
@@ -275,7 +205,6 @@ export default function CalendarPage({
               handleUpdateEvent={handleUpdateEvent}
               setSelectedEvent={setSelectedEvent}
               handleDeleteEvent={handleDeleteEvent}
-              onOptimisticUpdate={handleOptimisticUpdate}
               currentDate={currentDate}
             />
           )}
@@ -287,7 +216,6 @@ export default function CalendarPage({
               handleUpdateEvent={handleUpdateEvent}
               setSelectedEvent={setSelectedEvent}
               handleDeleteEvent={handleDeleteEvent}
-              onOptimisticUpdate={handleOptimisticUpdate}
               currentDate={currentDate}
             />
           )}
@@ -309,7 +237,6 @@ export default function CalendarPage({
           }}
           onSave={selectedEvent ? handleUpdateEvent : handleCreateEvent}
           event={selectedEvent}
-          colorId={selectedCalendarColor}
         />
         <EventTypeDialog
           isOpen={isEventTypeDialogOpen}

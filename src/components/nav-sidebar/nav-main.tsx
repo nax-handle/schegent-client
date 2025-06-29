@@ -54,7 +54,6 @@ export function NavMain({
   setChecked,
   setCalendarID,
   setIsEventDialogOpen,
-  setSelectedCalendarColor,
   isCollapsed,
 }: {
   items: NavItem[];
@@ -62,7 +61,6 @@ export function NavMain({
   setChecked?: React.Dispatch<React.SetStateAction<string[]>>;
   setCalendarID: (id: string) => void;
   setIsEventDialogOpen: (isOpen: boolean) => void;
-  setSelectedCalendarColor: (colorId: string) => void;
   isCollapsed: boolean;
 }) {
   const { deleteCalendar } = useDeleteCalendar();
@@ -128,6 +126,7 @@ export function NavMain({
                           >
                             <Plus />
                           </div>
+
                           <ChevronRight className="ml-2 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
                         </div>
                       </SidebarMenuButton>
@@ -169,7 +168,6 @@ export function NavMain({
                                     onClick={() => {
                                       setCalendarID(subItem.id);
                                       setIsEventDialogOpen(true);
-                                      setSelectedCalendarColor(subItem.colorId);
                                     }}
                                   >
                                     Create Event

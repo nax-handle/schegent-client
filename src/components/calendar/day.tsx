@@ -35,13 +35,51 @@ export default function Day({
   const [topOffset, setTopOffset] = useState(0);
   const { updateEvent } = useUpdateEvent();
   const [isDragging, setIsDragging] = useState(false);
+  const [originalEvents, setOriginalEvents] = useState<Map<string, Event>>(
+    new Map()
+  );
+  const [events, setEvents] = useState<Event[]>(eventsData);
+  const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
+    const originalEvent = events.find((e) => e.id === eventId);
+    if (originalEvent) {
+      setOriginalEvents((prev) => new Map(prev.set(eventId, originalEvent)));
+    }
+
+    setEvents((prevEvents) =>
+      prevEvents.map((event) => (event.id === eventId ? updatedEvent : event))
+    );
+
+    // Call the parent's onOptimisticUpdate if provided
+    if (onOptimisticUpdate) {
+      onOptimisticUpdate(eventId, updatedEvent);
+    }
+  };
+
   const { handleMouseDownResize, handleMouseDownMoveBlock } =
     useEventDragResize({
-      updateEvent,
+      updateEvent: (params) => {
+        handleOptimisticUpdate(params.id, params.data as Event);
+        updateEvent(params, {
+          onError: () => {
+            const originalEvent = originalEvents.get(params.id);
+            if (originalEvent) {
+              setEvents((prevEvents) =>
+                prevEvents.map((event) =>
+                  event.id === params.id ? originalEvent : event
+                )
+              );
+              setOriginalEvents((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(params.id);
+                return newMap;
+              });
+            }
+          },
+        });
+      },
       view: "day",
-      onOptimisticUpdate,
+      onOptimisticUpdate: handleOptimisticUpdate,
     });
-  const [events, setEvents] = useState<Event[]>(eventsData);
 
   const daysVN = [
     "Sunday",
@@ -104,7 +142,7 @@ export default function Day({
   }, [isDragging]);
 
   return (
-    <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl black overflow-hidden border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
+    <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl overflow-hidden border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
       <p className="p-2 pl-6 text-2xl dark:text-white w-fit rounded-full">
         {weekday}, {displayDate}
       </p>
@@ -122,8 +160,7 @@ export default function Day({
           }}
         >
           <div
-            className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden"
-            style={{ height: "calc(100vh - 225px)" }}
+            className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden h-[calc(100vh-250px)] sm:h-[calc(100vh-185px)]"
             onDoubleClick={(e) => {
               if (!(e.target as HTMLElement).closest("[data-event]")) {
                 setIsEventDialogOpen(true);

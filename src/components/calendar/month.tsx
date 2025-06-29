@@ -60,10 +60,7 @@ export default function Month({
         ))}
       </div>
 
-      <div
-        className="grid grid-cols-7 grid-rows-5 "
-        style={{ height: "calc(100vh - 227px)" }}
-      >
+      <div className="grid grid-cols-7 grid-rows-5 h-[calc(100vh-157px)]">
         {Array.from({ length: totalCells }, (_, i) => {
           const date = i - firstDayOfMonth + 1;
           const isCurrentMonth = date > 0 && date <= daysInMonth;

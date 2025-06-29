@@ -34,6 +34,19 @@ export default function Week({
   const { updateEvent } = useUpdateEvent();
   const [events, setEvents] = useState<Event[]>(eventsdata);
   const [isDragging, setIsDragging] = useState(false);
+
+  // Optimistic update function for drag & drop
+  const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
+    setEvents((prevEvents) =>
+      prevEvents.map((event) => (event.id === eventId ? updatedEvent : event))
+    );
+
+    // Call the parent's onOptimisticUpdate if provided
+    if (onOptimisticUpdate) {
+      onOptimisticUpdate(eventId, updatedEvent);
+    }
+  };
+
   const {
     handleMouseDownResize,
     handleMouseDownMoveBlock,
@@ -42,7 +55,7 @@ export default function Week({
   } = useEventDragResize({
     updateEvent,
     view: "week",
-    onOptimisticUpdate,
+    onOptimisticUpdate: handleOptimisticUpdate,
   });
 
   useEffect(() => {
@@ -96,7 +109,7 @@ export default function Week({
   return (
     <div className="w-full relative rounded-tr-xl rounded-br-xl rou border-gray-300 border-t-1 border-b-1 border-r-1">
       <div className=" w-full flex sticky top-0 z-50 rounded-t-lg">
-        <div className="grid grid-cols-7 pl-19 border-b border-gray-200 flex-1 w-full ">
+        <div className="grid grid-cols-7 sm:pl-20 pl-10 border-b border-gray-200 flex-1 w-full ">
           {days.map((day, index) => {
             const date = new Date(currentDate);
             const diff = index - currentDate.getDay();
@@ -128,8 +141,7 @@ export default function Week({
         }}
       >
         <div
-          className="relative overflow-y-auto scrollbar-hidden"
-          style={{ height: "calc(100vh - 210px)" }}
+          className="relative overflow-y-auto scrollbar-hidden h-[calc(100vh-190px)]"
           onDoubleClick={(e) => {
             if (!(e.target as HTMLElement).closest("[data-event]")) {
               setIsEventDialogOpen(true);
@@ -137,7 +149,7 @@ export default function Week({
             }
           }}
         >
-          <div className="absolute left-0 w-20 z-10 h-full">
+          <div className="absolute left-0 sm:w-20 w-10  z-10 h-full">
             {Array.from({ length: 24 }, (_, i) => (
               <div
                 key={i}
@@ -148,7 +160,7 @@ export default function Week({
             ))}
           </div>
 
-          <div className="flex w-full h-full relative pl-20 ">
+          <div className="flex w-full h-full relative sm:pl-20 pl-10  ">
             <div className="grid grid-cols-7 divide-x divide-gray-200 flex-1 w-full">
               {days.map((day, dayIndex) => {
                 const date = new Date(currentDate);

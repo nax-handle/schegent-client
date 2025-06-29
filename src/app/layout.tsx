@@ -24,8 +24,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   const [checked, setChecked] = useState<string[]>([]);
   const [calendarID, setCalendarID] = useState<string>("");
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
-  const [selectedCalendarColor, setSelectedCalendarColor] =
-    useState<string>("");
   const pathname = usePathname();
   const { isNotFound } = useNotFound();
 
@@ -43,24 +41,21 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           setChecked={setChecked}
           setCalendarID={setCalendarID}
           setIsEventDialogOpen={setIsEventDialogOpen}
-          setSelectedCalendarColor={setSelectedCalendarColor}
         />
         <SidebarInset>
-          {/* <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 absolute top-6 z-100">
-            <div className="flex items-center gap-2 px-4">
+          <header className="flex sm:hidden h-5 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10">
+            <div className="flex items-center gap-2 px-4 mt-4">
               <SidebarTrigger className="-ml-1" />
             </div>
-          </header> */}
-          <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+          </header>
+          <div className="flex flex-1 flex-col gap-4 p-1 pt-0">
             <div className="flex flex-col min-h-[80vh] relative">
-              <ScrollAnimation />
               <div className="flex flex-1">
                 <Calendar
                   checked={checked}
                   calendarID={calendarID}
                   isEventDialogOpen={isEventDialogOpen}
                   setIsEventDialogOpen={setIsEventDialogOpen}
-                  selectedCalendarColor={selectedCalendarColor}
                 />
                 <div className="flex flex-col absolute bottom-10 right-20">
                   <Chat />
@@ -80,7 +75,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
       <AppSidebar
         setCalendarID={setCalendarID}
         setIsEventDialogOpen={setIsEventDialogOpen}
-        setSelectedCalendarColor={setSelectedCalendarColor}
       />
       <SidebarInset>
         <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">

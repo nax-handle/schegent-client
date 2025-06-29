@@ -2,6 +2,7 @@ import React from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
+import { cn } from "@/lib/utils";
 
 interface HeaderProps {
   currentView: "day" | "week" | "month";
@@ -10,6 +11,7 @@ interface HeaderProps {
   onNavigatePrevious: () => void;
   onNavigateNext: () => void;
   onNavigateToday: () => void;
+  onNavigateToDate: (date: Date) => void;
 }
 
 export default function NavMenu({
@@ -19,6 +21,7 @@ export default function NavMenu({
   onNavigatePrevious,
   onNavigateNext,
   onNavigateToday,
+  onNavigateToDate,
 }: HeaderProps) {
   const { t } = useTranslation();
 
@@ -101,40 +104,77 @@ export default function NavMenu({
     }
   };
 
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const today = new Date(
+    new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
+  );
+
   return (
-    <div className="flex items-center justify-between border-gray-300   w-full pl-6 pb-6">
-      <div className="flex items-center gap-4 ml-8">
-        <h1
-          className="text-md border-2 px-4 py-2 rounded-full cursor-pointer hover:bg-gray-100"
-          onClick={onNavigateToday}
-        >
-          {t("Today")}
-        </h1>
-        <div className="flex items-center ">
-          <button
-            className="p-2 rounded-md hover:bg-gray-100"
-            onClick={onNavigatePrevious}
-          >
-            <ChevronLeft className="w-5 h-5" />
-          </button>
-          <button
-            className="p-2 rounded-md hover:bg-gray-100"
-            onClick={onNavigateNext}
-          >
-            <ChevronRight className="w-5 h-5" />
-          </button>
+    <div className="flex flex-col sm:flex-row items-center justify-between border-gray-300 w-full sm:pl-6 pb-4 sm:pb-6 gap-4 sm:gap-0">
+      <div className="w-full">
+        <div className="grid grid-cols-7 flex-1 w-full border-b sm:hidden">
+          {days.map((day, index) => {
+            const date = new Date(currentDate);
+            const diff = index - currentDate.getDay();
+            date.setDate(currentDate.getDate() + diff);
+
+            const isToday = date.toDateString() === today.toDateString();
+            return (
+              <div
+                key={day}
+                className="py-2 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                onClick={() => onNavigateToDate(date)}
+              >
+                <div className="font-medium">{day}</div>
+                <div
+                  className={cn(
+                    "w-7 h-7 mx-auto mt-1 flex items-center justify-center rounded-full",
+                    isToday
+                      ? "dark:bg-white bg-[#3A82F6] text-white dark:text-black"
+                      : ""
+                  )}
+                >
+                  {date.getDate()}
+                </div>
+              </div>
+            );
+          })}
         </div>
-        <h1 className="text-2xl font-bold ">{formatDisplayDate()}</h1>
+        <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-start">
+          <div className="sm:flex hidden items-center mt-4">
+            <button
+              className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100"
+              onClick={onNavigatePrevious}
+            >
+              <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+            <h1
+              className="text-sm sm:text-md border-2 px-3 sm:px-4 py-1.5 sm:py-2 mx-2 rounded-full cursor-pointer hover:bg-gray-100"
+              onClick={onNavigateToday}
+            >
+              {t("Today")}
+            </h1>
+            <button
+              className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100"
+              onClick={onNavigateNext}
+            >
+              <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
+            </button>
+          </div>
+          <h1 className="text-sx sm:text-2xl font-bold text-center sm:text-left flex-1 sm:flex-none mt-4">
+            {formatDisplayDate()}
+          </h1>
+        </div>
       </div>
 
-      <div className="flex items-center gap-4">
-        <div className="px-8 pb-6 mt-6 flex justify-center">
-          <div className="inline-flex rounded-md overflow-hidden">
+      <div className="sm:flex hidden items-center w-full sm:w-auto justify-center">
+        <div className="px-2 sm:px-8 pb-2 sm:pb-6 mt-2 sm:mt-6 flex justify-center w-full">
+          <div className="inline-flex rounded-md overflow-hidden w-full sm:w-auto">
             <button
-              className={`px-6 py-2 text-ld rounded-lg transition 
+              className={`flex-1 sm:flex-none px-3 sm:px-6 py-2 text-sm sm:text-ld rounded-lg transition 
                           ${
                             currentView === "day"
-                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
+                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md"
                               : "hover:bg-white/10"
                           }`}
               onClick={() => handleCurrentView("day")}
@@ -142,10 +182,10 @@ export default function NavMenu({
               {t("Day")}
             </button>
             <button
-              className={`px-6 py-2 text-ld rounded-lg transition 
+              className={`flex-1 sm:flex-none px-3 sm:px-6 py-2 text-sm sm:text-ld rounded-lg transition 
                           ${
                             currentView === "week"
-                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
+                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md"
                               : "hover:bg-white/10"
                           }`}
               onClick={() => handleCurrentView("week")}
@@ -154,10 +194,10 @@ export default function NavMenu({
             </button>
 
             <button
-              className={`px-6 py-2 text-ld rounded-lg transition 
+              className={`flex-1 sm:flex-none px-3 sm:px-6 py-2 text-sm sm:text-ld rounded-lg transition 
                           ${
                             currentView === "month"
-                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md  "
+                              ? "dark:bg-white/20 bg-gray-100 backdrop-blur-md shadow-md"
                               : "hover:bg-white/10"
                           }`}
               onClick={() => handleCurrentView("month")}

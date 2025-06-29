@@ -9,8 +9,14 @@ import { SendEvent, ResponseEvent } from "@/types";
 
 // Create a new event
 export const useCreateEvent = () => {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: events.createEvent,
+    onSuccess: () => {
+      // Invalidate all event queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
+    },
   });
   return {
     createEvent: mutation.mutate,
@@ -60,11 +66,15 @@ export const useGetDetailEvent = () => {
 
 // Update an existing event
 export const useUpdateEvent = () => {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: ({ data, id }: { data: SendEvent; id: string }) =>
       events.updateEvent(data, id),
     onSuccess: (data, variables) => {
       console.log("Event updated successfully:", variables.id);
+      // Invalidate all event queries to refresh data
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
     },
     onError: (err) => {
       console.error("Failed to update event:", err);
