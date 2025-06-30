@@ -76,9 +76,9 @@ export function AppSidebar({
             },
             {
               type: "sub",
-              title: "Reports",
+              title: "Dashboards",
               icon: ChartColumnDecreasing,
-              url: "/reports",
+              url: "/dashboards",
             },
             {
               type: "sub",

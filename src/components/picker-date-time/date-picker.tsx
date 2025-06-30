@@ -34,9 +34,10 @@ function isValidDate(date: Date | undefined) {
 export interface DatePickerProps {
   value?: Date;
   onChange?: (date: Date | undefined) => void;
+  onDateChange?: (date: Date | undefined) => void;
 }
 
-export function DatePicker({ value, onChange }: DatePickerProps) {
+export function DatePicker({ value, onChange, onDateChange }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [date, setDate] = useState<Date | undefined>(value);
   const [month, setMonth] = useState<Date | undefined>(value);
@@ -53,6 +54,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
     setInputValue(formatDate(selectedDate));
     setOpen(false);
     if (onChange) onChange(selectedDate);
+    if (onDateChange) onDateChange(selectedDate);
   };
 
   const today = new Date();
@@ -72,6 +74,7 @@ export function DatePicker({ value, onChange }: DatePickerProps) {
             setDate(parsedDate);
             setMonth(parsedDate);
             if (onChange) onChange(parsedDate);
+            if (onDateChange) onDateChange(parsedDate);
           }
         }}
         onKeyDown={(e) => {

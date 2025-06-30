@@ -12,6 +12,14 @@ import {
 } from "@/components/ui/dropdown-menu";
 import ContextMenuComponent from "../context-menu/create-event";
 
+// Hàm ép thời gian về giờ Việt Nam
+function toVietnamDate(dateInput: string | Date): Date {
+  const date = new Date(dateInput);
+  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
+  const vietnamOffset = 7 * 60 * 60000;
+  return new Date(utc + vietnamOffset);
+}
+
 interface PropEvent {
   eventsdata: Event[];
   setCalendarID: (id: string) => void;
@@ -35,13 +43,28 @@ export default function Week({
   const [events, setEvents] = useState<Event[]>(eventsdata);
   const [isDragging, setIsDragging] = useState(false);
 
-  // Optimistic update function for drag & drop
+  const today = toVietnamDate(new Date());
+  const hour = today.getHours();
+  const minute = today.getMinutes();
+  const topOffset = hour * 56 + (minute / 60) * 56;
+
+  const hours = Array.from(
+    { length: 24 },
+    (_, i) => `${i.toString().padStart(2, "0")}:00`
+  );
+  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  const addOpacityToHex = (color: string) => {
+    const alpha = Math.round(255 * 0.19)
+      .toString(16)
+      .padStart(2, "0");
+    return color + alpha;
+  };
+
   const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
     setEvents((prevEvents) =>
       prevEvents.map((event) => (event.id === eventId ? updatedEvent : event))
     );
-
-    // Call the parent's onOptimisticUpdate if provided
     if (onOptimisticUpdate) {
       onOptimisticUpdate(eventId, updatedEvent);
     }
@@ -62,62 +85,35 @@ export default function Week({
     setEvents(eventsdata);
   }, [eventsdata]);
 
-  const today = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
-  );
-  const hour = today.getHours();
-  const minute = today.getMinutes();
-
-  const topOffset = hour * 56 + (minute / 60) * 56;
-
-  const hours = Array.from(
-    { length: 24 },
-    (_, i) => `${i.toString().padStart(2, "0")}:00`
-  );
-
-  const addOpacityToHex = (color: string) => {
-    const alpha = Math.round(255 * 0.19)
-      .toString(16)
-      .padStart(2, "0");
-    return color + alpha;
-  };
-
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-
   const handleMouseDown = (
     e: React.MouseEvent<HTMLDivElement>,
     event: Event
   ) => {
-    if ((e.target as HTMLElement).closest("button")) {
-      return;
-    }
+    if ((e.target as HTMLElement).closest("button")) return;
     setIsDragging(true);
     handleMouseDownDragToOtherDay(e, event);
   };
 
-  const handleMouseUp = () => {
-    setIsDragging(false);
-  };
+  const handleMouseUp = () => setIsDragging(false);
 
   useEffect(() => {
     document.addEventListener("mouseup", handleMouseUp);
-    return () => {
-      document.removeEventListener("mouseup", handleMouseUp);
-    };
+    return () => document.removeEventListener("mouseup", handleMouseUp);
   }, [isDragging]);
 
   return (
-    <div className="w-full relative rounded-tr-xl rounded-br-xl rou border-gray-300 border-t-1 border-b-1 border-r-1">
-      <div className=" w-full flex sticky top-0 z-50 rounded-t-lg">
-        <div className="grid grid-cols-7 sm:pl-20 pl-10 border-b border-gray-200 flex-1 w-full ">
+    <div className="w-full relative rounded-tr-xl rounded-br-xl border-gray-300 border-t-1 border-b-1 border-r-1">
+      <div className="w-full flex sticky top-0 z-50 rounded-t-lg">
+        <div className="grid grid-cols-7 sm:pl-20 pl-10 border-b border-gray-200 flex-1 w-full">
           {days.map((day, index) => {
             const date = new Date(currentDate);
-            const diff = index - currentDate.getDay();
-            date.setDate(currentDate.getDate() + diff);
+            const diff = index - date.getDay();
+            date.setDate(date.getDate() + diff);
+            const zonedDate = toVietnamDate(date);
+            const isToday = zonedDate.toDateString() === today.toDateString();
 
-            const isToday = date.toDateString() === today.toDateString();
             return (
-              <div key={day} className="py-2 text-center ">
+              <div key={day} className="py-2 text-center">
                 <div className="font-medium">{day}</div>
                 <div
                   className={cn(
@@ -127,13 +123,14 @@ export default function Week({
                       : ""
                   )}
                 >
-                  {date.getDate()}
+                  {zonedDate.getDate()}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
+
       <ContextMenuComponent
         openDialog={() => {
           setIsEventDialogOpen(true);
@@ -149,24 +146,24 @@ export default function Week({
             }
           }}
         >
-          <div className="absolute left-0 sm:w-20 w-10  z-10 h-full">
+          <div className="absolute left-0 sm:w-20 w-10 z-10 h-full">
             {Array.from({ length: 24 }, (_, i) => (
               <div
                 key={i}
-                className="flex h-14 items-center justify-center pr-2 border-r  text-xs "
+                className="flex h-14 items-center justify-center pr-2 border-r text-xs"
               >
                 <p className="mb-13.5">{i === 0 ? "" : `${i}:00`}</p>
               </div>
             ))}
           </div>
 
-          <div className="flex w-full h-full relative sm:pl-20 pl-10  ">
+          <div className="flex w-full h-full relative sm:pl-20 pl-10">
             <div className="grid grid-cols-7 divide-x divide-gray-200 flex-1 w-full">
               {days.map((day, dayIndex) => {
                 const date = new Date(currentDate);
-                const diff = dayIndex - currentDate.getDay();
-                date.setDate(currentDate.getDate() + diff);
-                const currentDateForDay = date;
+                const diff = dayIndex - date.getDay();
+                date.setDate(date.getDate() + diff);
+                const zonedDate = toVietnamDate(date);
 
                 return (
                   <div key={day} className="relative">
@@ -176,41 +173,36 @@ export default function Week({
                         className={`h-14 ${
                           index === hours.length - 1
                             ? ""
-                            : "border-b dark:border-gray-200 border-gray-300"
+                            : "border-b border-gray-300"
                         }`}
-                      ></div>
+                      />
                     ))}
 
                     {events
                       .filter((event) => {
-                        const eventDate = new Date(event.startTime);
+                        const eventDate = toVietnamDate(event.startTime);
                         return (
-                          eventDate.getDate() === currentDateForDay.getDate() &&
-                          eventDate.getMonth() ===
-                            currentDateForDay.getMonth() &&
-                          eventDate.getFullYear() ===
-                            currentDateForDay.getFullYear()
+                          eventDate.getDate() === zonedDate.getDate() &&
+                          eventDate.getMonth() === zonedDate.getMonth() &&
+                          eventDate.getFullYear() === zonedDate.getFullYear()
                         );
                       })
                       .map((event, index) => {
-                        const stateTime = new Date(event.startTime);
-                        const hourStartTime = stateTime.getHours();
-                        const minuteStartTime = stateTime.getMinutes();
+                        const startTime = toVietnamDate(event.startTime);
+                        const endTime = toVietnamDate(event.endTime);
                         const top =
-                          hourStartTime * 56 + (minuteStartTime / 60) * 56;
-
-                        const endTime = new Date(event.endTime);
-                        const hourEndTime = endTime.getHours();
-                        const minuteEndTime = endTime.getMinutes();
+                          startTime.getHours() * 56 +
+                          (startTime.getMinutes() / 60) * 56;
                         const height =
-                          (hourEndTime - hourStartTime) * 56 +
-                          (minuteEndTime - minuteStartTime) * (56 / 60);
+                          (endTime.getHours() - startTime.getHours()) * 56 +
+                          (endTime.getMinutes() - startTime.getMinutes()) *
+                            (56 / 60);
 
                         return (
                           <div
                             key={index}
                             data-event="true"
-                            className={`absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none group`}
+                            className="absolute left-1 right-1 rounded-md p-2 overflow-hidden text-black dark:text-white border-l-4 bg-opacity-20 select-none group"
                             style={{
                               top: `${top}px`,
                               height: `${height}px`,
@@ -226,24 +218,21 @@ export default function Week({
                           >
                             <div className="flex justify-between items-start">
                               <div className="text-xs truncate pointer-events-none">
-                                <p className="font-bold">
-                                  {new Date(event.startTime).toLocaleTimeString(
-                                    [],
-                                    {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    }
-                                  )}{" "}
-                                  -{" "}
-                                  {new Date(event.endTime).toLocaleTimeString(
-                                    [],
-                                    {
-                                      hour: "2-digit",
-                                      minute: "2-digit",
-                                    }
-                                  )}
+                                <p className="text-lg font-bold">
+                                  {event.title}
                                 </p>
-                                <p className="mt-2">{event.title}</p>
+
+                                <p className="">
+                                  {startTime.toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}{" "}
+                                  -{" "}
+                                  {endTime.toLocaleTimeString([], {
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}
+                                </p>
                                 <p className="mt-2">{event.description}</p>
                               </div>
                               <DropdownMenu>
@@ -301,7 +290,8 @@ export default function Week({
                       })}
 
                     {dayIndex === currentDate.getDay() &&
-                      date.toDateString() === today.toDateString() && (
+                      toVietnamDate(date).toDateString() ===
+                        today.toDateString() && (
                         <div
                           className="absolute top-0 left-0 right-0 z-20"
                           style={{ top: `${topOffset}px` }}

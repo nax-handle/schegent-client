@@ -13,7 +13,6 @@ export const useCreateEvent = () => {
   const mutation = useMutation({
     mutationFn: events.createEvent,
     onSuccess: () => {
-      // Invalidate all event queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
     },
@@ -70,9 +69,7 @@ export const useUpdateEvent = () => {
   const mutation = useMutation({
     mutationFn: ({ data, id }: { data: SendEvent; id: string }) =>
       events.updateEvent(data, id),
-    onSuccess: (data, variables) => {
-      console.log("Event updated successfully:", variables.id);
-      // Invalidate all event queries to refresh data
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
     },
@@ -95,7 +92,6 @@ export const useDeleteEvent = () => {
   const mutation = useMutation({
     mutationFn: events.deleteEvent,
     onSuccess: () => {
-      // Invalidate all event queries to refresh data
       queryClient.invalidateQueries({ queryKey: ["events"] });
       queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
     },
@@ -106,4 +102,13 @@ export const useDeleteEvent = () => {
     isDeletingEvent: mutation.isPending,
     isEventDeleted: mutation.isSuccess,
   };
+};
+
+// Reminder events
+export const useReminderEvent = () => {
+  return useQuery({
+    queryKey: ["reminderEvents"],
+    queryFn: events.reminderEvent,
+    select: (res) => res.data,
+  });
 };

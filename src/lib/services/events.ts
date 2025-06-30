@@ -1,11 +1,13 @@
 import { axiosInstance } from "../axios";
 import { SendEvent, ResponseEvent } from "@/types";
+import { getUserID } from "../auth";
 
 const API_ENDPOINTS = {
   CREATE: "/event/create",
   ALL: "/event/",
   GETEVENT: "/event",
   GETALL: "/event/calendar/",
+  EVENT_AI: "/event/ai/",
 };
 
 // This function creates a new event
@@ -64,4 +66,14 @@ export async function updateEvent(
 // This function deletes an event by its ID
 export async function deleteEvent(id: string): Promise<void> {
   await axiosInstance.delete(`${API_ENDPOINTS.ALL}${id}`);
+}
+
+//This function reminder
+export async function reminderEvent(): Promise<ResponseEvent> {
+  const { data: response } = await axiosInstance.get(
+    `${
+      API_ENDPOINTS.EVENT_AI
+    }${getUserID()}?currentDate=${new Date().toISOString()}&calendarBy=day`
+  );
+  return response;
 }

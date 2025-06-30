@@ -15,7 +15,6 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { ScrollAnimation, ScrollToTop } from "@/components/ui/scroll-animation";
 import { CalendarDialogProvider } from "@/context/calendar-dialog-context";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -28,7 +27,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   const { isNotFound } = useNotFound();
 
   const hideLayoutPaths = ["/login", "/register", "/forgot-password"];
-  const calendarPaths = ["/", "/calendar"];
+  const calendarPaths = ["/calendar"];
+  const AI_Calendar = ["/"];
 
   if (hideLayoutPaths.includes(pathname) || isNotFound) {
     return <>{children}</>;
@@ -61,7 +61,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                   <Chat />
                 </div>
               </div>
-              <ScrollToTop />
             </div>
           </div>
         </SidebarInset>
@@ -69,7 +68,6 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
     );
   }
 
-  // ✅ Render layout mặc định cho các page còn lại
   return (
     <SidebarProvider>
       <AppSidebar
@@ -77,15 +75,20 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         setIsEventDialogOpen={setIsEventDialogOpen}
       />
       <SidebarInset>
-        <header className="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12">
-          <div className="flex items-center gap-2 px-4">
+        <header className="flex sm:hidden h-5 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10">
+          <div className="flex items-center gap-2 px-4 mt-4">
             <SidebarTrigger className="-ml-1" />
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
-          <ScrollAnimation />
-          <main className="flex-1">{children}</main>
-          <ScrollToTop />
+          <div className="flex flex-1">
+            <main className="flex-1">{children}</main>
+            {!AI_Calendar.includes(pathname) && (
+              <div className="flex flex-col absolute bottom-10 right-20">
+                <Chat />
+              </div>
+            )}
+          </div>
         </div>
       </SidebarInset>
     </SidebarProvider>

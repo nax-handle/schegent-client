@@ -1,14 +1,20 @@
-"use client";
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
+import React from "react";
+import CalendarPage from "@/components/calendar/index";
+import { Metadata } from "next";
 
-export default function CalendarPage() {
-  const router = useRouter();
-
-  useEffect(() => {
-    // Redirect to root since calendar is handled in layout
-    router.replace("/");
-  }, [router]);
-
-  return null;
+export const metadata: Metadata = {
+  title: "Calendar",
+  description: "Your personal calendar to manage events and tasks.",
+};
+export default function Calendar() {
+  return (
+    <div>
+      <CalendarPage
+        checked={[]}
+        calendarID=""
+        isEventDialogOpen={false}
+        setIsEventDialogOpen={() => {}}
+      />
+    </div>
+  );
 }

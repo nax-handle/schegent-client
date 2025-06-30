@@ -18,6 +18,7 @@ import "@/../i18n";
 import TimePicker from "@/components/picker-date-time/time-picker";
 import { useGetAllCalendars } from "@/hooks/calendar/use.calendar";
 import { useCreateEvent, useUpdateEvent } from "@/hooks/calendar/use.events";
+import { DatePicker } from "../picker-date-time/date-picker";
 
 interface EventDialogProps {
   isOpen: boolean;
@@ -39,6 +40,10 @@ export function EventDialog({
   const { createEvent, createEventError, isCreatingEvent } = useCreateEvent();
   const { updateEvent, updateEventError, isUpdatingEvent } = useUpdateEvent();
   const { data: calendarData } = useGetAllCalendars();
+
+  const [selectedDate, setSelectedDate] = useState<Date | undefined>(
+    event?.startTime ? new Date(event.startTime) : new Date()
+  );
 
   const [formData, setFormData] = useState<Partial<SendEvent>>({
     title: "",
@@ -81,6 +86,11 @@ export function EventDialog({
           calendarData?.find((calendar) => calendar.id === event.calendarId)
             ?.colorId || "",
       }));
+
+      // Update selectedDate when editing an existing event
+      if (event.startTime) {
+        setSelectedDate(new Date(event.startTime));
+      }
     }
   }, [event, calendarData]);
 
@@ -321,7 +331,13 @@ export function EventDialog({
             setFormData={setFormData}
             startDate={event?.startTime || ""}
             endDate={event?.endTime || ""}
+            selectedDate={selectedDate}
           />
+
+          <div>
+            <Label htmlFor="date">{t("Date")}</Label>
+            <DatePicker value={selectedDate} onDateChange={setSelectedDate} />
+          </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div>

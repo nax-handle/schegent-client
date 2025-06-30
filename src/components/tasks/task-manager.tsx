@@ -66,7 +66,7 @@ export default function TaskManager({
                   <div
                     ref={provided.innerRef}
                     {...provided.draggableProps}
-                    className="dark:bg-slate-800 bg-[#fcfdff] border border-gray-200 rounded-lg p-4 w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] "
+                    className="dark:bg-primarydark bg-[#fcfdff] border border-gray-200 dark:border-gray-800 rounded-lg p-4 w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] xl:w-[calc(25%-1.125rem)] "
                   >
                     <div
                       className="flex items-center justify-between mb-4"
@@ -100,14 +100,14 @@ export default function TaskManager({
                               }, 0);
                             }}
                           >
-                            {t("Edit Task Table")}
+                            {t("Edit Task")}
                           </DropdownMenuItem>
 
                           <DropdownMenuItem
                             onClick={() => handleDeleteEventType(taskType.id)}
                             className="text-red-400"
                           >
-                            {t("Delete Task Table")}
+                            {t("Delete Task")}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>

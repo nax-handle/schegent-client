@@ -3,6 +3,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import { cn } from "@/lib/utils";
+import i18next from "i18next";
 
 interface HeaderProps {
   currentView: "day" | "week" | "month";
@@ -23,7 +24,7 @@ export default function NavMenu({
   onNavigateToday,
   onNavigateToDate,
 }: HeaderProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const months = [
     "January",
@@ -40,8 +41,45 @@ export default function NavMenu({
     "December",
   ];
 
-  const currentMonth = months[currentDate.getMonth()];
-  const currentYear = currentDate.getFullYear();
+  const monthsVi = [
+    "Tháng 1",
+    "Tháng 2",
+    "Tháng 3",
+    "Tháng 4",
+    "Tháng 5",
+    "Tháng 6",
+    "Tháng 7",
+    "Tháng 8",
+    "Tháng 9",
+    "Tháng 10",
+    "Tháng 11",
+    "Tháng 12",
+  ];
+
+  const weekdaysVi = [
+    "Chủ nhật",
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+  ];
+
+  const shortMonthsVi = [
+    "T1",
+    "T2",
+    "T3",
+    "T4",
+    "T5",
+    "T6",
+    "T7",
+    "T8",
+    "T9",
+    "T10",
+    "T11",
+    "T12",
+  ];
 
   const handleCurrentView = (currentView: string) => {
     localStorage.setItem("currentView", currentView);
@@ -49,45 +87,58 @@ export default function NavMenu({
   };
 
   const formatDisplayDate = () => {
-    const formatDate = (date: Date) => {
-      const weekdays = [
-        "Sunday",
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday",
-        "Saturday",
-      ];
-      const shortMonths = [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
-      ];
+    const lang = i18n?.language || i18next.language || "en";
+    const isVi = lang.startsWith("vi");
+    const monthsCurrent = isVi ? monthsVi : months;
+    const weekdaysCurrent = isVi
+      ? weekdaysVi
+      : [
+          "Sunday",
+          "Monday",
+          "Tuesday",
+          "Wednesday",
+          "Thursday",
+          "Friday",
+          "Saturday",
+        ];
+    const shortMonthsCurrent = isVi
+      ? shortMonthsVi
+      : [
+          "Jan",
+          "Feb",
+          "Mar",
+          "Apr",
+          "May",
+          "Jun",
+          "Jul",
+          "Aug",
+          "Sep",
+          "Oct",
+          "Nov",
+          "Dec",
+        ];
+    const currentMonthLocal = monthsCurrent[currentDate.getMonth()];
+    const currentYearLocal = currentDate.getFullYear();
 
+    const formatDate = (date: Date) => {
       return {
-        weekday: weekdays[date.getDay()],
-        month: months[date.getMonth()],
-        shortMonth: shortMonths[date.getMonth()],
+        weekday: weekdaysCurrent[date.getDay()],
+        month: monthsCurrent[date.getMonth()],
+        shortMonth: shortMonthsCurrent[date.getMonth()],
         day: date.getDate(),
         year: date.getFullYear(),
       };
     };
 
     switch (currentView) {
-      case "day":
+      case "day": {
         const dayFormat = formatDate(currentDate);
+        if (isVi) {
+          return `${dayFormat.weekday}, ${dayFormat.day} ${dayFormat.month} ${dayFormat.year}`;
+        }
         return `${dayFormat.weekday}, ${dayFormat.month} ${dayFormat.day}, ${dayFormat.year}`;
-      case "week":
+      }
+      case "week": {
         const startOfWeek = new Date(currentDate);
         startOfWeek.setDate(currentDate.getDate() - currentDate.getDay());
         const endOfWeek = new Date(startOfWeek);
@@ -95,12 +146,15 @@ export default function NavMenu({
 
         const startFormat = formatDate(startOfWeek);
         const endFormat = formatDate(endOfWeek);
-
+        if (isVi) {
+          return `${startFormat.shortMonth} ${startFormat.day} - ${endFormat.shortMonth} ${endFormat.day}, ${endFormat.year}`;
+        }
         return `${startFormat.shortMonth} ${startFormat.day} - ${endFormat.shortMonth} ${endFormat.day}, ${endFormat.year}`;
+      }
       case "month":
-        return `${currentMonth}, ${currentYear}`;
+        return `${currentMonthLocal}, ${currentYearLocal}`;
       default:
-        return `${currentMonth}, ${currentYear}`;
+        return `${currentMonthLocal}, ${currentYearLocal}`;
     }
   };
 

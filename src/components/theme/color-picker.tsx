@@ -48,7 +48,7 @@ const ColorPicker = forwardRef<
         </Button>
         {open && (
           <div
-            className="absolute z-10 mt-2 top-0 left-15 bg-white border rounded shadow p-2"
+            className="absolute z-10 mt-2 top-0 left-15 bg-white dark:bg-black border rounded shadow p-2"
             style={{ minWidth: 220 }}
           >
             <HexColorPicker color={parsedValue} onChange={onChange} />

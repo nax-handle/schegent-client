@@ -30,10 +30,12 @@ export default function TimePicker({
   setFormData,
   startDate,
   endDate,
+  selectedDate,
 }: {
   setFormData: React.Dispatch<React.SetStateAction<Partial<SendEvent>>>;
   startDate: string;
   endDate: string;
+  selectedDate?: Date;
 }) {
   const { t } = useTranslation();
   const currentLanguage = i18next.language;
@@ -113,10 +115,10 @@ export default function TimePicker({
       minute: string;
       period?: string;
     }) => {
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = (now.getMonth() + 1).toString().padStart(2, "0");
-      const day = now.getDate().toString().padStart(2, "0");
+      const baseDate = selectedDate || new Date();
+      const year = baseDate.getFullYear();
+      const month = (baseDate.getMonth() + 1).toString().padStart(2, "0");
+      const day = baseDate.getDate().toString().padStart(2, "0");
 
       const hour24 = isEnglish
         ? convertTo24Hour(time.hour, time.period)
@@ -134,7 +136,7 @@ export default function TimePicker({
       startTime: buildTimeISO(timeRange.start),
       endTime: buildTimeISO(timeRange.end),
     }));
-  }, [timeRange, setFormData, isEnglish]);
+  }, [timeRange, setFormData, isEnglish, selectedDate]);
 
   return (
     <div>

@@ -12,6 +12,8 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import ContextMenuComponent from "../context-menu/create-event";
+import i18next from "i18next";
+import { useTranslation } from "react-i18next";
 
 interface PropEvent {
   eventsData: Event[];
@@ -39,6 +41,7 @@ export default function Day({
     new Map()
   );
   const [events, setEvents] = useState<Event[]>(eventsData);
+  const { t, i18n } = useTranslation();
   const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
     const originalEvent = events.find((e) => e.id === eventId);
     if (originalEvent) {
@@ -49,7 +52,6 @@ export default function Day({
       prevEvents.map((event) => (event.id === eventId ? updatedEvent : event))
     );
 
-    // Call the parent's onOptimisticUpdate if provided
     if (onOptimisticUpdate) {
       onOptimisticUpdate(eventId, updatedEvent);
     }
@@ -81,7 +83,16 @@ export default function Day({
       onOptimisticUpdate: handleOptimisticUpdate,
     });
 
-  const daysVN = [
+  const daysVi = [
+    "Chủ nhật",
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+  ];
+  const daysEn = [
     "Sunday",
     "Monday",
     "Tuesday",
@@ -90,6 +101,8 @@ export default function Day({
     "Friday",
     "Saturday",
   ];
+  const lang = i18n?.language || i18next.language || "en";
+  const daysVN = lang.startsWith("vi") ? daysVi : daysEn;
   const date = currentDate;
   const weekday = daysVN[date.getDay()];
   const displayDate = date.getDate();
@@ -262,13 +275,15 @@ export default function Day({
                                     setIsEventDialogOpen(true);
                                   }}
                                 >
-                                  <Pencil className="w-4 h-4 mr-2" /> Sửa
+                                  <Pencil className="w-4 h-4 mr-2" />{" "}
+                                  {t("Update")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteEvent(event.id)}
                                   className="text-red-600 focus:text-red-700"
                                 >
-                                  <Trash2 className="w-4 h-4 mr-2" /> Xóa
+                                  <Trash2 className="w-4 h-4 mr-2" />{" "}
+                                  {t("Delete")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -277,11 +292,13 @@ export default function Day({
                             {formatTime(stateTime)} - {formatTime(endTime)}
                           </span>
                           <span className="spanText-event">
-                            <span className="font-bold">Description:</span>{" "}
+                            <span className="font-bold">
+                              {t("Description")}:
+                            </span>{" "}
                             {event.description}
                           </span>
                           <span className="spanText-event">
-                            <span className="font-bold">Location:</span>{" "}
+                            <span className="font-bold">{t("Location")}:</span>{" "}
                             {event.location}
                           </span>
 
