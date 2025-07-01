@@ -30,18 +30,21 @@ export default function EditProfile({ user }: { user: UserType }) {
             {t("Name")}
           </Label>
           <Input
-            className="text-gray-400 dark:text-white"
+            className="text-gray-400 dark:text-white bg-[#181818]"
             id="name"
             value={editedUser.name}
             onChange={(e) => handleChange("name", e.target.value)}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="email" className="text-black dark:text-white">
+          <Label
+            htmlFor="email"
+            className="text-black dark:text-white bg-[#181818]"
+          >
             {t("Email")}
           </Label>
           <Input
-            className="text-gray-400 dark:text-white"
+            className="text-gray-400 dark:text-white bg-[#181818]"
             id="email"
             type="email"
             value={editedUser.email}
@@ -107,7 +110,7 @@ export default function EditProfile({ user }: { user: UserType }) {
           {t("Address")}
         </Label>
         <Textarea
-          className="text-black dark:text-white"
+          className="text-black dark:text-white bg-[#181818]"
           id="address"
           value={editedUser.address || ""}
           onChange={(e) => handleChange("address", e.target.value)}

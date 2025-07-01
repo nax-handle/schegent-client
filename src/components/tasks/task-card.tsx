@@ -52,7 +52,7 @@ export function TaskCard({
   };
 
   return (
-    <Card className="dark:bg-gray-700 h-fit bg-white dark:border-slate-600 border-gray-100 hover:bg-slate-650 transition-colors cursor-pointer group">
+    <Card className="dark:bg-gray-900 h-fit bg-white dark:border-slate-800 border-gray-100 hover:bg-slate-650 transition-colors cursor-pointer group">
       <CardContent className="p-4">
         <div
           className={`w-10 h-3 mb-3 rounded-full ${getPriorityColor(
@@ -106,13 +106,6 @@ export function TaskCard({
         </div>
 
         <div className="space-y-2">
-          {task.dueDate && (
-            <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
-              <Clock className="w-3 h-3 ml-2" />
-              <span>Due: {formatDate(task.dueDate)}</span>
-            </div>
-          )}
-
           {task.startDate && task.endDate && (
             <div className="flex items-center gap-2 text-xs dark:text-slate-300 text-black">
               <Clock className="w-3 h-3" />
@@ -144,9 +137,9 @@ export function TaskCard({
           </div>
 
           {task.description && (
-            <div className="mt-2 p-2 dark:bg-slate-600 bg-gray-100 rounded text-xs text-slate-300">
+            <div className="mt-2 p-2 dark:bg-slate-800 bg-gray-100 rounded text-xs text-slate-300">
               <div className="flex items-center gap-1 mb-1">
-                <div className="w-3 h-3 dark:bg-slate-500 bg-gray-50 rounded flex items-center justify-center">
+                <div className="w-3 h-3 dark:bg-slate-800 bg-gray-50 rounded flex items-center justify-center">
                   <span className="text-[8px] dark:text-white text-black">
                     📝
                   </span>

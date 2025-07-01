@@ -1,11 +1,21 @@
-import { useMutation, useQuery, useQueries } from "@tanstack/react-query";
+import {
+  useMutation,
+  useQuery,
+  useQueries,
+  useQueryClient,
+} from "@tanstack/react-query";
 import * as events from "@/lib/services/events";
 import { SendEvent, ResponseEvent } from "@/types";
 
 // Create a new event
 export const useCreateEvent = () => {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: events.createEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
+    },
   });
   return {
     createEvent: mutation.mutate,
@@ -55,11 +65,13 @@ export const useGetDetailEvent = () => {
 
 // Update an existing event
 export const useUpdateEvent = () => {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: ({ data, id }: { data: SendEvent; id: string }) =>
       events.updateEvent(data, id),
-    onSuccess: (data, variables) => {
-      console.log("Event updated successfully:", variables.id);
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
     },
     onError: (err) => {
       console.error("Failed to update event:", err);
@@ -76,8 +88,13 @@ export const useUpdateEvent = () => {
 
 // Delete an existing event
 export const useDeleteEvent = () => {
+  const queryClient = useQueryClient();
   const mutation = useMutation({
     mutationFn: events.deleteEvent,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["events"] });
+      queryClient.invalidateQueries({ queryKey: ["eventsByCalendarId"] });
+    },
   });
   return {
     deleteEvent: mutation.mutate,
@@ -85,4 +102,13 @@ export const useDeleteEvent = () => {
     isDeletingEvent: mutation.isPending,
     isEventDeleted: mutation.isSuccess,
   };
+};
+
+// Reminder events
+export const useReminderEvent = () => {
+  return useQuery({
+    queryKey: ["reminderEvents"],
+    queryFn: events.reminderEvent,
+    select: (res) => res.data,
+  });
 };

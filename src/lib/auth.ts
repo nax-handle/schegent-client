@@ -23,3 +23,10 @@ export function clearSessionId() {
 export function getCookie() {
   return Cookies.get("accessToken");
 }
+export function setUserID(userID: string): void {
+  localStorage.setItem("userID", userID);
+}
+
+export function getUserID(): string | null {
+  return localStorage.getItem("userID");
+}

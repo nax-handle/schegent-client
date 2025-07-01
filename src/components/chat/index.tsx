@@ -90,7 +90,7 @@ export default function AiChatWidget() {
       </Button>
 
       {isOpen && (
-        <Card className="w-130 md:w-96 shadow-xl flex flex-col z-40 min-h-[50vh] bg-gray-300 overflow-hidden">
+        <Card className="xm:w-130 md:w-96 shadow-xl flex flex-col z-40 min-h-[50vh] bg-gray-300 overflow-hidden">
           {/* Header */}
           <div className="bg-primary text-primary-foreground p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">

@@ -47,8 +47,8 @@ export default function CreateAccount() {
   }, [isSuccess]);
 
   return (
-    <div className="w-full h-screen flex justify-center items-center">
-      <div className="w-full max-w-md mx-auto p-6 backdrop-blur-2xl bg-gray-200/20 border-1 rounded-xl">
+    <div className="w-full h-screen flex justify-center items-center ">
+      <div className="w-full max-w-md mx-auto p-6 backdrop-blur-2xl dark:bg-primarydark border-1 rounded-xl">
         <div className="text-center mb-8">
           <h1 className="text-2xl font-bold text-[#2e2e77] dark:text-[#8989d1]">
             {step === 1 ? t("Create Your Account") : t("Verify Your Email")}
@@ -65,7 +65,7 @@ export default function CreateAccount() {
             {/* Google Signup */}
             <Button
               variant="outline"
-              className="w-full py-6 flex items-center justify-center gap-2  dark:bg-[#535353]"
+              className="w-full py-6 flex items-center justify-center gap-2  dark:bg-[#303030]"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -98,14 +98,13 @@ export default function CreateAccount() {
             {/* OR line */}
             <div className="relative flex items-center justify-center">
               <div className="border-t border-gray-200 w-full absolute"></div>
-              <span className="px-4 text-sm text-gray-400 dark:bg-[#3F3F40] bg-[#FAFAFB] relative">
+              <span className="px-4 text-sm text-gray-400 dark:bg-primarydark bg-[#FAFAFB] relative">
                 {t("OR")}
               </span>
             </div>
 
             {/* FORM */}
             <form className="space-y-4">
-              {/* Email */}
               <div className="relative">
                 <div className="absolute inset-y-0 left-3 flex items-center pointer-events-none text-gray-400">
                   <Mail size={18} />
@@ -121,7 +120,7 @@ export default function CreateAccount() {
                       setValue("email", `${value}@gmail.com`);
                     }
                   }}
-                  className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+                  className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#303030] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
                 />
               </div>
               {errors.email && (
@@ -140,7 +139,7 @@ export default function CreateAccount() {
                   maxLength={20}
                   placeholder={t("Password")}
                   {...register("password")}
-                  className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+                  className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#303030] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
                 />
                 <button
                   type="button"
@@ -168,7 +167,7 @@ export default function CreateAccount() {
                   {...register("confirmPassword")}
                   className={`pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 ${
                     errors.confirmPassword ? "border-red-500" : ""
-                  } bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white`}
+                  } bg-white dark:bg-[#303030] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white`}
                 />
                 <button
                   type="button"
@@ -199,7 +198,7 @@ export default function CreateAccount() {
                 onClick={handleSubmit(handleRegister)}
                 disabled={isRegistering}
                 variant={"default"}
-                className="py-6"
+                className="py-6 w-full"
               >
                 {isRegistering ? t("Loading...") : t("Continue")}
               </Button>

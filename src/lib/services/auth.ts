@@ -1,6 +1,6 @@
 import { axiosInstance } from "../axios";
 import Cookies from "js-cookie";
-import { getAuthToken, getSessionId, clearSessionId } from "../auth";
+import { getAuthToken, getSessionId, clearSessionId, setUserID } from "../auth";
 
 const isClient = typeof window !== "undefined";
 
@@ -153,7 +153,7 @@ export async function getCurrentUser(): Promise<UserResponse> {
       },
     }
   );
-
+  setUserID(response.data.data.id);
   return response.data;
 }
 

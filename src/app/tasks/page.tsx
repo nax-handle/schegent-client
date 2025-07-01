@@ -1,8 +1,6 @@
 "use client";
 import { useState, useEffect } from "react";
 import { DropResult } from "@hello-pangea/dnd";
-import { Button } from "@/components/ui/button";
-import { Plus } from "lucide-react";
 import { TaskDialog } from "@/components/tasks/task-dialog";
 import { EventTypeDialog } from "@/components/events/calendar-dialog";
 import type { Task, Calendar, SendTask } from "@/types";
@@ -44,10 +42,6 @@ export default function TaskManagement() {
       setTasks(dataTasks);
     }
   }, [data, dataTasks]);
-
-  useEffect(() => {
-    console.log("dataTasks from backend:", dataTasks);
-  }, [dataTasks]);
 
   const handleDragEnd = (result: DropResult) => {
     const { source, destination, draggableId, type } = result;
@@ -170,10 +164,10 @@ export default function TaskManagement() {
 
   return (
     <div
-      className=" p-6 overflow-y-scroll scrollbar-hidden border-none dark:bg-slate-900 bg-slate-50 "
-      style={{ height: "calc(100vh - 85px)" }}
+      className=" p-6 overflow-y-scroll scrollbar-hidden border-none dark:bg-primarydark bg-white "
+      style={{ height: "calc(100vh - 19px)" }}
     >
-      <div className="max-w-7xl mx-auto">
+      <div className="">
         <div className="md:flex justify-between items-center mb-6">
           <div>
             <h1 className="text-3xl font-bold dark:text-white text-black">
@@ -183,14 +177,6 @@ export default function TaskManagement() {
               {t("Manage your tasks and task types efficiently.")}
             </p>
           </div>
-          <Button
-            variant={"decorate"}
-            onClick={() => setIsEventTypeDialogOpen(true)}
-            className="w-fit dark:text-white "
-          >
-            <Plus className="w-4 h-4 mr-2 dark:text-white" />
-            {t("Add Task Type")}
-          </Button>
         </div>
 
         <TaskManager

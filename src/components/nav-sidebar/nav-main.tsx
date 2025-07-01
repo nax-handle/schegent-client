@@ -1,12 +1,14 @@
 "use client";
 import React, { useEffect, useRef } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 import {
   ChevronRight,
   Plus,
   MoreVertical,
   type LucideIcon,
 } from "lucide-react";
+import { Bot } from "lucide-react";
+
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   SidebarGroup,
@@ -31,6 +33,8 @@ import {
 import type { Calendar } from "@/types";
 import { useDeleteCalendar } from "@/hooks/calendar/use.calendar";
 import { useCalendarDialog } from "@/context/calendar-dialog-context";
+import { useTranslation } from "react-i18next";
+import Link from "next/link";
 
 type NavItem =
   | {
@@ -54,7 +58,6 @@ export function NavMain({
   setChecked,
   setCalendarID,
   setIsEventDialogOpen,
-  setSelectedCalendarColor,
   isCollapsed,
 }: {
   items: NavItem[];
@@ -62,12 +65,13 @@ export function NavMain({
   setChecked?: React.Dispatch<React.SetStateAction<string[]>>;
   setCalendarID: (id: string) => void;
   setIsEventDialogOpen: (isOpen: boolean) => void;
-  setSelectedCalendarColor: (colorId: string) => void;
   isCollapsed: boolean;
 }) {
   const { deleteCalendar } = useDeleteCalendar();
   const { setIsEventTypeDialogOpen, setEditingEventType } = useCalendarDialog();
   const isCreatingRef = useRef(false);
+  const router = useRouter();
+  const { t } = useTranslation();
 
   const handleDeleteCalendar = (id: string) => {
     deleteCalendar(id);
@@ -97,6 +101,19 @@ export function NavMain({
   return (
     <SidebarGroup>
       <SidebarMenu>
+        <SidebarMenuItem>
+          <SidebarMenuButton
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              router.push("/");
+            }}
+            className="flex items-center gap-2 w-full text-left cursor-pointer"
+          >
+            <Bot className={"w-5 h-5"} />
+            <span>AI-Calendar</span>
+          </SidebarMenuButton>
+        </SidebarMenuItem>
         {items.map((item) => {
           if (item.type === "main") {
             return (
@@ -107,32 +124,49 @@ export function NavMain({
                 className="group/collapsible"
               >
                 <SidebarMenuItem>
-                  <CollapsibleTrigger asChild>
-                    <Link href={item.url || "#"}>
-                      <SidebarMenuButton tooltip={item.title}>
-                        {item.icon && (
-                          <item.icon
-                            className={isCollapsed ? "w-5 h-5" : "w-8 h-8"}
-                          />
-                        )}
-                        <span>{item.title}</span>
-                        <div className="ml-auto flex items-center">
-                          <div
-                            role="button"
-                            onClick={(e) => {
-                              e.preventDefault();
-                              e.stopPropagation();
-                              handleCreateCalendar();
-                            }}
-                            className="p-1 hover:bg-accent rounded-sm cursor-pointer"
-                          >
-                            <Plus />
+                  <div className="flex items-center w-full">
+                    <SidebarMenuButton asChild>
+                      <div className="flex items-center justify-between w-full px-2 py-1">
+                        <Link
+                          href={"/calendar"}
+                          className="flex items-center gap-2 w-fit"
+                        >
+                          {item.icon && <item.icon className={"w-4 h-4"} />}
+                        </Link>
+                        <Link
+                          href={"/calendar"}
+                          className="flex items-center gap-2 w-full"
+                        >
+                          {!isCollapsed && <span>{t(item.title)}</span>}
+                        </Link>
+
+                        {!isCollapsed && (
+                          <div className="flex items-center gap-1">
+                            <div
+                              role="button"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                handleCreateCalendar();
+                              }}
+                              className="p-1 hover:bg-accent rounded-sm cursor-pointer"
+                            >
+                              <Plus />
+                            </div>
+
+                            <CollapsibleTrigger asChild>
+                              <div
+                                role="button"
+                                className="p-1 hover:bg-accent rounded-sm cursor-pointer"
+                              >
+                                <ChevronRight className="ml-1 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+                              </div>
+                            </CollapsibleTrigger>
                           </div>
-                          <ChevronRight className="ml-2 transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
-                        </div>
-                      </SidebarMenuButton>
-                    </Link>
-                  </CollapsibleTrigger>
+                        )}
+                      </div>
+                    </SidebarMenuButton>
+                  </div>
 
                   <CollapsibleContent>
                     <SidebarMenuSub>
@@ -160,34 +194,45 @@ export function NavMain({
                               </span>
                               <DropdownMenu>
                                 <DropdownMenuTrigger asChild>
-                                  <button className="p-1 hover:bg-accent rounded-sm">
+                                  <button
+                                    className="p-1 hover:bg-accent rounded-sm"
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                    }}
+                                  >
                                     <MoreVertical className="w-4 h-4" />
                                   </button>
                                 </DropdownMenuTrigger>
                                 <DropdownMenuContent align="end">
                                   <DropdownMenuItem
-                                    onClick={() => {
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
                                       setCalendarID(subItem.id);
                                       setIsEventDialogOpen(true);
-                                      setSelectedCalendarColor(subItem.colorId);
                                     }}
                                   >
-                                    Create Event
+                                    {t("Add Event")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      handleUpdateCalendar(subItem)
-                                    }
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleUpdateCalendar(subItem);
+                                    }}
                                   >
-                                    Update
+                                    {t("Edit Calendar")}
                                   </DropdownMenuItem>
                                   <DropdownMenuItem
-                                    onClick={() =>
-                                      handleDeleteCalendar(subItem.id)
-                                    }
+                                    onClick={(e) => {
+                                      e.preventDefault();
+                                      e.stopPropagation();
+                                      handleDeleteCalendar(subItem.id);
+                                    }}
                                     className="text-destructive"
                                   >
-                                    Delete
+                                    {t("Delete Calendar")}
                                   </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
@@ -206,18 +251,20 @@ export function NavMain({
           if (item.type === "sub") {
             return (
               <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton asChild>
-                  <a
-                    href={item.url}
-                    className="flex items-center gap-2 w-full text-left"
-                  >
-                    {item.icon && (
-                      <item.icon
-                        className={isCollapsed ? "w-5 h-5" : "w-8 h-8"}
-                      />
-                    )}
-                    <span>{item.title}</span>
-                  </a>
+                <SidebarMenuButton
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    router.push(item.url);
+                  }}
+                  className="flex items-center gap-2 w-full text-left cursor-pointer"
+                >
+                  {item.icon && (
+                    <item.icon
+                      className={isCollapsed ? "w-5 h-5" : "w-8 h-8"}
+                    />
+                  )}
+                  <span>{t(item.title)}</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             );

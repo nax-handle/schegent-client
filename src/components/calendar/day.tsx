@@ -12,6 +12,8 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import ContextMenuComponent from "../context-menu/create-event";
+import i18next from "i18next";
+import { useTranslation } from "react-i18next";
 
 interface PropEvent {
   eventsData: Event[];
@@ -21,6 +23,7 @@ interface PropEvent {
   handleDeleteEvent: (eventId: string) => void;
   setSelectedEvent: (event: Event | null) => void;
   onOptimisticUpdate?: (eventId: string, updatedEvent: Event) => void;
+  currentDate: Date;
 }
 
 export default function Day({
@@ -29,23 +32,67 @@ export default function Day({
   setIsEventDialogOpen,
   handleDeleteEvent,
   onOptimisticUpdate,
+  currentDate,
 }: PropEvent) {
   const [topOffset, setTopOffset] = useState(0);
   const { updateEvent } = useUpdateEvent();
   const [isDragging, setIsDragging] = useState(false);
+  const [originalEvents, setOriginalEvents] = useState<Map<string, Event>>(
+    new Map()
+  );
+  const [events, setEvents] = useState<Event[]>(eventsData);
+  const { t, i18n } = useTranslation();
+  const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
+    const originalEvent = events.find((e) => e.id === eventId);
+    if (originalEvent) {
+      setOriginalEvents((prev) => new Map(prev.set(eventId, originalEvent)));
+    }
+
+    setEvents((prevEvents) =>
+      prevEvents.map((event) => (event.id === eventId ? updatedEvent : event))
+    );
+
+    if (onOptimisticUpdate) {
+      onOptimisticUpdate(eventId, updatedEvent);
+    }
+  };
+
   const { handleMouseDownResize, handleMouseDownMoveBlock } =
     useEventDragResize({
-      updateEvent,
+      updateEvent: (params) => {
+        handleOptimisticUpdate(params.id, params.data as Event);
+        updateEvent(params, {
+          onError: () => {
+            const originalEvent = originalEvents.get(params.id);
+            if (originalEvent) {
+              setEvents((prevEvents) =>
+                prevEvents.map((event) =>
+                  event.id === params.id ? originalEvent : event
+                )
+              );
+              setOriginalEvents((prev) => {
+                const newMap = new Map(prev);
+                newMap.delete(params.id);
+                return newMap;
+              });
+            }
+          },
+        });
+      },
       view: "day",
-      onOptimisticUpdate,
+      onOptimisticUpdate: handleOptimisticUpdate,
     });
-  const [events, setEvents] = useState<Event[]>(eventsData);
 
-  const today = new Date(
-    new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
-  );
-  const todayDate = today.getDate();
-  const daysVN = [
+  const daysVi = [
+    "Chủ nhật",
+    "Thứ 2",
+    "Thứ 3",
+    "Thứ 4",
+    "Thứ 5",
+    "Thứ 6",
+    "Thứ 7",
+  ];
+  const daysEn = [
     "Sunday",
     "Monday",
     "Tuesday",
@@ -54,8 +101,11 @@ export default function Day({
     "Friday",
     "Saturday",
   ];
-  const date = new Date();
+  const lang = i18n?.language || i18next.language || "en";
+  const daysVN = lang.startsWith("vi") ? daysVi : daysEn;
+  const date = currentDate;
   const weekday = daysVN[date.getDay()];
+  const displayDate = date.getDate();
 
   const calculateTopOffset = () => {
     const now = new Date();
@@ -105,9 +155,9 @@ export default function Day({
   }, [isDragging]);
 
   return (
-    <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl black overflow-hidden border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
+    <div className="w-full inset-0 bg-gray/30 backdrop-blur-xl overflow-hidden border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
       <p className="p-2 pl-6 text-2xl dark:text-white w-fit rounded-full">
-        {weekday}, {todayDate}
+        {weekday}, {displayDate}
       </p>
       <div className="h-full w-full">
         <div className="mx-2 flex">
@@ -123,11 +173,12 @@ export default function Day({
           }}
         >
           <div
-            className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden"
-            style={{ height: "calc(100vh - 225px)" }}
-            onDoubleClick={() => {
-              setIsEventDialogOpen(true);
-              setSelectedEvent(null);
+            className="mx-2 flex overflow-y-scroll relative overflow-x-hidden scrollbar-hidden h-[calc(100vh-250px)] sm:h-[calc(100vh-185px)]"
+            onDoubleClick={(e) => {
+              if (!(e.target as HTMLElement).closest("[data-event]")) {
+                setIsEventDialogOpen(true);
+                setSelectedEvent(null);
+              }
             }}
           >
             <div className="flex h-full w-full">
@@ -153,11 +204,14 @@ export default function Day({
                 ))}
 
                 {events
-                  .filter(
-                    (event) =>
-                      new Date(event.startTime).getDate() ===
-                      new Date().getDate()
-                  )
+                  .filter((event) => {
+                    const eventDate = new Date(event.startTime);
+                    return (
+                      eventDate.getDate() === currentDate.getDate() &&
+                      eventDate.getMonth() === currentDate.getMonth() &&
+                      eventDate.getFullYear() === currentDate.getFullYear()
+                    );
+                  })
                   .map((event) => {
                     const stateTime = new Date(event.startTime);
                     const hourStartTime = stateTime.getHours();
@@ -187,7 +241,13 @@ export default function Day({
                         style={{ top: `${top}px` }}
                       >
                         <span
+                          data-event="true"
                           onMouseDown={(e) => handleMouseDown(e, event)}
+                          onDoubleClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedEvent(event);
+                            setIsEventDialogOpen(true);
+                          }}
                           className={`p-3 w-full mr-30 border-l-4 bg-opacity-20 rounded-md text-black dark:text-white flex flex-col relative ${
                             isDragging ? "cursor-grabbing" : "cursor-move"
                           } group`}
@@ -215,13 +275,15 @@ export default function Day({
                                     setIsEventDialogOpen(true);
                                   }}
                                 >
-                                  <Pencil className="w-4 h-4 mr-2" /> Sửa
+                                  <Pencil className="w-4 h-4 mr-2" />{" "}
+                                  {t("Update")}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => handleDeleteEvent(event.id)}
                                   className="text-red-600 focus:text-red-700"
                                 >
-                                  <Trash2 className="w-4 h-4 mr-2" /> Xóa
+                                  <Trash2 className="w-4 h-4 mr-2" />{" "}
+                                  {t("Delete")}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -230,11 +292,13 @@ export default function Day({
                             {formatTime(stateTime)} - {formatTime(endTime)}
                           </span>
                           <span className="spanText-event">
-                            <span className="font-bold">Description:</span>{" "}
+                            <span className="font-bold">
+                              {t("Description")}:
+                            </span>{" "}
                             {event.description}
                           </span>
                           <span className="spanText-event">
-                            <span className="font-bold">Location:</span>{" "}
+                            <span className="font-bold">{t("Location")}:</span>{" "}
                             {event.location}
                           </span>
 
