@@ -145,7 +145,7 @@ export default function AICalendar() {
 
       <div className="lg:col-span-3">
         <div className="col-span-2 ">
-          <Card className=" flex flex-col lg:h-[calc(100vh-2rem)] h-[calc(100vh-20rem)]">
+          <Card className=" flex flex-col lg:h-[calc(100vh-3rem)] h-[calc(100vh-20rem)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-black dark:text-white">
                 <Bot className="h-5 w-5 text-primary" />
