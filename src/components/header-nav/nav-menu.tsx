@@ -158,7 +158,9 @@ export default function NavMenu({
     }
   };
 
-  const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+  const days = i18n.language.startsWith("vi")
+    ? ["CN", "T2", "T3", "T4", "T5", "T6", "T7"]
+    : ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   const today = new Date(
     new Date().toLocaleString("en-US", { timeZone: "Asia/Ho_Chi_Minh" })
   );
@@ -166,50 +168,52 @@ export default function NavMenu({
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between border-gray-300 w-full sm:pl-6 pb-4 sm:pb-6 gap-4 sm:gap-0">
       <div className="w-full">
-        <div className="grid grid-cols-7 flex-1 w-full border-b sm:hidden">
-          {days.map((day, index) => {
-            const date = new Date(currentDate);
-            const diff = index - currentDate.getDay();
-            date.setDate(currentDate.getDate() + diff);
+        {currentView === "day" && (
+          <div className="grid grid-cols-7 flex-1 w-full border-b sm:hidden">
+            {days.map((day, index) => {
+              const date = new Date(currentDate);
+              const diff = index - currentDate.getDay();
+              date.setDate(currentDate.getDate() + diff);
 
-            const isToday = date.toDateString() === today.toDateString();
-            return (
-              <div
-                key={day}
-                className="py-2 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
-                onClick={() => onNavigateToDate(date)}
-              >
-                <div className="font-medium">{day}</div>
+              const isToday = date.toDateString() === today.toDateString();
+              return (
                 <div
-                  className={cn(
-                    "w-7 h-7 mx-auto mt-1 flex items-center justify-center rounded-full",
-                    isToday
-                      ? "dark:bg-white bg-[#3A82F6] text-white dark:text-black"
-                      : ""
-                  )}
+                  key={day}
+                  className="py-2 text-center cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-800"
+                  onClick={() => onNavigateToDate(date)}
                 >
-                  {date.getDate()}
+                  <div className="font-medium">{day}</div>
+                  <div
+                    className={cn(
+                      "w-7 h-7 mx-auto mt-1 flex items-center justify-center rounded-full",
+                      isToday
+                        ? "dark:bg-white bg-[#3A82F6] text-white dark:text-black"
+                        : ""
+                    )}
+                  >
+                    {date.getDate()}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
         <div className="flex items-center gap-2 sm:gap-4 w-full sm:w-auto justify-center sm:justify-start">
           <div className="sm:flex hidden items-center mt-4">
             <button
-              className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100"
+              className="p-1.5 sm:p-2 rounded-md dark:hover:bg-gray-800 hover:bg-gray-100"
               onClick={onNavigatePrevious}
             >
               <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
             <h1
-              className="text-sm sm:text-md border-2 px-3 sm:px-4 py-1.5 sm:py-2 mx-2 rounded-full cursor-pointer hover:bg-gray-100"
+              className="text-sm sm:text-md border-2 px-3 sm:px-4 py-1.5 sm:py-2 mx-2 rounded-full cursor-pointer dark:hover:bg-gray-800 hover:bg-gray-100"
               onClick={onNavigateToday}
             >
               {t("Today")}
             </h1>
             <button
-              className="p-1.5 sm:p-2 rounded-md hover:bg-gray-100"
+              className="p-1.5 sm:p-2 rounded-md dark:hover:bg-gray-800 hover:bg-gray-100"
               onClick={onNavigateNext}
             >
               <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />

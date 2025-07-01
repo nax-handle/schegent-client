@@ -16,13 +16,26 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import { CalendarDialogProvider } from "@/context/calendar-dialog-context";
+import { Logs } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { useTranslation } from "react-i18next";
 
 const inter = Inter({ subsets: ["latin"] });
 
 function InnerLayout({ children }: { children: React.ReactNode }) {
+  const { t } = useTranslation();
   const [checked, setChecked] = useState<string[]>([]);
   const [calendarID, setCalendarID] = useState<string>("");
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [currentView, setCurrentView] = useState<"day" | "week" | "month">(
+    "day"
+  );
   const pathname = usePathname();
   const { isNotFound } = useNotFound();
 
@@ -43,9 +56,27 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           setIsEventDialogOpen={setIsEventDialogOpen}
         />
         <SidebarInset>
-          <header className="flex sm:hidden h-5 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10">
-            <div className="flex items-center gap-2 px-4 mt-4">
+          <header className="flex justify-between sm:hidden h-5 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10 p-4 items-center">
+            <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
+              <span>Menu</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="none">
+                    <Logs className="h-6 w-6" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-fit">
+                  <DropdownMenuItem onClick={() => setCurrentView("month")}>
+                    {t("Month")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setCurrentView("day")}>
+                    {t("Day")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </header>
           <div className="flex flex-1 flex-col gap-4 p-1 pt-0">
@@ -56,6 +87,8 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
                   calendarID={calendarID}
                   isEventDialogOpen={isEventDialogOpen}
                   setIsEventDialogOpen={setIsEventDialogOpen}
+                  setCurrentView={setCurrentView}
+                  currentView={currentView}
                 />
                 <div className="flex flex-col absolute bottom-10 right-20">
                   <Chat />
@@ -75,9 +108,10 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         setIsEventDialogOpen={setIsEventDialogOpen}
       />
       <SidebarInset>
-        <header className="flex sm:hidden h-5 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10">
-          <div className="flex items-center gap-2 px-4 mt-4">
+        <header className="flex justify-between sm:hidden h-5 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10 p-4 items-center">
+          <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
+            <span>Menu</span>
           </div>
         </header>
         <div className="flex flex-1 flex-col gap-4 p-4 pt-0">

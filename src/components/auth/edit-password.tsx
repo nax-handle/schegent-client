@@ -28,7 +28,7 @@ export default function EditPassword() {
           </Label>
           <Input
             {...register("currentPassword")}
-            className="text-gray-400 dark:text-white bg-white dark:bg-[#535353]"
+            className="text-gray-400 dark:text-white bg-white dark:bg-[#181818]"
             id="current-password"
             type="password"
             placeholder="••••••••"
@@ -46,7 +46,7 @@ export default function EditPassword() {
           </Label>
           <Input
             {...register("newPassword")}
-            className="text-gray-400 dark:text-white bg-white dark:bg-[#535353]"
+            className="text-gray-400 dark:text-white bg-white dark:bg-[#181818]"
             id="new-password"
             type="password"
             placeholder="••••••••"
@@ -67,7 +67,7 @@ export default function EditPassword() {
           </Label>
           <Input
             {...register("confirmPassword")}
-            className="text-gray-400 dark:text-white bg-white dark:bg-[#535353]"
+            className="text-gray-400 dark:text-white bg-white dark:bg-[#181818]"
             id="confirm-password"
             type="password"
             placeholder="••••••••"

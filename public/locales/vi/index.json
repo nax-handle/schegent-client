@@ -127,6 +127,7 @@
   "Delete Task": "Xoá nhiệm vụ",
   "Edit Calendar": "Sửa lịch",
   "Delete Calendar": "Xoá lịch",
+  "Enter event location": "Nhập vị trí sự kiện",
 
   "welcome": "Chào mừng bạn đến với trang web của chúng tôi!",
   "Visibility": "Hiển thị",
@@ -141,5 +142,15 @@
   "Tentative": "Tạm thời",
   "Cancelled": "Đã hủy",
   "Saving...": "Đang lưu...",
+
+  "None": "Không",
+  "Daily": "Hàng ngày",
+  "Weekly": "Hàng tuần",
+  "Monthly": "Hàng tháng",
+  "Yearly": "Hàng năm",
+  "Default": "Mặc định",
+  "Public": "Công khai",
+  "Private": "Riêng tư",
+
   "An error occurred": "Đã xảy ra lỗi"
 }

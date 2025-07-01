@@ -9,6 +9,9 @@ import { Separator } from "@/components/ui/separator";
 import { Calendar, Clock, User, Bot } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Mic, ImageIcon } from "lucide-react";
+import { Swiper, SwiperSlide } from "swiper/react";
+import { Pagination } from "swiper/modules";
+import "swiper/css/pagination";
 
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
@@ -58,9 +61,9 @@ export default function AICalendar() {
   }
 
   return (
-    <div className="text-black grid grid-cols-1 lg:grid-cols-4 gap-4">
-      <div className="col-span-1">
-        <Card className="h-fit">
+    <div className="text-black mt-4 grid grid-cols-1 lg:grid-cols-4 gap-4">
+      <div className="lg:col-span-1">
+        <Card className="h-fit lg:block hidden max-h-[calc(100vh-2rem)] overflow-y-auto">
           <CardHeader>
             <CardTitle className="flex items-center gap-2 text-black dark:text-white">
               <Calendar className="h-5 w-5 text-primary " />
@@ -94,11 +97,55 @@ export default function AICalendar() {
             )}
           </CardContent>
         </Card>
+        {/* mobile */}
+        <Card className="h-fit lg:hidden block">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-black dark:text-white">
+              <Calendar className="h-5 w-5 text-primary " />
+              Todays Events
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4 ">
+            {data && data.length > 0 ? (
+              <Swiper
+                spaceBetween={12}
+                slidesPerView={1}
+                style={{ paddingBottom: "24px" }}
+                pagination={{ clickable: true }}
+                modules={[Pagination]}
+              >
+                {data.map((event) => (
+                  <SwiperSlide key={event.id}>
+                    <div className="p-3 border rounded-lg bg-white dark:bg-slate-900 shadow-sm mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <Badge variant="outline" className="text-xs">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {formatTime(event.startTime)} -{" "}
+                          {formatTime(event.endTime)}
+                        </Badge>
+                      </div>
+                      <h4 className="font-medium text-sm text-black dark:text-white">
+                        {event.title}
+                      </h4>
+                      <p className="text-xs text-gray-600 mt-1">
+                        {event.description}
+                      </p>
+                    </div>
+                  </SwiperSlide>
+                ))}
+              </Swiper>
+            ) : (
+              <div className="text-center text-gray-500">
+                {t("No events for today")}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
 
-      <div className="col-span-3">
+      <div className="lg:col-span-3">
         <div className="col-span-2 ">
-          <Card className=" flex flex-col h-[calc(100vh-2rem)]">
+          <Card className=" flex flex-col lg:h-[calc(100vh-2rem)] h-[calc(100vh-20rem)]">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 text-black dark:text-white">
                 <Bot className="h-5 w-5 text-primary" />
@@ -110,7 +157,7 @@ export default function AICalendar() {
               {/* Messages */}
               <div className="flex-1 overflow-y-auto space-y-4 mb-4">
                 {messages.length === 0 && (
-                  <div className="flex items-center gap-3 p-4 bg-blue-50 rounded-lg text-black dark:text-white">
+                  <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-slate-800 rounded-lg text-black dark:text-white">
                     <Bot className="h-8 w-8 text-primary flex-shrink-0" />
                     <div className="flex-1">
                       <p className="text-sm">

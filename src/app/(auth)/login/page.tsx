@@ -30,10 +30,10 @@ export default function Login() {
   };
 
   return (
-    <div className="w-full h-screen flex items-center justify-center">
+    <div className="w-full h-screen flex items-center justify-center dark:bg-primarydark">
       <div className="w-full max-w-md mx-auto p-6 backdrop-blur-2xl  border-1 rounded-xl">
         <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold text-black">
+          <h1 className="text-2xl font-bold text-black dark:text-white">
             {t("LogIn")}
           </h1>
         </div>
@@ -41,7 +41,7 @@ export default function Login() {
         <form className="space-y-6">
           <Button
             variant="outline"
-            className="w-full py-6 flex items-center justify-center gap-2 dark:bg-[#535353]"
+            className="w-full py-6 flex items-center justify-center gap-2 dark:bg-[#303030]"
             type="button"
           >
             <svg
@@ -74,7 +74,7 @@ export default function Login() {
 
           <div className="relative flex items-center justify-center">
             <div className="border-t border-gray-200 w-full absolute"></div>
-            <span className="dark:bg-[#3F3F40]  px-4 text-sm dark:text-gray-100 bg-[#FAFAFB] text-gray-400 relative">
+            <span className="dark:bg-primarydark  px-4 text-sm dark:text-gray-100 bg-[#FAFAFB] text-gray-400 relative">
               {t("OR")}
             </span>
           </div>
@@ -89,7 +89,7 @@ export default function Login() {
                 placeholder={t("Your Email")}
                 {...register("email")}
                 onChange={handleChangeEmail}
-                className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+                className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#303030] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
               />
             </div>
             {errors.email && (
@@ -106,7 +106,7 @@ export default function Login() {
                 type={showPassword ? "text" : "password"}
                 placeholder={t("Password")}
                 {...register("password")}
-                className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+                className="pl-10 pr-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#303030] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
               />
               <button
                 type="button"

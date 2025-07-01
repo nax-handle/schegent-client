@@ -99,13 +99,13 @@ export default function ProfilePage() {
                   </AvatarFallback>
                 </Avatar>
                 {isEditing && (
-                  <div className="absolute bottom-0 right-0">
+                  <div className="absolute bottom-0 right-0 ">
                     <Button
                       size="sm"
                       variant="outline"
-                      className="rounded-full h-8 w-8 p-0 "
+                      className="rounded-full h-8 w-8 p-0 dark:bg-primarydark"
                     >
-                      <Edit2 className="h-4 w-4 text-black dark:text-white" />
+                      <Edit2 className="h-4 w-4 text-black dark:text-white " />
                       <span className="sr-only">{t("Change avatar")}</span>
                     </Button>
                   </div>

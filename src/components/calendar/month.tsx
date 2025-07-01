@@ -2,17 +2,22 @@ import React from "react";
 import { cn } from "@/lib/utils";
 import LunarJS from "lunar-javascript";
 import type { Event } from "@/types";
+import { useSwipeable } from "react-swipeable";
 
 export default function Month({
   eventsdata,
   currentDate,
   setSelectedEvent,
   setIsEventDialogOpen,
+  onChangeMonth,
+  onSelectDay,
 }: {
   eventsdata: Event[];
   currentDate: Date;
   setSelectedEvent: (event: Event | null) => void;
   setIsEventDialogOpen: (isOpen: boolean) => void;
+  onChangeMonth: (newDate: Date) => void;
+  onSelectDay: (date: Date) => void;
 }) {
   const { Lunar } = LunarJS;
   const days = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
@@ -47,8 +52,26 @@ export default function Month({
 
   const totalCells = Math.ceil((daysInMonth + firstDayOfMonth) / 7) * 7;
 
+  // Swipe handlers
+  const swipeHandlers = useSwipeable({
+    onSwipedLeft: () => {
+      // Next month
+      const nextMonth = new Date(year, month + 1, 1);
+      onChangeMonth(nextMonth);
+    },
+    onSwipedRight: () => {
+      // Previous month
+      const prevMonth = new Date(year, month - 1, 1);
+      onChangeMonth(prevMonth);
+    },
+    trackMouse: true,
+  });
+
   return (
-    <div className="inset-0 bg-gray/30 backdrop-blur-sm border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl">
+    <div
+      className="inset-0 bg-gray/30 backdrop-blur-sm border-gray-300 border-t-1 border-r-1 border-b-1 rounded-tr-xl rounded-br-xl"
+      {...swipeHandlers}
+    >
       <div className="grid grid-cols-7 border-b ">
         {days.map((day) => (
           <div
@@ -76,6 +99,9 @@ export default function Month({
             );
           });
 
+          // Tạo đối tượng Date cho ngày này
+          const cellDate = new Date(year, month, date);
+
           return (
             <div
               key={i}
@@ -85,6 +111,12 @@ export default function Month({
                 } border-t border-gray-200 p-1 relative h-full dark:text-white text-black`,
                 !isCurrentMonth && "opacity-50"
               )}
+              onClick={() => {
+                if (isCurrentMonth) {
+                  onSelectDay(cellDate);
+                }
+              }}
+              style={{ cursor: isCurrentMonth ? "pointer" : "default" }}
             >
               {isCurrentMonth && (
                 <>
