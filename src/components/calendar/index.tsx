@@ -40,10 +40,6 @@ export default function CalendarPage({
   const setView = setCurrentView ?? setInternalView;
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
-  useEffect(() => {
-    localStorage.setItem("currentView", view);
-  }, [view]);
-
   const navigateToPrevious = () => {
     const newDate = new Date(currentDate);
     switch (view) {

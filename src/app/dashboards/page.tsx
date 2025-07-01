@@ -134,7 +134,7 @@ export default function Component() {
             </div>
 
             <div className="grid grid-cols-7 gap-1 mb-4">
-              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day, index) => (
+              {["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"].map((day) => (
                 <div
                   key={day}
                   className={`text-xs text-center py-1 rounded ${
