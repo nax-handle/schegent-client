@@ -11,7 +11,7 @@ import { Label } from "@/components/ui/label";
 import type { SendCalendar, Calendar } from "@/types";
 import { useTranslation } from "react-i18next";
 import "@/../i18n";
-import ColorPicker from "@/components/ui/color-picker";
+import ColorPicker from "@/components/theme/color-picker";
 import {
   useCreateCalendar,
   useUpdateCalendar,

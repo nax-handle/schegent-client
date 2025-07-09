@@ -25,17 +25,63 @@ export default function CalendarPage({
   calendarID,
   isEventDialogOpen,
   setIsEventDialogOpen,
-  selectedCalendarColor,
+  setCurrentView,
+  currentView,
 }: {
   checked: string[];
   calendarID: string;
   isEventDialogOpen: boolean;
   setIsEventDialogOpen: (isOpen: boolean) => void;
-  selectedCalendarColor: string;
+  setCurrentView?: (view: CalendarView) => void;
+  currentView?: CalendarView;
 }) {
-  const [currentView, setCurrentView] = useState<CalendarView>("day");
-  const { deleteEvent } = useDeleteEvent();
-  const { updateEvent: updateEventAPI, updateEventError } = useUpdateEvent();
+  const [internalView, setInternalView] = useState<CalendarView>("day");
+  const view = currentView ?? internalView;
+  const setView = setCurrentView ?? setInternalView;
+  const [currentDate, setCurrentDate] = useState<Date>(new Date());
+
+  const navigateToPrevious = () => {
+    const newDate = new Date(currentDate);
+    switch (view) {
+      case "day":
+        newDate.setDate(currentDate.getDate() - 1);
+        break;
+      case "week":
+        newDate.setDate(currentDate.getDate() - 7);
+        break;
+      case "month":
+        newDate.setMonth(currentDate.getMonth() - 1);
+        break;
+    }
+    setCurrentDate(newDate);
+  };
+
+  const navigateToNext = () => {
+    const newDate = new Date(currentDate);
+    switch (view) {
+      case "day":
+        newDate.setDate(currentDate.getDate() + 1);
+        break;
+      case "week":
+        newDate.setDate(currentDate.getDate() + 7);
+        break;
+      case "month":
+        newDate.setMonth(currentDate.getMonth() + 1);
+        break;
+    }
+    setCurrentDate(newDate);
+  };
+
+  const navigateToToday = () => {
+    setCurrentDate(new Date());
+  };
+
+  const navigateToDate = (date: Date) => {
+    setCurrentDate(date);
+  };
+
+  const { deleteEvent, deleteEventError } = useDeleteEvent();
+  useUpdateEvent();
 
   const { updateCalendar } = useUpdateCalendar();
   const { createCalendar } = useCreateCalendar();
@@ -46,19 +92,16 @@ export default function CalendarPage({
     setEditingEventType,
   } = useCalendarDialog();
 
-  const currentDate = new Date().toISOString().split("T")[0];
+  const currentDateString = new Date().toLocaleDateString("en-CA");
+
+  useEffect(() => {
+    console.log("Current date string:", currentDateString);
+  }, [currentDateString]);
   const [events, setEvents] = useState<Event[] | null>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [, setSelectedCalendarID] = useState<string>("");
-  const [optimisticUpdates, setOptimisticUpdates] = useState<
-    Map<string, Event>
-  >(new Map());
 
-  const queryResults = useMultiCalendarEvents(
-    checked,
-    currentView,
-    currentDate
-  );
+  const queryResults = useMultiCalendarEvents(checked, view, currentDateString);
 
   const data = queryResults.map((result) => result.data).filter(Boolean);
 
@@ -83,90 +126,31 @@ export default function CalendarPage({
 
   const handleCreateEvent = (eventData: Partial<SendEvent>) => {
     if (typeof eventData.title === "string") {
-      const newEvent: Event = {
-        id: Date.now().toString(),
-        title: eventData.title,
-        description: eventData.description ?? "",
-        location: eventData.location ?? null,
-        startTime: eventData.startTime ?? new Date().toISOString(),
-        endTime: eventData.endTime ?? new Date().toISOString(),
-        hangoutLink: eventData.hangoutLink ?? null,
-        recurrence: eventData.recurrence ?? "",
-        icon: eventData.icon ?? null,
-        visibility: eventData.visibility ?? "default",
-        status: eventData.status ?? "confirmed",
-        priority: eventData.priority ?? "medium",
-        eventCategory: eventData.eventCategory ?? "general",
-        colorId: eventData.colorId ?? "",
-        isAllDay: eventData.isAllDay ?? false,
-        calendarId: calendarID,
-      };
-
-      setEvents((prevEvents) => [...(prevEvents || []), newEvent]);
-      setIsEventDialogOpen(false);
+      // Don't do optimistic update for create, let React Query handle it
+      // The API call is handled in EventDialog component
+      console.log("Event created successfully, React Query will refresh data");
     } else {
       console.error("Event title is required");
     }
   };
 
-  const handleUpdateEvent = (eventData: Partial<Event>) => {
+  const handleUpdateEvent = () => {
     if (!selectedEvent) return;
-
-    const originalEvent = events?.find((e) => e.id === selectedEvent.id);
-    if (originalEvent) {
-      setOptimisticUpdates(
-        (prev) => new Map(prev.set(selectedEvent.id, originalEvent))
-      );
-    }
-
-    setEvents((prevEvents) => {
-      if (!prevEvents) return prevEvents;
-      return prevEvents.map((event) =>
-        event.id === selectedEvent.id ? { ...event, ...eventData } : event
-      );
-    });
-
-    updateEventAPI({
-      id: selectedEvent.id,
-      data: {
-        ...selectedEvent,
-        ...eventData,
-      } as SendEvent,
-    });
-
     setSelectedEvent(null);
   };
 
-  useEffect(() => {
-    if (updateEventError) {
-      setEvents((prevEvents) => {
-        if (!prevEvents) return prevEvents;
-        return prevEvents.map((event) => {
-          const originalEvent = optimisticUpdates.get(event.id);
-          return originalEvent || event;
-        });
-      });
-      setOptimisticUpdates(new Map());
-    }
-  }, [updateEventError, optimisticUpdates]);
-
   const handleDeleteEvent = (eventId: string) => {
-    setEvents((prevEvents) => {
-      if (!prevEvents) return prevEvents;
-      return prevEvents.filter((event) => event.id !== eventId);
-    });
-
+    // Call API to delete
     deleteEvent(eventId);
   };
 
-  const handleOptimisticUpdate = (eventId: string, updatedEvent: Event) => {
-    setEvents((prevEvents) => {
-      if (!prevEvents) return prevEvents;
-      return prevEvents.map((event) =>
-        event.id === eventId ? updatedEvent : event
-      );
-    });
-  };
+  // Handle delete error - restore the event if deletion failed
+  useEffect(() => {
+    if (deleteEventError) {
+      console.error("Failed to delete event:", deleteEventError);
+      // The query invalidation will restore the event from server data
+    }
+  }, [deleteEventError]);
 
   const handleCreateEventType = (eventTypeData: Partial<Calendar>) => {
     if (typeof eventTypeData.name === "string") {
@@ -198,11 +182,19 @@ export default function CalendarPage({
   };
 
   return (
-    <div className="w-full">
-      <NavMenu currentView={currentView} setCurrentView={setCurrentView} />
+    <div className="w-full sm:mt-0 mt-4">
+      <NavMenu
+        currentView={view}
+        setCurrentView={setView}
+        currentDate={currentDate}
+        onNavigatePrevious={navigateToPrevious}
+        onNavigateNext={navigateToNext}
+        onNavigateToday={navigateToToday}
+        onNavigateToDate={navigateToDate}
+      />
       <div className={`flex`}>
-        <div className={`flex-1  mr-1 `}>
-          {currentView === "day" && (
+        <div className={`flex-1`}>
+          {view === "day" && (
             <Day
               eventsData={events ?? []}
               setCalendarID={setSelectedCalendarID}
@@ -210,10 +202,10 @@ export default function CalendarPage({
               handleUpdateEvent={handleUpdateEvent}
               setSelectedEvent={setSelectedEvent}
               handleDeleteEvent={handleDeleteEvent}
-              onOptimisticUpdate={handleOptimisticUpdate}
+              currentDate={currentDate}
             />
           )}
-          {currentView === "week" && (
+          {view === "week" && (
             <Week
               eventsdata={events ?? []}
               setCalendarID={setSelectedCalendarID}
@@ -221,10 +213,22 @@ export default function CalendarPage({
               handleUpdateEvent={handleUpdateEvent}
               setSelectedEvent={setSelectedEvent}
               handleDeleteEvent={handleDeleteEvent}
-              onOptimisticUpdate={handleOptimisticUpdate}
+              currentDate={currentDate}
             />
           )}
-          {currentView === "month" && <Month eventsdata={events ?? []} />}
+          {view === "month" && (
+            <Month
+              eventsdata={events ?? []}
+              currentDate={currentDate}
+              setSelectedEvent={setSelectedEvent}
+              setIsEventDialogOpen={setIsEventDialogOpen}
+              onChangeMonth={setCurrentDate}
+              onSelectDay={(date) => {
+                setCurrentDate(date);
+                setView("day");
+              }}
+            />
+          )}
         </div>
         <EventDialog
           calendarID={calendarID}
@@ -235,7 +239,6 @@ export default function CalendarPage({
           }}
           onSave={selectedEvent ? handleUpdateEvent : handleCreateEvent}
           event={selectedEvent}
-          colorId={selectedCalendarColor}
         />
         <EventTypeDialog
           isOpen={isEventTypeDialogOpen}

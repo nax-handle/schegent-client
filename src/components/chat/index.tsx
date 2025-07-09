@@ -12,12 +12,9 @@ function cn(...classes: (string | undefined | false | null)[]) {
   return classes.filter(Boolean).join(" ");
 }
 import { useProfile } from "@/hooks/auth/use.auth";
-import {
-  useSendMessage,
-  useCreateMultipleEvents,
-} from "@/hooks/chat/use.chatbot";
+import { useSendMessage, useActionEvents } from "@/hooks/chat/use.chatbot";
 import EventSuggestions from "./event-suggestions";
-import type { SuggestedEvent } from "@/lib/services/chatbot";
+import type { Events } from "@/lib/services/chatbot";
 import type { SendEvent } from "@/types";
 
 interface Message {
@@ -25,16 +22,22 @@ interface Message {
   content: string;
   role: "user" | "assistant";
   timestamp: string;
-  events?: SuggestedEvent[];
+  events?: Events[];
 }
 
 export default function AiChatWidget() {
   const { data } = useProfile();
   const { sendMessageAsync, isSending } = useSendMessage();
-  const { createEventsAsync, isCreating } = useCreateMultipleEvents();
+  const { createEventsAsync, isCreating } = useActionEvents();
   const [isOpen, setIsOpen] = useState(false);
   const [pendingEvents, setPendingEvents] = useState<{
-    [messageId: string]: SuggestedEvent[];
+    [messageId: string]: Events[];
+  }>({});
+  const [eventStates, setEventStates] = useState<{
+    [messageId: string]: {
+      accepted: number[];
+      rejected: number[];
+    };
   }>({});
   const [messages, setMessages] = useState<Message[]>([
     {
@@ -48,45 +51,127 @@ export default function AiChatWidget() {
     },
   ]);
   const [input, setInput] = useState("");
-
+  const [action, setAction] = useState<string>("");
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
 
+  const handleAcceptEvent = async (
+    messageId: string,
+    event: Events,
+    eventIndex: number
+  ) => {
+    // Mark this event as accepted FIRST for immediate UI feedback
+    setEventStates((prev) => ({
+      ...prev,
+      [messageId]: {
+        ...prev[messageId],
+        accepted: [...(prev[messageId]?.accepted || []), eventIndex],
+      },
+    }));
+
+    // Create single event
+    try {
+      const sendEvent: SendEvent = {
+        title: event.title,
+        description: event.description,
+        location: event.location || null,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        hangoutLink: event.hangoutLink || null,
+        recurrence: event.recurrence || "",
+        icon: event.icon || null,
+        visibility: event.visibility || "default",
+        status: event.status || "confirmed",
+        priority: event.priority,
+        eventCategory: event.eventCategory || "general",
+        colorId: event.colorId || "#3B82F6",
+        isAllDay: event.isAllDay,
+        calendarId: event.calendarId || "",
+      };
+
+      await createEventsAsync({ events: [sendEvent], action });
+
+      // Add success message for individual event
+      const successMessage: Message = {
+        id: Date.now().toString(),
+        content: `✅ Đã thêm "${event.title}" vào lịch của bạn!`,
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, successMessage]);
+    } catch (error) {
+      console.error("Error creating single event:", error);
+
+      // Revert the accepted state on error
+      setEventStates((prev) => ({
+        ...prev,
+        [messageId]: {
+          ...prev[messageId],
+          accepted:
+            prev[messageId]?.accepted.filter((idx) => idx !== eventIndex) || [],
+        },
+      }));
+
+      // Add error message
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: `❌ Không thể thêm "${event.title}". Vui lòng thử lại.`,
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+  };
+
+  const handleRejectEvent = (messageId: string, eventIndex: number) => {
+    setEventStates((prev) => ({
+      ...prev,
+      [messageId]: {
+        ...prev[messageId],
+        rejected: [...(prev[messageId]?.rejected || []), eventIndex],
+      },
+    }));
+  };
+
   const handleAcceptEvents = async (
     messageId: string,
-    events: SuggestedEvent[]
+    events: Events[],
+    action: string
   ) => {
     try {
-      // Convert SuggestedEvent to SendEvent format
       const sendEvents: SendEvent[] = events.map((event) => ({
         title: event.title,
         description: event.description,
-        location: event.location,
+        location: event.location || null,
         startTime: event.startTime,
         endTime: event.endTime,
-        hangoutLink: event.hangoutLink,
-        recurrence: event.recurrence,
-        icon: event.icon,
-        visibility: event.visibility,
-        status: event.status,
+        hangoutLink: event.hangoutLink || null,
+        recurrence: event.recurrence || "",
+        icon: event.icon || null,
+        visibility: event.visibility || "default",
+        status: event.status || "confirmed",
         priority: event.priority,
-        eventCategory: event.eventCategory,
-        colorId: event.colorId,
+        eventCategory: event.eventCategory || "general",
+        colorId: event.colorId || "#3B82F6",
         isAllDay: event.isAllDay,
-        calendarId: event.calendarId,
+        calendarId: event.calendarId || "",
       }));
 
-      await createEventsAsync(sendEvents);
+      await createEventsAsync({ events: sendEvents, action });
 
-      // Remove from pending events
       setPendingEvents((prev) => {
         const newPending = { ...prev };
         delete newPending[messageId];
         return newPending;
       });
 
-      // Add success message
       const successMessage: Message = {
         id: Date.now().toString(),
         content: `✅ Đã thêm thành công ${events.length} sự kiện vào lịch của bạn!`,
@@ -100,7 +185,6 @@ export default function AiChatWidget() {
     } catch (error) {
       console.error("Error creating events:", error);
 
-      // Add error message
       const errorMessage: Message = {
         id: Date.now().toString(),
         content: "❌ Có lỗi xảy ra khi thêm sự kiện. Vui lòng thử lại.",
@@ -119,6 +203,12 @@ export default function AiChatWidget() {
       const newPending = { ...prev };
       delete newPending[messageId];
       return newPending;
+    });
+
+    setEventStates((prev) => {
+      const newStates = { ...prev };
+      delete newStates[messageId];
+      return newStates;
     });
   };
 
@@ -148,6 +238,12 @@ export default function AiChatWidget() {
 
       if (response.success && response.data) {
         const messageId = (Date.now() + 1).toString();
+
+        // Handle events data from API response
+        const events = response.data.eventsData || [];
+        const responseAction = response.data.action || "";
+        setAction(responseAction);
+
         const aiMessage: Message = {
           id: messageId,
           content: response.data.response,
@@ -156,14 +252,23 @@ export default function AiChatWidget() {
             hour: "2-digit",
             minute: "2-digit",
           }),
-          events: response.data.events_data,
+          events: events,
         };
 
-        // Store pending events if any
-        if (response.data.events_data && response.data.events_data.length > 0) {
+        // Store pending events if any and action is create or suggest
+        if (events && events.length > 0) {
           setPendingEvents((prev) => ({
             ...prev,
-            [messageId]: response.data.events_data,
+            [messageId]: events,
+          }));
+
+          // Initialize event states
+          setEventStates((prev) => ({
+            ...prev,
+            [messageId]: {
+              accepted: [],
+              rejected: [],
+            },
           }));
         }
 
@@ -202,7 +307,7 @@ export default function AiChatWidget() {
       </Button>
 
       {isOpen && (
-        <Card className="w-130 md:w-96 shadow-xl flex flex-col z-40 min-h-[50vh] bg-gray-300 overflow-hidden">
+        <Card className="xm:w-130 md:w-96 shadow-xl flex flex-col z-40 min-h-[50vh] bg-gray-300 overflow-hidden">
           {/* Header */}
           <div className="bg-primary text-primary-foreground p-3 flex items-center justify-between">
             <div className="flex items-center gap-2">
@@ -273,10 +378,18 @@ export default function AiChatWidget() {
                     <div className="mt-2 w-full">
                       <EventSuggestions
                         events={pendingEvents[message.id]}
-                        onAccept={(events) =>
-                          handleAcceptEvents(message.id, events)
+                        onAcceptEvent={(event, index) =>
+                          handleAcceptEvent(message.id, event, index)
                         }
-                        onReject={() => handleRejectEvents(message.id)}
+                        onRejectEvent={(index) =>
+                          handleRejectEvent(message.id, index)
+                        }
+                        onAcceptAll={(events) =>
+                          handleAcceptEvents(message.id, events, action)
+                        }
+                        onRejectAll={() => handleRejectEvents(message.id)}
+                        acceptedEvents={eventStates[message.id]?.accepted || []}
+                        rejectedEvents={eventStates[message.id]?.rejected || []}
                         isLoading={isCreating}
                       />
                     </div>

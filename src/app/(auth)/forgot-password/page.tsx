@@ -60,7 +60,7 @@ export default function ForgotPassword() {
                   placeholder={t("Your Email")}
                   value={email}
                   onChange={handleChangeEmail}
-                  className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-[#535353] dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
+                  className="pl-10 py-6 border-[#e0e0f2] rounded-xl focus-visible:ring-blue-500 bg-white dark:bg-primarydark dark:selection:bg-[#658DBD] selection:bg-blue-500 selection:text-white"
                   required
                 />
               </div>

@@ -1,26 +1,25 @@
 import { axiosInstance } from "../axios";
-import { getAuthToken, getSessionId } from "../auth";
 
 interface ChatbotRequest {
   message: string;
 }
 
-export interface SuggestedEvent {
+export interface Events {
   title: string;
   description: string;
   location: string;
   startTime: string;
   endTime: string;
-  hangoutLink: string;
-  recurrence: string;
-  icon: string;
-  visibility: string;
-  status: "confirmed" | "tentative" | "cancelled";
+  hangoutLink?: string;
+  recurrence?: string;
+  icon?: string;
+  visibility?: string;
+  status?: "confirmed" | "tentative" | "cancelled";
   priority: "low" | "medium" | "high";
-  eventCategory: "general" | "habit" | "task";
-  colorId: string;
+  eventCategory?: "general" | "habit" | "task";
+  colorId?: string;
   isAllDay: boolean;
-  calendarId: string;
+  calendarId?: string;
 }
 
 interface ChatbotResponse {
@@ -28,8 +27,9 @@ interface ChatbotResponse {
   success: boolean;
   message: string;
   data: {
-    events_data: SuggestedEvent[];
+    eventsData?: Events[];
     response: string;
+    action?: string;
   };
 }
 
@@ -40,18 +40,9 @@ const API_ENDPOINTS = {
 export async function sendMessage(
   data: ChatbotRequest
 ): Promise<ChatbotResponse> {
-  const token = getAuthToken();
-  const sessionID = getSessionId();
-
   const { data: response } = await axiosInstance.post<ChatbotResponse>(
     API_ENDPOINTS.CHATBOT,
-    data,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "x-session-id": sessionID,
-      },
-    }
+    data
   );
 
   return response;

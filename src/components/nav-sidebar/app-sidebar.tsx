@@ -26,13 +26,11 @@ export function AppSidebar({
   setChecked,
   setCalendarID,
   setIsEventDialogOpen,
-  setSelectedCalendarColor,
   ...props
 }: React.ComponentProps<typeof Sidebar> & {
   setChecked?: React.Dispatch<React.SetStateAction<string[]>>;
   setCalendarID: (id: string) => void;
   setIsEventDialogOpen: (isOpen: boolean) => void;
-  setSelectedCalendarColor: (colorId: string) => void;
 }) {
   const { data: dataCalendar } = useGetAllCalendars();
   const [calendar, setCalendar] = useState(dataCalendar || []);
@@ -54,7 +52,6 @@ export function AppSidebar({
           setChecked={setChecked}
           setCalendarID={setCalendarID}
           setIsEventDialogOpen={setIsEventDialogOpen}
-          setSelectedCalendarColor={setSelectedCalendarColor}
           calendar={calendar}
           items={[
             {
@@ -63,7 +60,7 @@ export function AppSidebar({
               icon: Calendar1,
               isActive: true,
               items: calendar,
-              url: "/",
+              url: "/calendar",
             },
             {
               type: "sub",
@@ -79,9 +76,9 @@ export function AppSidebar({
             },
             {
               type: "sub",
-              title: "Reports",
+              title: "Dashboards",
               icon: ChartColumnDecreasing,
-              url: "/reports",
+              url: "/dashboards",
             },
             {
               type: "sub",

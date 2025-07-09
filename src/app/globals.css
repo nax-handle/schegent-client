@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "tw-animate-css";
+@import "swiper/css";
 
 html {
   scroll-behavior: smooth;
@@ -46,6 +47,7 @@ html {
   --color-secondary: var(--secondary);
   --color-primary-foreground: var(--primary-foreground);
   --color-primary: #007bff;
+  --color-primarydark: #0a0a0a;
   --color-secondary: #8ec447;
   --color-popover-foreground: var(--popover-foreground);
   --color-popover: var(--popover);
