@@ -1,59 +1,43 @@
 "use client";
+import { Button } from "@/components/ui/button";
+import { Accordion } from "@/components/ui/accordion";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import "@/../i18n";
-import Warningsetting from "@/components/settings/warning-setting";
-import Deviceloggedin from "@/components/settings/device-loggedin";
-import { LogOut } from "lucide-react";
-import { useTranslation } from "react-i18next";
+  ProfileSection,
+  PasswordSection,
+  SecuritySection,
+} from "@/components/settings";
 
-export default function SessionManagement() {
-  const { t } = useTranslation();
-
+export default function Component() {
   return (
-    <div className="space-y-6 px-4">
-      <p className="pl-4 pt-10 text-3xl font-bold dark:text-white">
-        {t("Secure")}
-      </p>
-      <p className="pl-4 text-xl dark:text-white">
-        {t("Manage your sessions and devices")}
-      </p>
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-black dark:text-white">
-            <LogOut className="w-5 h-5 text-black dark:text-white" />
-            {t("Sign out quickly")}
-          </CardTitle>
-          <CardDescription className="text-black dark:text-white">
-            {t("Quickly sign out of your current device or all other devices")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Warning */}
-          <Warningsetting />
-          {/*  */}
-        </CardContent>
-      </Card>
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-black dark:text-white">
-            {t("Device is logged in")}
-          </CardTitle>
-          <CardDescription className="text-black dark:text-white">
-            {t("List of devices currently logged into your account")}
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {/* Deviceloggedin */}
-          <Deviceloggedin />
-          {/*  */}
-        </CardContent>
-      </Card>
+    <div className="container max-w-4xl mx-auto p-6 space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold">Settings</h1>
+        <p className="text-muted-foreground">
+          Manage your account settings, security preferences, and language
+          options.
+        </p>
+      </div>
+
+      <Accordion
+        type="multiple"
+        defaultValue={["profile", "password", "security", "language"]}
+        className="space-y-4"
+      >
+        <ProfileSection />
+        <PasswordSection />
+        <SecuritySection />
+        {/* // <LanguageSection /> */}
+      </Accordion>
+
+      {/* Save All Changes */}
+      <div className="flex flex-col sm:flex-row gap-3 pt-6 border-t">
+        <Button size="lg" className="sm:w-auto">
+          Save All Changes
+        </Button>
+        <Button variant="outline" size="lg" className="sm:w-auto">
+          Reset to Defaults
+        </Button>
+      </div>
     </div>
   );
 }

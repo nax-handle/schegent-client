@@ -12,17 +12,33 @@ function cn(...classes: (string | undefined | false | null)[]) {
   return classes.filter(Boolean).join(" ");
 }
 import { useProfile } from "@/hooks/auth/use.auth";
+import { useSendMessage, useActionEvents } from "@/hooks/chat/use.chatbot";
+import EventSuggestions from "./event-suggestions";
+import type { Events } from "@/lib/services/chatbot";
+import type { SendEvent } from "@/types";
 
 interface Message {
   id: string;
   content: string;
   role: "user" | "assistant";
   timestamp: string;
+  events?: Events[];
 }
 
 export default function AiChatWidget() {
   const { data } = useProfile();
+  const { sendMessageAsync, isSending } = useSendMessage();
+  const { createEventsAsync, isCreating } = useActionEvents();
   const [isOpen, setIsOpen] = useState(false);
+  const [pendingEvents, setPendingEvents] = useState<{
+    [messageId: string]: Events[];
+  }>({});
+  const [eventStates, setEventStates] = useState<{
+    [messageId: string]: {
+      accepted: number[];
+      rejected: number[];
+    };
+  }>({});
   const [messages, setMessages] = useState<Message[]>([
     {
       id: "1",
@@ -35,19 +51,177 @@ export default function AiChatWidget() {
     },
   ]);
   const [input, setInput] = useState("");
-
+  const [action, setAction] = useState<string>("");
   const toggleChat = () => {
     setIsOpen(!isOpen);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleAcceptEvent = async (
+    messageId: string,
+    event: Events,
+    eventIndex: number
+  ) => {
+    // Mark this event as accepted FIRST for immediate UI feedback
+    setEventStates((prev) => ({
+      ...prev,
+      [messageId]: {
+        ...prev[messageId],
+        accepted: [...(prev[messageId]?.accepted || []), eventIndex],
+      },
+    }));
+
+    // Create single event
+    try {
+      const sendEvent: SendEvent = {
+        title: event.title,
+        description: event.description,
+        location: event.location || null,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        hangoutLink: event.hangoutLink || null,
+        recurrence: event.recurrence || "",
+        icon: event.icon || null,
+        visibility: event.visibility || "default",
+        status: event.status || "confirmed",
+        priority: event.priority,
+        eventCategory: event.eventCategory || "general",
+        colorId: event.colorId || "#3B82F6",
+        isAllDay: event.isAllDay,
+        calendarId: event.calendarId || "",
+      };
+
+      await createEventsAsync({ events: [sendEvent], action });
+
+      // Add success message for individual event
+      const successMessage: Message = {
+        id: Date.now().toString(),
+        content: `✅ Đã thêm "${event.title}" vào lịch của bạn!`,
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, successMessage]);
+    } catch (error) {
+      console.error("Error creating single event:", error);
+
+      // Revert the accepted state on error
+      setEventStates((prev) => ({
+        ...prev,
+        [messageId]: {
+          ...prev[messageId],
+          accepted:
+            prev[messageId]?.accepted.filter((idx) => idx !== eventIndex) || [],
+        },
+      }));
+
+      // Add error message
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: `❌ Không thể thêm "${event.title}". Vui lòng thử lại.`,
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+  };
+
+  const handleRejectEvent = (messageId: string, eventIndex: number) => {
+    setEventStates((prev) => ({
+      ...prev,
+      [messageId]: {
+        ...prev[messageId],
+        rejected: [...(prev[messageId]?.rejected || []), eventIndex],
+      },
+    }));
+  };
+
+  const handleAcceptEvents = async (
+    messageId: string,
+    events: Events[],
+    action: string
+  ) => {
+    try {
+      const sendEvents: SendEvent[] = events.map((event) => ({
+        title: event.title,
+        description: event.description,
+        location: event.location || null,
+        startTime: event.startTime,
+        endTime: event.endTime,
+        hangoutLink: event.hangoutLink || null,
+        recurrence: event.recurrence || "",
+        icon: event.icon || null,
+        visibility: event.visibility || "default",
+        status: event.status || "confirmed",
+        priority: event.priority,
+        eventCategory: event.eventCategory || "general",
+        colorId: event.colorId || "#3B82F6",
+        isAllDay: event.isAllDay,
+        calendarId: event.calendarId || "",
+      }));
+
+      await createEventsAsync({ events: sendEvents, action });
+
+      setPendingEvents((prev) => {
+        const newPending = { ...prev };
+        delete newPending[messageId];
+        return newPending;
+      });
+
+      const successMessage: Message = {
+        id: Date.now().toString(),
+        content: `✅ Đã thêm thành công ${events.length} sự kiện vào lịch của bạn!`,
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, successMessage]);
+    } catch (error) {
+      console.error("Error creating events:", error);
+
+      const errorMessage: Message = {
+        id: Date.now().toString(),
+        content: "❌ Có lỗi xảy ra khi thêm sự kiện. Vui lòng thử lại.",
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+      setMessages((prev) => [...prev, errorMessage]);
+    }
+  };
+
+  const handleRejectEvents = (messageId: string) => {
+    setPendingEvents((prev) => {
+      const newPending = { ...prev };
+      delete newPending[messageId];
+      return newPending;
+    });
+
+    setEventStates((prev) => {
+      const newStates = { ...prev };
+      delete newStates[messageId];
+      return newStates;
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
+    if (!input.trim() || isSending) return;
+
+    const userInputText = input.trim();
 
     // Add user message
     const userMessage: Message = {
       id: Date.now().toString(),
-      content: input,
+      content: userInputText,
       role: "user",
       timestamp: new Date().toLocaleTimeString([], {
         hour: "2-digit",
@@ -55,23 +229,66 @@ export default function AiChatWidget() {
       }),
     };
 
-    setMessages([...messages, userMessage]);
+    setMessages((prev) => [...prev, userMessage]);
     setInput("");
 
-    // Simulate AI response after a short delay
-    setTimeout(() => {
-      const aiMessage: Message = {
+    try {
+      // Call the chatbot API
+      const response = await sendMessageAsync({ message: userInputText });
+
+      if (response.success && response.data) {
+        const messageId = (Date.now() + 1).toString();
+
+        // Handle events data from API response
+        const events = response.data.eventsData || [];
+        const responseAction = response.data.action || "";
+        setAction(responseAction);
+
+        const aiMessage: Message = {
+          id: messageId,
+          content: response.data.response,
+          role: "assistant",
+          timestamp: new Date().toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
+          events: events,
+        };
+
+        // Store pending events if any and action is create or suggest
+        if (events && events.length > 0) {
+          setPendingEvents((prev) => ({
+            ...prev,
+            [messageId]: events,
+          }));
+
+          // Initialize event states
+          setEventStates((prev) => ({
+            ...prev,
+            [messageId]: {
+              accepted: [],
+              rejected: [],
+            },
+          }));
+        }
+
+        setMessages((prev) => [...prev, aiMessage]);
+      }
+    } catch (error) {
+      console.error("Error sending message:", error);
+
+      // Add error message
+      const errorMessage: Message = {
         id: (Date.now() + 1).toString(),
-        content:
-          "Tôi đã nhận được tin nhắn của bạn. Tôi có thể giúp gì thêm không?",
+        content: "Xin lỗi, đã có lỗi xảy ra. Vui lòng thử lại.",
         role: "assistant",
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
           minute: "2-digit",
         }),
       };
-      setMessages((prev) => [...prev, aiMessage]);
-    }, 1000);
+      setMessages((prev) => [...prev, errorMessage]);
+    }
   };
 
   return (
@@ -152,8 +369,55 @@ export default function AiChatWidget() {
                 <span className="text-xs text-gray-500 mt-1">
                   {message.timestamp}
                 </span>
+
+                {/* Event suggestions */}
+                {message.role === "assistant" &&
+                  message.events &&
+                  message.events.length > 0 &&
+                  pendingEvents[message.id] && (
+                    <div className="mt-2 w-full">
+                      <EventSuggestions
+                        events={pendingEvents[message.id]}
+                        onAcceptEvent={(event, index) =>
+                          handleAcceptEvent(message.id, event, index)
+                        }
+                        onRejectEvent={(index) =>
+                          handleRejectEvent(message.id, index)
+                        }
+                        onAcceptAll={(events) =>
+                          handleAcceptEvents(message.id, events, action)
+                        }
+                        onRejectAll={() => handleRejectEvents(message.id)}
+                        acceptedEvents={eventStates[message.id]?.accepted || []}
+                        rejectedEvents={eventStates[message.id]?.rejected || []}
+                        isLoading={isCreating}
+                      />
+                    </div>
+                  )}
               </div>
             ))}
+
+            {/* Typing indicator */}
+            {isSending && (
+              <div className="flex flex-col max-w-[80%] mr-auto items-start">
+                <div className="bg-gray-100 dark:bg-gray-800 text-foreground p-2 rounded-lg rounded-bl-none">
+                  <div className="flex space-x-1">
+                    <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.1s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-gray-400 rounded-full animate-bounce"
+                      style={{ animationDelay: "0.2s" }}
+                    ></div>
+                  </div>
+                </div>
+                <span className="text-xs text-gray-500 mt-1">
+                  Đang soạn tin...
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Input area */}
@@ -182,8 +446,14 @@ export default function AiChatWidget() {
                 onChange={(e) => setInput(e.target.value)}
                 placeholder="Aa"
                 className="flex-1 bg-white decored-input text-black"
+                disabled={isSending}
               />
-              <Button type="submit" size="icon" className="h-8 w-8">
+              <Button
+                type="submit"
+                size="icon"
+                className="h-8 w-8"
+                disabled={isSending || !input.trim()}
+              >
                 <Send className="h-4 w-4 text-white" />
               </Button>
             </form>
