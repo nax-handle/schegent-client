@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import type { Event } from "@/types";
+import type { Event, SendEvent } from "@/types";
 import { useUpdateEvent } from "@/hooks/calendar/use.events";
 import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
 import { Pencil, Trash2, MoreVertical } from "lucide-react";
@@ -61,23 +61,30 @@ export default function Day({
     useEventDragResize({
       updateEvent: (params) => {
         handleOptimisticUpdate(params.id, params.data as Event);
-        updateEvent(params, {
-          onError: () => {
-            const originalEvent = originalEvents.get(params.id);
-            if (originalEvent) {
-              setEvents((prevEvents) =>
-                prevEvents.map((event) =>
-                  event.id === params.id ? originalEvent : event
-                )
-              );
-              setOriginalEvents((prev) => {
-                const newMap = new Map(prev);
-                newMap.delete(params.id);
-                return newMap;
-              });
-            }
-          },
-        });
+        const sendEventData: SendEvent = {
+          ...params.data,
+          minutesBefore: 1,
+        };
+        updateEvent(
+          { id: params.id, data: sendEventData },
+          {
+            onError: () => {
+              const originalEvent = originalEvents.get(params.id);
+              if (originalEvent) {
+                setEvents((prevEvents) =>
+                  prevEvents.map((event) =>
+                    event.id === params.id ? originalEvent : event
+                  )
+                );
+                setOriginalEvents((prev) => {
+                  const newMap = new Map(prev);
+                  newMap.delete(params.id);
+                  return newMap;
+                });
+              }
+            },
+          }
+        );
       },
       view: "day",
       onOptimisticUpdate: handleOptimisticUpdate,
