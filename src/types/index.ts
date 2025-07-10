@@ -68,6 +68,7 @@ export interface SendEvent {
   colorId: string;
   isAllDay: boolean;
   calendarId: string;
+  minutesBefore: number;
 }
 
 export interface Event {

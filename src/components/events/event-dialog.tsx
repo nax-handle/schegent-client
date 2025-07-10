@@ -61,6 +61,7 @@ export function EventDialog({
     colorId: "",
     isAllDay: false,
     calendarId: calendarID || "",
+    minutesBefore: 1,
   });
 
   useEffect(() => {
@@ -334,9 +335,62 @@ export function EventDialog({
             selectedDate={selectedDate}
           />
 
-          <div>
-            <Label htmlFor="date">{t("Date")}</Label>
-            <DatePicker value={selectedDate} onDateChange={setSelectedDate} />
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <Label htmlFor="date">{t("Date")}</Label>
+              <DatePicker value={selectedDate} onDateChange={setSelectedDate} />
+            </div>
+            <div>
+              <Label htmlFor="time">{t("Remind")}</Label>
+              <Select
+                value={formData.minutesBefore?.toString() ?? ""}
+                onValueChange={(value) =>
+                  setFormData({ ...formData, minutesBefore: Number(value) })
+                }
+              >
+                <SelectTrigger className="w-full decored-selection">
+                  <SelectValue placeholder={t("Select")} />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem
+                    value="1"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {"1 " + t("minute")}
+                  </SelectItem>
+                  <SelectItem
+                    value="5"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {"5 " + t("minutes")}
+                  </SelectItem>
+                  <SelectItem
+                    value="10"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {"10 " + t("minutes")}
+                  </SelectItem>
+                  <SelectItem
+                    value="15"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {"15 " + t("minutes")}
+                  </SelectItem>
+                  <SelectItem
+                    value="30"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {"30 " + t("minutes")}
+                  </SelectItem>
+                  <SelectItem
+                    value="60"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {"1 " + t("hour")}
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -432,82 +486,6 @@ export function EventDialog({
               placeholder={t("Enter event location")}
               className="decored-input"
             />
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="status">{t("Status")}</Label>
-              <Select
-                value={formData.status || "confirmed"}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    status: value as "confirmed" | "tentative" | "cancelled",
-                  })
-                }
-              >
-                <SelectTrigger className="w-full decored-selection">
-                  <SelectValue placeholder={t("Select")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    value="confirmed"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
-                  >
-                    {t("Confirmed")}
-                  </SelectItem>
-                  <SelectItem
-                    value="tentative"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
-                  >
-                    {t("Tentative")}
-                  </SelectItem>
-                  <SelectItem
-                    value="cancelled"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
-                  >
-                    {t("Cancelled")}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="eventCategory">{t("Event Category")}</Label>
-              <Select
-                value={formData.eventCategory || "general"}
-                onValueChange={(value) =>
-                  setFormData({
-                    ...formData,
-                    eventCategory: value as "general" | "habit" | "task",
-                  })
-                }
-              >
-                <SelectTrigger className="w-full decored-selection">
-                  <SelectValue placeholder={t("Select")} />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem
-                    value="general"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
-                  >
-                    {t("General")}
-                  </SelectItem>
-                  <SelectItem
-                    value="habit"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
-                  >
-                    {t("Habit")}
-                  </SelectItem>
-                  <SelectItem
-                    value="task"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
-                  >
-                    {t("Task")}
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
           </div>
 
           <div className="flex justify-end gap-2 mt-4">

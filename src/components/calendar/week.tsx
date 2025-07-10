@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import type { Event } from "@/types";
+import type { Event, SendEvent } from "@/types";
 import { useUpdateEvent } from "@/hooks/calendar/use.events";
 import { useEventDragResize } from "@/hooks/useEventDragResize/use.event-drag-resize";
 import { Pencil, Trash2, MoreVertical } from "lucide-react";
@@ -11,8 +11,6 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import ContextMenuComponent from "../context-menu/create-event";
-
-// Hàm ép thời gian về giờ Việt Nam
 function toVietnamDate(dateInput: string | Date): Date {
   const date = new Date(dateInput);
   const utc = date.getTime() + date.getTimezoneOffset() * 60000;
@@ -76,7 +74,13 @@ export default function Week({
     handleMouseDownDragToOtherDay,
     dragIndicator,
   } = useEventDragResize({
-    updateEvent,
+    updateEvent: (params) => {
+      const sendEventData: SendEvent = {
+        ...params.data,
+        minutesBefore: 1,
+      };
+      updateEvent({ id: params.id, data: sendEventData });
+    },
     view: "week",
     onOptimisticUpdate: handleOptimisticUpdate,
   });
@@ -269,20 +273,25 @@ export default function Week({
                               className={`h-full w-full ${
                                 isDragging ? "cursor-grabbing" : "cursor-move"
                               }`}
-                              onMouseDown={(e) => handleMouseDown(e, event)}
-                            ></div>
-                            <div
-                              className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize"
                               onMouseDown={(e) => {
-                                e.stopPropagation();
-                                handleMouseDownResize(e, event);
+                                if (
+                                  e.clientY -
+                                    e.currentTarget.getBoundingClientRect()
+                                      .top <
+                                  8
+                                ) {
+                                  e.stopPropagation();
+                                  handleMouseDownMoveBlock(e, event);
+                                } else {
+                                  handleMouseDown(e, event);
+                                }
                               }}
                             />
                             <div
-                              className="absolute top-0 left-0 right-0 h-2 cursor-move"
+                              className="absolute bottom-0 left-0 right-0 h-2 cursor-ns-resize bg-green-300"
                               onMouseDown={(e) => {
                                 e.stopPropagation();
-                                handleMouseDownMoveBlock(e, event);
+                                handleMouseDownResize(e, event);
                               }}
                             />
                           </div>

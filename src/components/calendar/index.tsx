@@ -92,11 +92,7 @@ export default function CalendarPage({
     setEditingEventType,
   } = useCalendarDialog();
 
-  const currentDateString = new Date().toLocaleDateString("en-CA");
-
-  useEffect(() => {
-    console.log("Current date string:", currentDateString);
-  }, [currentDateString]);
+  const currentDateString = currentDate.toLocaleDateString("en-CA");
   const [events, setEvents] = useState<Event[] | null>([]);
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [, setSelectedCalendarID] = useState<string>("");
@@ -126,8 +122,6 @@ export default function CalendarPage({
 
   const handleCreateEvent = (eventData: Partial<SendEvent>) => {
     if (typeof eventData.title === "string") {
-      // Don't do optimistic update for create, let React Query handle it
-      // The API call is handled in EventDialog component
       console.log("Event created successfully, React Query will refresh data");
     } else {
       console.error("Event title is required");
@@ -140,15 +134,12 @@ export default function CalendarPage({
   };
 
   const handleDeleteEvent = (eventId: string) => {
-    // Call API to delete
     deleteEvent(eventId);
   };
 
-  // Handle delete error - restore the event if deletion failed
   useEffect(() => {
     if (deleteEventError) {
       console.error("Failed to delete event:", deleteEventError);
-      // The query invalidation will restore the event from server data
     }
   }, [deleteEventError]);
 
