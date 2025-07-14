@@ -1,6 +1,16 @@
 import { axiosInstance } from "../axios";
 import Cookies from "js-cookie";
-import { getAuthToken, getSessionId, clearSessionId, setUserID } from "../auth";
+import {
+  getAuthToken,
+  getSessionId,
+  clearSessionId,
+  setUserID,
+  setAuthTokens,
+  setAuthRefreshToken,
+  setSessionId,
+  clearAuthTokens,
+  clearAuthRefreshToken,
+} from "../auth";
 
 const isClient = typeof window !== "undefined";
 
@@ -108,6 +118,9 @@ export async function login(data: LoginData): Promise<AuthResponse> {
       API_ENDPOINTS.LOGIN,
       data
     );
+    setAuthTokens(response.data.accessToken);
+    setAuthRefreshToken(response.data.refreshToken);
+    setSessionId(response.data.sessionId);
     return response;
   } catch (error) {
     console.error("Login failed:", error);
@@ -133,6 +146,8 @@ export async function logout(): Promise<void> {
 
   if (isClient) {
     clearSessionId();
+    clearAuthTokens();
+    clearAuthRefreshToken();
   }
 }
 
@@ -180,7 +195,7 @@ export async function revokeSession(data: RevokeSessionData): Promise<void> {
 }
 
 export async function refreshToken(): Promise<AuthResponse> {
-  const token = getAuthToken();
+  const token = Cookies.get("accessToken");
   const sessionID = getSessionId();
 
   if (!token || !sessionID) {
@@ -220,9 +235,21 @@ export async function forgot_password(email: string): Promise<void> {
 }
 
 export async function resetPassword(newPassword: string): Promise<void> {
-  const response = await axiosInstance.post(API_ENDPOINTS.RESET_PASSWORD, {
-    newPassword,
-  });
+  const token = getAuthToken();
+  const sessionID = getSessionId();
+  const response = await axiosInstance.post(
+    API_ENDPOINTS.RESET_PASSWORD,
+    {
+      token,
+      newPassword,
+    },
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "x-session-id": sessionID,
+      },
+    }
+  );
   if (isClient) {
     alert("Your password has been reset successfully.");
   }

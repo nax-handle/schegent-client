@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import * as chatbot from "@/lib/services/chatbot";
-import * as events from "@/lib/services/events";
+import * as chatbot from "@/lib/services/chatbot.service";
+import * as events from "@/lib/services/events.service";
 
 export const useSendMessage = () => {
   const mutation = useMutation({
