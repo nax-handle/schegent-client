@@ -10,15 +10,21 @@ import { useTranslation } from "react-i18next";
 import "@/../i18n";
 import { useLogin } from "@/hooks/auth/use.auth";
 import { useLoginForm, LoginFormData } from "@/hooks/auth/zod.auth";
+import { useGoogleLogin } from "@/hooks/auth/use.auth";
 
 export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const { t } = useTranslation();
+  const googleLogin = useGoogleLogin();
   const { login, isLoggingIn, loginError } = useLogin();
   const { register, handleSubmit, errors, setValue } = useLoginForm();
 
   const handleLogin = (data: LoginFormData) => {
     login({ ...data, type: "email" });
+  };
+
+  const handleGoogleLogin = () => {
+    googleLogin();
   };
 
   const handleChangeEmail = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -43,6 +49,7 @@ export default function Login() {
             variant="outline"
             className="w-full py-6 flex items-center justify-center gap-2 dark:bg-[#303030]"
             type="button"
+            onClick={handleGoogleLogin}
           >
             <svg
               xmlns="http://www.w3.org/2000/svg"

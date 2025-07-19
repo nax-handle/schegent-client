@@ -68,6 +68,7 @@ export interface SendEvent {
   colorId: string;
   isAllDay: boolean;
   calendarId: string;
+  minutesBefore: number;
 }
 
 export interface Event {
@@ -160,4 +161,18 @@ export interface ResponseTask {
     estimatedDuration?: number;
     calendarId?: string;
   }[];
+}
+
+export interface ApiError {
+  response?: {
+    data?: {
+      message?: string;
+      statusCode?: number;
+      error?: string;
+    };
+    status?: number;
+    statusText?: string;
+  };
+  message?: string;
+  code?: string;
 }

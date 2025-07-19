@@ -14,7 +14,7 @@ function cn(...classes: (string | undefined | false | null)[]) {
 import { useProfile } from "@/hooks/auth/use.auth";
 import { useSendMessage, useActionEvents } from "@/hooks/chat/use.chatbot";
 import EventSuggestions from "./event-suggestions";
-import type { Events } from "@/lib/services/chatbot";
+import type { Events } from "@/lib/services/chatbot.service";
 import type { SendEvent } from "@/types";
 
 interface Message {
@@ -88,6 +88,7 @@ export default function AiChatWidget() {
         colorId: event.colorId || "#3B82F6",
         isAllDay: event.isAllDay,
         calendarId: event.calendarId || "",
+        minutesBefore: 0,
       };
 
       await createEventsAsync({ events: [sendEvent], action });
@@ -162,6 +163,7 @@ export default function AiChatWidget() {
         colorId: event.colorId || "#3B82F6",
         isAllDay: event.isAllDay,
         calendarId: event.calendarId || "",
+        minutesBefore: 0,
       }));
 
       await createEventsAsync({ events: sendEvents, action });

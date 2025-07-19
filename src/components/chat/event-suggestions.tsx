@@ -4,7 +4,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar, Clock, MapPin, Check, X } from "lucide-react";
-import type { Events } from "@/lib/services/chatbot";
+import type { Events } from "@/lib/services/chatbot.service";
 
 interface EventSuggestionsProps {
   events: Events[];

@@ -4,7 +4,7 @@ import {
   useQueries,
   useQueryClient,
 } from "@tanstack/react-query";
-import * as events from "@/lib/services/events";
+import * as events from "@/lib/services/events.service";
 import { SendEvent, ResponseEvent } from "@/types";
 
 // Create a new event

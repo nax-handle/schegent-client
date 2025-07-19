@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import * as calendar from "@/lib/services/calendar";
+import * as calendar from "@/lib/services/calendar.service";
 import { SendCalendar } from "@/types";
 
 // Create a new calendar

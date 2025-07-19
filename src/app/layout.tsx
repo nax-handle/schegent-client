@@ -39,7 +39,12 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const { isNotFound } = useNotFound();
 
-  const hideLayoutPaths = ["/login", "/register", "/forgot-password"];
+  const hideLayoutPaths = [
+    "/login",
+    "/register",
+    "/forgot-password",
+    "/google",
+  ];
   const calendarPaths = ["/calendar"];
   const AI_Calendar = ["/"];
 
@@ -56,7 +61,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
           setIsEventDialogOpen={setIsEventDialogOpen}
         />
         <SidebarInset>
-          <header className="flex justify-between sm:hidden h-5 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10 p-4 items-center">
+          <header className="flex justify-between sm:hidden h-5 shrink-0 gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10 p-4 items-center">
             <div className="flex items-center gap-2">
               <SidebarTrigger className="-ml-1" />
               <span>Menu</span>
@@ -108,7 +113,7 @@ function InnerLayout({ children }: { children: React.ReactNode }) {
         setIsEventDialogOpen={setIsEventDialogOpen}
       />
       <SidebarInset>
-        <header className="flex justify-between sm:hidden h-5 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10 p-4 items-center">
+        <header className="flex justify-between sm:hidden h-5 shrink-0 gap-2 transition-[width,height] ease-linear group-has-[[data-collapsible=icon]]/sidebar-wrapper:h-12 z-10 p-4 items-center">
           <div className="flex items-center gap-2">
             <SidebarTrigger className="-ml-1" />
             <span>Menu</span>

@@ -1,5 +1,5 @@
 import { useMutation, useQuery } from "@tanstack/react-query";
-import * as tasks from "@/lib/services/tasks";
+import * as tasks from "@/lib/services/tasks.service";
 import { SendTask } from "@/types";
 
 // Create a new task
