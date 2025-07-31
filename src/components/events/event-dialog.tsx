@@ -61,7 +61,7 @@ export function EventDialog({
     colorId: "",
     isAllDay: false,
     calendarId: calendarID || "",
-    minutesBefore: 1,
+    minutesBefore: 2,
   });
 
   useEffect(() => {

@@ -9,7 +9,6 @@ type CalendarView = "day" | "week" | "month";
 import {
   useMultiCalendarEvents,
   useDeleteEvent,
-  useUpdateEvent,
 } from "@/hooks/calendar/use.events";
 import { Event, SendEvent, Calendar } from "@/types";
 import { EventDialog } from "@/components/events/event-dialog";
@@ -81,7 +80,6 @@ export default function CalendarPage({
   };
 
   const { deleteEvent, deleteEventError } = useDeleteEvent();
-  useUpdateEvent();
 
   const { updateCalendar } = useUpdateCalendar();
   const { createCalendar } = useCreateCalendar();

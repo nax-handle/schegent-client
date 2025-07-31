@@ -14,6 +14,12 @@ import {
 import ContextMenuComponent from "../context-menu/create-event";
 import i18next from "i18next";
 import { useTranslation } from "react-i18next";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface PropEvent {
   eventsData: Event[];
@@ -60,10 +66,18 @@ export default function Day({
   const { handleMouseDownResize, handleMouseDownMoveBlock } =
     useEventDragResize({
       updateEvent: (params) => {
+        const adjustedStartTime = new Date(params.data.startTime);
+        adjustedStartTime.setHours(adjustedStartTime.getHours() - 7);
+
+        const adjustedEndTime = new Date(params.data.endTime);
+        adjustedEndTime.setHours(adjustedEndTime.getHours() - 7);
+
         handleOptimisticUpdate(params.id, params.data as Event);
         const sendEventData: SendEvent = {
           ...params.data,
-          minutesBefore: 1,
+          startTime: adjustedStartTime.toISOString(),
+          endTime: adjustedEndTime.toISOString(),
+          minutesBefore: 2,
         };
         updateEvent(
           { id: params.id, data: sendEventData },
@@ -115,9 +129,9 @@ export default function Day({
   const displayDate = date.getDate();
 
   const calculateTopOffset = () => {
-    const now = new Date();
-    const hours = now.getHours();
-    const minutes = now.getMinutes();
+    const now = dayjs.utc(new Date());
+    const hours = now.hour();
+    const minutes = now.minute();
     const offset = hours * 65 + minutes * (65 / 60);
     setTopOffset(offset);
   };
@@ -212,33 +226,25 @@ export default function Day({
 
                 {events
                   .filter((event) => {
-                    const eventDate = new Date(event.startTime);
+                    const eventDate = dayjs.utc(event.startTime);
                     return (
-                      eventDate.getDate() === currentDate.getDate() &&
-                      eventDate.getMonth() === currentDate.getMonth() &&
-                      eventDate.getFullYear() === currentDate.getFullYear()
+                      eventDate.date() === currentDate.getDate() &&
+                      eventDate.month() === currentDate.getMonth() &&
+                      eventDate.year() === currentDate.getFullYear()
                     );
                   })
                   .map((event) => {
-                    const stateTime = new Date(event.startTime);
-                    const hourStartTime = stateTime.getHours();
-                    const minuteStartTime = stateTime.getMinutes();
+                    const startTime = dayjs.utc(event.startTime);
+                    const endTime = dayjs.utc(event.endTime);
                     const top =
-                      hourStartTime * 65 + (minuteStartTime / 60) * 65;
+                      startTime.hour() * 65 + (startTime.minute() / 60) * 65;
 
-                    const endTime = new Date(event.endTime);
-                    const hourEndTime = endTime.getHours();
-                    const minuteEndTime = endTime.getMinutes();
                     const height =
-                      (hourEndTime - hourStartTime) * 65 +
-                      (minuteEndTime - minuteStartTime) * (65 / 60);
+                      (endTime.hour() - startTime.hour()) * 65 +
+                      (endTime.minute() - startTime.minute()) * (65 / 60);
 
-                    const formatTime = (date: Date) => {
-                      return date.toLocaleTimeString([], {
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        hour12: false,
-                      });
+                    const formatTime = (date: dayjs.Dayjs) => {
+                      return date.format("HH:mm");
                     };
 
                     return (
@@ -296,7 +302,7 @@ export default function Day({
                             </DropdownMenu>
                           </div>
                           <span className="spanText-event">
-                            {formatTime(stateTime)} - {formatTime(endTime)}
+                            {formatTime(startTime)} - {formatTime(endTime)}
                           </span>
                           <span className="spanText-event">
                             <span className="font-bold">

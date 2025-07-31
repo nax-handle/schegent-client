@@ -11,12 +11,12 @@ import {
   DropdownMenuItem,
 } from "@/components/ui/dropdown-menu";
 import ContextMenuComponent from "../context-menu/create-event";
-function toVietnamDate(dateInput: string | Date): Date {
-  const date = new Date(dateInput);
-  const utc = date.getTime() + date.getTimezoneOffset() * 60000;
-  const vietnamOffset = 7 * 60 * 60000;
-  return new Date(utc + vietnamOffset);
-}
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+
+dayjs.extend(utc);
+dayjs.extend(timezone);
 
 interface PropEvent {
   eventsdata: Event[];
@@ -40,6 +40,14 @@ export default function Week({
   const { updateEvent } = useUpdateEvent();
   const [events, setEvents] = useState<Event[]>(eventsdata);
   const [isDragging, setIsDragging] = useState(false);
+
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+
+  const toVietnamDate = (dateInput: string | Date) => {
+    // Thời gian UTC trong database đã là múi giờ Việt Nam
+    return dayjs.utc(dateInput).toDate();
+  };
 
   const today = toVietnamDate(new Date());
   const hour = today.getHours();
@@ -75,9 +83,18 @@ export default function Week({
     dragIndicator,
   } = useEventDragResize({
     updateEvent: (params) => {
+      // Subtract 7 hours from startTime and endTime
+      const adjustedStartTime = new Date(params.data.startTime);
+      adjustedStartTime.setHours(adjustedStartTime.getHours() - 7);
+
+      const adjustedEndTime = new Date(params.data.endTime);
+      adjustedEndTime.setHours(adjustedEndTime.getHours() - 7);
+
       const sendEventData: SendEvent = {
         ...params.data,
-        minutesBefore: 1,
+        startTime: adjustedStartTime.toISOString(),
+        endTime: adjustedEndTime.toISOString(),
+        minutesBefore: 2,
       };
       updateEvent({ id: params.id, data: sendEventData });
     },
@@ -184,23 +201,41 @@ export default function Week({
 
                     {events
                       .filter((event) => {
-                        const eventDate = toVietnamDate(event.startTime);
+                        const eventDate = dayjs.utc(event.startTime);
                         return (
-                          eventDate.getDate() === zonedDate.getDate() &&
-                          eventDate.getMonth() === zonedDate.getMonth() &&
-                          eventDate.getFullYear() === zonedDate.getFullYear()
+                          eventDate.date() === zonedDate.getDate() &&
+                          eventDate.month() === zonedDate.getMonth() &&
+                          eventDate.year() === zonedDate.getFullYear()
                         );
                       })
                       .map((event, index) => {
-                        const startTime = toVietnamDate(event.startTime);
-                        const endTime = toVietnamDate(event.endTime);
+                        const startTime = dayjs.utc(event.startTime);
+                        const endTime = dayjs.utc(event.endTime);
+
+                        // Giới hạn start/end trong ngày hiện tại
+                        const dayStart = dayjs.utc(zonedDate).startOf("day");
+                        const dayEnd = dayjs.utc(zonedDate).endOf("day");
+
+                        // Nếu event kết thúc trước khi ngày bắt đầu hoặc bắt đầu sau khi ngày kết thúc thì bỏ qua
+                        if (
+                          endTime.isBefore(dayStart) ||
+                          startTime.isAfter(dayEnd)
+                        )
+                          return null;
+
+                        // Clamp thời gian nằm trong ngày
+                        const clampedStart = startTime.isBefore(dayStart)
+                          ? dayStart
+                          : startTime;
+                        const clampedEnd = endTime.isAfter(dayEnd)
+                          ? dayEnd
+                          : endTime;
+
                         const top =
-                          startTime.getHours() * 56 +
-                          (startTime.getMinutes() / 60) * 56;
+                          clampedStart.hour() * 56 +
+                          (clampedStart.minute() / 60) * 56;
                         const height =
-                          (endTime.getHours() - startTime.getHours()) * 56 +
-                          (endTime.getMinutes() - startTime.getMinutes()) *
-                            (56 / 60);
+                          (clampedEnd.diff(clampedStart, "minute") / 60) * 56;
 
                         return (
                           <div
@@ -227,15 +262,8 @@ export default function Week({
                                 </p>
 
                                 <p className="">
-                                  {startTime.toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}{" "}
-                                  -{" "}
-                                  {endTime.toLocaleTimeString([], {
-                                    hour: "2-digit",
-                                    minute: "2-digit",
-                                  })}
+                                  {dayjs.utc(event.startTime).format("HH:mm")} -{" "}
+                                  {dayjs.utc(event.endTime).format("HH:mm")}
                                 </p>
                                 <p className="mt-2">{event.description}</p>
                               </div>
@@ -299,8 +327,8 @@ export default function Week({
                       })}
 
                     {dayIndex === currentDate.getDay() &&
-                      toVietnamDate(date).toDateString() ===
-                        today.toDateString() && (
+                      dayjs.utc(date).format("YYYY-MM-DD") ===
+                        dayjs.utc(new Date()).format("YYYY-MM-DD") && (
                         <div
                           className="absolute top-0 left-0 right-0 z-20"
                           style={{ top: `${topOffset}px` }}
@@ -313,9 +341,9 @@ export default function Week({
 
                     {dragIndicator && dragIndicator.column === dayIndex && (
                       <div
-                        className="absolute h-0.5 bg-blue-500 z-30 pointer-events-none"
+                        className="absolute h-0.5 bg-green-500 z-30 pointer-events-none"
                         style={{
-                          top: `${dragIndicator.top}px`,
+                          top: `${dragIndicator.top - 240}px`,
                           left: "4px",
                           right: "4px",
                         }}

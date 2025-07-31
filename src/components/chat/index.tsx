@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { MessageSquare, Send, X, Mic, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
@@ -33,6 +33,7 @@ export default function AiChatWidget() {
   const [pendingEvents, setPendingEvents] = useState<{
     [messageId: string]: Events[];
   }>({});
+  const bottomRef = useRef<HTMLDivElement | null>(null);
   const [eventStates, setEventStates] = useState<{
     [messageId: string]: {
       accepted: number[];
@@ -56,6 +57,10 @@ export default function AiChatWidget() {
     setIsOpen(!isOpen);
   };
 
+  useEffect(() => {
+    bottomRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
   const handleAcceptEvent = async (
     messageId: string,
     event: Events,
@@ -73,6 +78,7 @@ export default function AiChatWidget() {
     // Create single event
     try {
       const sendEvent: SendEvent = {
+        id: event.id,
         title: event.title,
         description: event.description,
         location: event.location || null,
@@ -148,6 +154,7 @@ export default function AiChatWidget() {
   ) => {
     try {
       const sendEvents: SendEvent[] = events.map((event) => ({
+        id: event.id,
         title: event.title,
         description: event.description,
         location: event.location || null,
@@ -420,6 +427,7 @@ export default function AiChatWidget() {
                 </span>
               </div>
             )}
+            <div ref={bottomRef} />
           </div>
 
           {/* Input area */}
