@@ -40,17 +40,50 @@ export default function AiChatWidget() {
       rejected: number[];
     };
   }>({});
-  const [messages, setMessages] = useState<Message[]>([
-    {
-      id: "1",
-      content: "Xin chào! Tôi có thể giúp gì cho bạn?",
-      role: "assistant",
-      timestamp: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    },
-  ]);
+  const [messages, setMessages] = useState<Message[]>(() => {
+    // Load messages from localStorage (only on client-side)
+    if (typeof window !== "undefined") {
+      const savedMessages = localStorage.getItem("chatMessages");
+      if (savedMessages) {
+        const parsed = JSON.parse(savedMessages);
+        const savedTime = localStorage.getItem("chatMessagesTime");
+        if (savedTime) {
+          const timeDiff = Date.now() - parseInt(savedTime);
+          const hoursDiff = timeDiff / (1000 * 60 * 60);
+
+          // If more than 24 hours, clear messages
+          if (hoursDiff > 24) {
+            localStorage.removeItem("chatMessages");
+            localStorage.removeItem("chatMessagesTime");
+            return [
+              {
+                id: "1",
+                content: "Xin chào! Tôi có thể giúp gì cho bạn?",
+                role: "assistant",
+                timestamp: new Date().toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                }),
+              },
+            ];
+          }
+          return parsed;
+        }
+      }
+    }
+
+    return [
+      {
+        id: "1",
+        content: "Xin chào! Tôi có thể giúp gì cho bạn?",
+        role: "assistant",
+        timestamp: new Date().toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      },
+    ];
+  });
   const [input, setInput] = useState("");
   const [action, setAction] = useState<string>("");
   const toggleChat = () => {
@@ -60,6 +93,33 @@ export default function AiChatWidget() {
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
+
+  useEffect(() => {
+    if (messages.length > 0 && typeof window !== "undefined") {
+      localStorage.setItem("chatMessages", JSON.stringify(messages));
+      localStorage.setItem("chatMessagesTime", Date.now().toString());
+    }
+  }, [messages]);
+
+  // Function to convert time format
+  const convertTimeFormat = (timeString: string): string => {
+    // Check if time is already in ISO format
+    if (timeString.includes("T") && timeString.includes("Z")) {
+      return timeString;
+    }
+
+    // Convert from "YYYY-MM-DD HH:MM" to ISO format
+    if (timeString.includes(" ")) {
+      const [date, time] = timeString.split(" ");
+      const [year, month, day] = date.split("-");
+      const [hour, minute] = time.split(":");
+
+      // Create ISO string with UTC timezone
+      return `${year}-${month}-${day}T${hour}:${minute}:00.000Z`;
+    }
+
+    return timeString;
+  };
 
   const handleAcceptEvent = async (
     messageId: string,
@@ -82,8 +142,8 @@ export default function AiChatWidget() {
         title: event.title,
         description: event.description,
         location: event.location || null,
-        startTime: event.startTime,
-        endTime: event.endTime,
+        startTime: convertTimeFormat(event.startTime),
+        endTime: convertTimeFormat(event.endTime),
         hangoutLink: event.hangoutLink || null,
         recurrence: event.recurrence || "",
         icon: event.icon || null,
@@ -102,7 +162,7 @@ export default function AiChatWidget() {
       // Add success message for individual event
       const successMessage: Message = {
         id: Date.now().toString(),
-        content: `✅ Đã thêm "${event.title}" vào lịch của bạn!`,
+        content: `✅ Đã sử lí "${event.title}" thành công vào lịch của bạn!`,
         role: "assistant",
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
@@ -110,6 +170,9 @@ export default function AiChatWidget() {
         }),
       };
       setMessages((prev) => [...prev, successMessage]);
+      // setTimeout(() => {
+      //   window.location.reload();
+      // }, 1000);
     } catch (error) {
       console.error("Error creating single event:", error);
 
@@ -158,8 +221,8 @@ export default function AiChatWidget() {
         title: event.title,
         description: event.description,
         location: event.location || null,
-        startTime: event.startTime,
-        endTime: event.endTime,
+        startTime: convertTimeFormat(event.startTime),
+        endTime: convertTimeFormat(event.endTime),
         hangoutLink: event.hangoutLink || null,
         recurrence: event.recurrence || "",
         icon: event.icon || null,
@@ -183,7 +246,7 @@ export default function AiChatWidget() {
 
       const successMessage: Message = {
         id: Date.now().toString(),
-        content: `✅ Đã thêm thành công ${events.length} sự kiện vào lịch của bạn!`,
+        content: `✅ Đã sử lý thành công ${events.length} sự kiện vào lịch của bạn!`,
         role: "assistant",
         timestamp: new Date().toLocaleTimeString([], {
           hour: "2-digit",
@@ -191,6 +254,11 @@ export default function AiChatWidget() {
         }),
       };
       setMessages((prev) => [...prev, successMessage]);
+
+      // Reload page after successful events creation
+      // setTimeout(() => {
+      //   window.location.reload();
+      // }, 1000);
     } catch (error) {
       console.error("Error creating events:", error);
 

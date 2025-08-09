@@ -4,7 +4,6 @@ import React, { useEffect, useState } from "react";
 import {
   ListChecks,
   ChartColumnDecreasing,
-  UsersRound,
   Settings2,
   Bell,
   Calendar1,
@@ -67,12 +66,6 @@ export function AppSidebar({
               title: "Tasks",
               icon: ListChecks,
               url: "/tasks",
-            },
-            {
-              type: "sub",
-              title: "Groups",
-              icon: UsersRound,
-              url: "/users",
             },
             {
               type: "sub",

@@ -115,7 +115,7 @@ export default function ProfileSection() {
             <Input
               id="first-name"
               placeholder="Enter your first name"
-              defaultValue="John"
+              defaultValue="Nguyen"
             />
           </div>
           <div className="space-y-2">
@@ -123,7 +123,7 @@ export default function ProfileSection() {
             <Input
               id="last-name"
               placeholder="Enter your last name"
-              defaultValue="Doe"
+              defaultValue="Thanh"
             />
           </div>
         </div>
@@ -133,7 +133,7 @@ export default function ProfileSection() {
           <Input
             id="username"
             placeholder="Enter your username"
-            defaultValue="johndoe"
+            defaultValue="nguyenthanh"
           />
           <p className="text-sm text-muted-foreground">
             This is your public username. It can only contain letters, numbers,
@@ -147,7 +147,7 @@ export default function ProfileSection() {
             id="email-profile"
             type="email"
             placeholder="Enter your email"
-            defaultValue="john.doe@example.com"
+            defaultValue="thanh@gmail.com"
           />
         </div>
 
@@ -172,7 +172,7 @@ export default function ProfileSection() {
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="phone">Phone Number</Label>
-              <Input id="phone" type="tel" placeholder="+1 (555) 123-4567" />
+              <Input id="phone" type="tel" placeholder="+84 555 123-4567" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="website">Website</Label>

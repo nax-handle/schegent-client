@@ -343,7 +343,7 @@ export default function Week({
                       <div
                         className="absolute h-0.5 bg-green-500 z-30 pointer-events-none"
                         style={{
-                          top: `${dragIndicator.top - 240}px`,
+                          top: `${dragIndicator.top - 390}px`,
                           left: "4px",
                           right: "4px",
                         }}

@@ -34,9 +34,27 @@ export default function CalendarPage({
   setCurrentView?: (view: CalendarView) => void;
   currentView?: CalendarView;
 }) {
-  const [internalView, setInternalView] = useState<CalendarView>("day");
-  const view = currentView ?? internalView;
-  const setView = setCurrentView ?? setInternalView;
+  const [internalView, setInternalView] = useState<CalendarView>(() => {
+    // Load saved view from localStorage (only on client-side)
+    if (typeof window !== "undefined") {
+      const savedView = localStorage.getItem("calendarView") as CalendarView;
+      return savedView || "week";
+    }
+    return "week";
+  });
+
+  // Use internalView as primary, fallback to currentView from props
+  const view = internalView ?? currentView ?? "week";
+  const setView = (newView: CalendarView) => {
+    // Save view to localStorage (only on client-side)
+    if (typeof window !== "undefined") {
+      localStorage.setItem("calendarView", newView);
+    }
+    setInternalView(newView);
+    if (setCurrentView) {
+      setCurrentView(newView);
+    }
+  };
   const [currentDate, setCurrentDate] = useState<Date>(new Date());
 
   const navigateToPrevious = () => {

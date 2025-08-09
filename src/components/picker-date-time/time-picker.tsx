@@ -12,6 +12,7 @@ import { useTranslation } from "react-i18next";
 import i18next from "i18next";
 import "@/../i18n";
 import type { SendEvent } from "@/types";
+import dayjs from "dayjs";
 
 interface TimeRange {
   start: {
@@ -44,9 +45,10 @@ export default function TimePicker({
 
   const parseTimeFromISO = (isoString: string) => {
     if (!isoString) return null;
-    const date = new Date(isoString);
-    const hours = date.getHours();
-    const minutes = date.getMinutes();
+    // Use dayjs to handle timezone correctly
+    const date = dayjs.utc(isoString);
+    const hours = date.hour();
+    const minutes = date.minute();
 
     if (isEnglish) {
       const period = hours >= 12 ? "PM" : "AM";
@@ -125,10 +127,10 @@ export default function TimePicker({
         : time.hour;
       const minute = time.minute.padStart(2, "0");
 
-      const isoString = new Date(
-        `${year}-${month}-${day}T${hour24}:${minute}:00`
-      ).toISOString();
-      return isoString;
+      // Create date in Vietnam timezone and convert to UTC
+      const localDate = dayjs(`${year}-${month}-${day}T${hour24}:${minute}:00`);
+      const utcDate = localDate.utc();
+      return utcDate.toISOString();
     };
 
     setFormData((prev) => ({
