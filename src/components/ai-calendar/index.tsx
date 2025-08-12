@@ -19,6 +19,8 @@ import type { SendEvent } from "@/types";
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
 
+  date.setTime(date.getTime() - 7 * 60 * 60 * 1000);
+
   const hours = date.getUTCHours().toString().padStart(2, "0");
   const minutes = date.getUTCMinutes().toString().padStart(2, "0");
   return `${hours}:${minutes}`;
@@ -39,7 +41,6 @@ export default function AICalendar() {
 
   const [input, setInput] = React.useState("");
   const [messages, setMessages] = React.useState<Message[]>(() => {
-    // Load messages from localStorage (only on client-side)
     if (typeof window !== "undefined") {
       const savedMessages = localStorage.getItem("aiCalendarMessages");
       if (savedMessages) {
@@ -49,7 +50,6 @@ export default function AICalendar() {
           const timeDiff = Date.now() - parseInt(savedTime);
           const hoursDiff = timeDiff / (1000 * 60 * 60);
 
-          // If more than 1 hour, clear messages
           if (hoursDiff > 1) {
             localStorage.removeItem("aiCalendarMessages");
             localStorage.removeItem("aiCalendarMessagesTime");
@@ -489,9 +489,9 @@ export default function AICalendar() {
               </CardTitle>
             </CardHeader>
 
-            <CardContent className="flex-1 flex flex-col">
+            <CardContent className="flex-1 flex flex-col h-[50vh] overflow-y-scroll">
               {/* Messages */}
-              <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+              <div className="flex-1 space-y-4 mb-4 h-50 overflow-y-scroll scrollbar-hidden">
                 {messages.length === 0 && (
                   <div className="flex items-center gap-3 p-4 bg-blue-50 dark:bg-slate-800 rounded-lg text-black dark:text-white">
                     <Bot className="h-8 w-8 text-primary flex-shrink-0" />
