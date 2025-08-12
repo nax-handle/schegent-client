@@ -61,7 +61,7 @@ export function EventDialog({
     colorId: "",
     isAllDay: false,
     calendarId: calendarID || "",
-    minutesBefore: 1,
+    minutesBefore: 2,
   });
 
   useEffect(() => {
@@ -252,17 +252,6 @@ export function EventDialog({
               </Select>
             </div>
           </div>
-          {/* <div className="flex items-center">
-            <Label htmlFor="isAllDay">{t("All Day Event:")}</Label>
-            <Switch
-              id="isAllDay"
-              checked={formData.isAllDay || false}
-              onCheckedChange={(checked) =>
-                setFormData({ ...formData, isAllDay: checked })
-              }
-              className="ml-2"
-            />
-          </div> */}
           <div>
             <Label htmlFor="description">{t("Description")}</Label>
             <Textarea

@@ -5,6 +5,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Calendar, Clock, MapPin, Check, X } from "lucide-react";
 import type { Events } from "@/lib/services/chatbot.service";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 
 interface EventSuggestionsProps {
   events: Events[];
@@ -29,18 +32,14 @@ export default function EventSuggestions({
 }: EventSuggestionsProps) {
   if (!events.length) return null;
 
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+
   const formatDateTime = (dateString: string) => {
-    const date = new Date(dateString);
+    const date = dayjs.utc(dateString);
     return {
-      date: date.toLocaleDateString("vi-VN", {
-        day: "2-digit",
-        month: "2-digit",
-        year: "numeric",
-      }),
-      time: date.toLocaleTimeString("vi-VN", {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
+      date: date.format("DD/MM/YYYY"),
+      time: date.format("HH:mm"),
     };
   };
 
@@ -58,6 +57,20 @@ export default function EventSuggestions({
           {events.map((event, index) => {
             const startTime = formatDateTime(event.startTime);
             const endTime = formatDateTime(event.endTime);
+            console.log(
+              "starttime: " +
+                event.startTime +
+                "\nendtime: " +
+                event.endTime +
+                "\nstart: " +
+                JSON.stringify(startTime) +
+                "\nend: " +
+                JSON.stringify(endTime) +
+                "\nutc_start: " +
+                dayjs.utc(event.startTime).format() +
+                "\nvietnam_start: " +
+                dayjs.utc(event.startTime).tz("Asia/Ho_Chi_Minh").format()
+            );
             const isAccepted = acceptedEvents.includes(index);
             const isRejected = rejectedEvents.includes(index);
 
