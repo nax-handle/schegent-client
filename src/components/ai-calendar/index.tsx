@@ -19,8 +19,6 @@ import type { SendEvent } from "@/types";
 const formatTime = (isoString: string) => {
   const date = new Date(isoString);
 
-  date.setTime(date.getTime() - 7 * 60 * 60 * 1000);
-
   const hours = date.getUTCHours().toString().padStart(2, "0");
   const minutes = date.getUTCMinutes().toString().padStart(2, "0");
   return `${hours}:${minutes}`;
@@ -548,7 +546,16 @@ export default function AICalendar() {
                   pendingEvents[message.id] ? (
                     <div key={`events-${message.id}`} className="mt-2">
                       <EventSuggestions
-                        events={pendingEvents[message.id]}
+                        events={pendingEvents[message.id].filter((_, index) => {
+                          const accepted =
+                            eventStates[message.id]?.accepted || [];
+                          const rejected =
+                            eventStates[message.id]?.rejected || [];
+                          return (
+                            !accepted.includes(index) &&
+                            !rejected.includes(index)
+                          );
+                        })}
                         onAcceptEvent={(event, index) =>
                           handleAcceptEvent(message.id, event, index)
                         }

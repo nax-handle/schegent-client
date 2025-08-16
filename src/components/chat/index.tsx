@@ -3,7 +3,7 @@
 import type React from "react";
 
 import { useState, useEffect, useRef } from "react";
-import { MessageSquare, Send, X, Mic, ImageIcon } from "lucide-react";
+import { MessageSquare, Send, X, Lightbulb } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -86,8 +86,13 @@ export default function AiChatWidget() {
   });
   const [input, setInput] = useState("");
   const [action, setAction] = useState<string>("");
+  const [isSuggestMode, setIsSuggestMode] = useState(false);
   const toggleChat = () => {
     setIsOpen(!isOpen);
+  };
+
+  const handleSuggestToggle = () => {
+    setIsSuggestMode(!isSuggestMode);
   };
 
   useEffect(() => {
@@ -154,7 +159,7 @@ export default function AiChatWidget() {
         colorId: event.colorId || "#3B82F6",
         isAllDay: event.isAllDay,
         calendarId: event.calendarId || "",
-        minutesBefore: 0,
+        minutesBefore: 2,
       };
 
       await createEventsAsync({ events: [sendEvent], action });
@@ -233,7 +238,8 @@ export default function AiChatWidget() {
         colorId: event.colorId || "#3B82F6",
         isAllDay: event.isAllDay,
         calendarId: event.calendarId || "",
-        minutesBefore: 0,
+        minutesBefore: 2,
+        action: event.action || "create",
       }));
 
       await createEventsAsync({ events: sendEvents, action });
@@ -310,8 +316,13 @@ export default function AiChatWidget() {
     setInput("");
 
     try {
+      // Prepare message for API - add "suggest " prefix if in suggest mode
+      const messageForAPI = isSuggestMode
+        ? `suggest ${userInputText}`
+        : userInputText;
+
       // Call the chatbot API
-      const response = await sendMessageAsync({ message: userInputText });
+      const response = await sendMessageAsync({ message: messageForAPI });
 
       if (response.success && response.data) {
         const messageId = (Date.now() + 1).toString();
@@ -501,24 +512,18 @@ export default function AiChatWidget() {
           {/* Input area */}
           <div className="p-3 border-t bg-slate-50 dark:bg-gray-800">
             <form onSubmit={handleSubmit} className="flex items-center gap-2">
-              <div className="flex items-center gap-2">
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                >
-                  <ImageIcon className="h-4 w-4 text-black dark:text-white" />
-                </Button>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                >
-                  <Mic className="h-4 w-4 text-black dark:text-white" />
-                </Button>
-              </div>
+              <Button
+                type="button"
+                onClick={handleSuggestToggle}
+                className={`px-4 py-2 rounded-lg flex items-center gap-2 transition-colors ${
+                  isSuggestMode
+                    ? "bg-blue-500 hover:bg-blue-600 text-white"
+                    : "bg-blue-500/30 hover:bg-blue-500/50 text-blue-700 dark:text-blue-300"
+                }`}
+              >
+                <Lightbulb className="h-4 w-4" />
+                <span className="text-sm font-medium">Suggest</span>
+              </Button>
               <Input
                 value={input}
                 onChange={(e) => setInput(e.target.value)}

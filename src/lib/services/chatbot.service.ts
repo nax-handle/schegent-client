@@ -21,6 +21,7 @@ export interface Events {
   colorId?: string;
   isAllDay: boolean;
   calendarId?: string;
+  action?: string | null;
 }
 
 interface ChatbotResponse {

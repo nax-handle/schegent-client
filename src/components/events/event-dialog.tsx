@@ -61,7 +61,7 @@ export function EventDialog({
     colorId: "",
     isAllDay: false,
     calendarId: calendarID || "",
-    minutesBefore: 2,
+    minutesBefore: 5,
   });
 
   useEffect(() => {
@@ -332,7 +332,12 @@ export function EventDialog({
             <div>
               <Label htmlFor="time">{t("Remind")}</Label>
               <Select
-                value={formData.minutesBefore?.toString() ?? ""}
+                value={
+                  formData.minutesBefore !== undefined &&
+                  formData.minutesBefore !== null
+                    ? String(formData.minutesBefore)
+                    : ""
+                }
                 onValueChange={(value) =>
                   setFormData({ ...formData, minutesBefore: Number(value) })
                 }
@@ -342,11 +347,18 @@ export function EventDialog({
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem
-                    value="1"
+                    value="0"
                     className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
-                    {"1 " + t("minute")}
+                    {t("No reminder")}
                   </SelectItem>
+                  <SelectItem
+                    value="2"
+                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
+                  >
+                    {"2 " + t("minutes")}
+                  </SelectItem>
+
                   <SelectItem
                     value="5"
                     className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
@@ -370,12 +382,6 @@ export function EventDialog({
                     className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
                   >
                     {"30 " + t("minutes")}
-                  </SelectItem>
-                  <SelectItem
-                    value="60"
-                    className="data-[highlighted]:bg-blue-100 data-[highlighted]:text-blue-700"
-                  >
-                    {"1 " + t("hour")}
                   </SelectItem>
                 </SelectContent>
               </Select>

@@ -70,6 +70,7 @@ export interface SendEvent {
   isAllDay: boolean;
   calendarId: string;
   minutesBefore: number;
+  action?: string | null;
 }
 
 export interface Event {
@@ -89,6 +90,7 @@ export interface Event {
   colorId: string;
   isAllDay: boolean;
   calendarId: string;
+  minutesBefore?: number;
 }
 
 export interface UpdateEvent {
@@ -114,6 +116,7 @@ export interface ResponseEvent {
     colorId: string;
     isAllDay: boolean;
     calendarId: string;
+    minutesBefore?: number;
   }[];
 }
 
