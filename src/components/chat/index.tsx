@@ -143,7 +143,7 @@ export default function AiChatWidget() {
     // Create single event
     try {
       const sendEvent: SendEvent = {
-        id: event.id,
+        // id: event.id,
         title: event.title,
         description: event.description,
         location: event.location || null,
@@ -222,7 +222,7 @@ export default function AiChatWidget() {
   ) => {
     try {
       const sendEvents: SendEvent[] = events.map((event) => ({
-        id: event.id,
+        // id: event.id,
         title: event.title,
         description: event.description,
         location: event.location || null,
