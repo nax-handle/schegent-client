@@ -5,7 +5,6 @@ interface ChatbotRequest {
 }
 
 export interface Events {
-  id?: string;
   title: string;
   description: string;
   location: string;
@@ -21,6 +20,7 @@ export interface Events {
   colorId?: string;
   isAllDay: boolean;
   calendarId?: string;
+  action?: string | null;
 }
 
 interface ChatbotResponse {

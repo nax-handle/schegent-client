@@ -172,13 +172,11 @@ export default function TimePicker({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="h-60 overflow-y-scroll scroll-hidden">
-                {minutes
-                  .filter((_, i) => i % 5 === 0)
-                  .map((minute) => (
-                    <SelectItem key={minute} value={minute}>
-                      {minute}
-                    </SelectItem>
-                  ))}
+                {minutes.map((minute) => (
+                  <SelectItem key={minute} value={minute}>
+                    {minute}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
 

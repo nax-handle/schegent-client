@@ -70,9 +70,36 @@ export async function actionEvents(data: ActionEvents): Promise<void> {
   console.log("📤 Sending events to API:", data);
   console.log("🌐 API Endpoint:", API_ENDPOINTS.CREATE_MULTIPLE);
 
+  const HOURS_TO_SUBTRACT = 7;
+  const millisecondsInHour = 60 * 60 * 1000;
+
+  const payload: ActionEvents =
+    data.action === "create"
+      ? {
+          ...data,
+          events: data.events.map((event) => {
+            const startTimeMs = new Date(event.startTime).getTime();
+            const endTimeMs = new Date(event.endTime).getTime();
+
+            const adjustedStartTime = new Date(
+              startTimeMs - HOURS_TO_SUBTRACT * millisecondsInHour
+            ).toISOString();
+            const adjustedEndTime = new Date(
+              endTimeMs - HOURS_TO_SUBTRACT * millisecondsInHour
+            ).toISOString();
+
+            return {
+              ...event,
+              startTime: adjustedStartTime,
+              endTime: adjustedEndTime,
+            };
+          }),
+        }
+      : data;
+
   const { data: response } = await axiosInstance.post(
     API_ENDPOINTS.CREATE_MULTIPLE,
-    data
+    payload
   );
 
   console.log("📥 API Response:", response);
